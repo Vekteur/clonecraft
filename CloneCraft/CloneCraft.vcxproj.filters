@@ -3,8 +3,14 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Window.cpp" />
+    <ClCompile Include="Render\Shader.cpp" />
+    <ClCompile Include="Render\Texture.cpp" />
+    <ClCompile Include="Render\ResourceManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.h" />
+    <ClInclude Include="Render\Shader.h" />
+    <ClInclude Include="Render\Texture.h" />
+    <ClInclude Include="Render\ResourceManager.h" />
   </ItemGroup>
 </Project>
