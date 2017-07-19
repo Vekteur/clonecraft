@@ -13,8 +13,8 @@ class ResManager
 public:
 	ResManager() = delete;
 
-	static std::map<std::string, Shader>    Shaders;
-	static std::map<std::string, Texture2D> Textures;
+	static std::map<std::string, Shader>    shaders;
+	static std::map<std::string, Texture2D> textures;
 
 	static Shader		loadShader(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile, std::string name);
 	static Shader		getShader(std::string name);

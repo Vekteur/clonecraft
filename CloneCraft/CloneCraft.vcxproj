@@ -19,17 +19,28 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Maths\GlmCommon.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClCompile Include="Maths\GlmCommon.cpp" />
+    <ClCompile Include="World\Chunk.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="View\Camera.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Render\ResourceManager.cpp" />
-    <ClCompile Include="Render\Shader.cpp" />
-    <ClCompile Include="Render\Texture.cpp" />
-    <ClCompile Include="Window.cpp" />
+    <ClCompile Include="ResManager\ResManager.cpp" />
+    <ClCompile Include="ResManager\Shader.cpp" />
+    <ClCompile Include="ResManager\Texture.cpp" />
+    <ClCompile Include="View\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Render\ResourceManager.h" />
-    <ClInclude Include="Render\Shader.h" />
-    <ClInclude Include="Render\Texture.h" />
-    <ClInclude Include="Window.h" />
+    <ClInclude Include="Util\Array3D.h" />
+    <ClInclude Include="World\Chunk.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="View\Camera.h" />
+    <ClInclude Include="ResManager\ResManager.h" />
+    <ClInclude Include="ResManager\Shader.h" />
+    <ClInclude Include="ResManager\Texture.h" />
+    <ClInclude Include="View\Window.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{5F415379-0B2F-4263-A2EC-0CE4F58CD16F}</ProjectGuid>
@@ -82,7 +93,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\vdheu\Informatique\Bibliothèques\OpenGL\includes;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Maths;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\ResManager;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Util;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\View;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\World;C:\Users\vdheu\Informatique\Bibliothèques\OpenGL\includes;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>C:\Users\vdheu\Informatique\Bibliothèques\OpenGL\libs;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -90,6 +101,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;SOIL.lib;assimp-vc140-mt.lib;irrKlang.lib;freetype.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>

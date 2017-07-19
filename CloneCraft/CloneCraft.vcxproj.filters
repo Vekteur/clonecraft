@@ -2,15 +2,24 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Window.cpp" />
-    <ClCompile Include="Render\Shader.cpp" />
-    <ClCompile Include="Render\Texture.cpp" />
-    <ClCompile Include="Render\ResourceManager.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="ResManager\ResManager.cpp" />
+    <ClCompile Include="ResManager\Shader.cpp" />
+    <ClCompile Include="ResManager\Texture.cpp" />
+    <ClCompile Include="World\Chunk.cpp" />
+    <ClCompile Include="View\Window.cpp" />
+    <ClCompile Include="View\Camera.cpp" />
+    <ClCompile Include="Maths\GlmCommon.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Window.h" />
-    <ClInclude Include="Render\Shader.h" />
-    <ClInclude Include="Render\Texture.h" />
-    <ClInclude Include="Render\ResourceManager.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="Util\Array3D.h" />
+    <ClInclude Include="ResManager\ResManager.h" />
+    <ClInclude Include="ResManager\Shader.h" />
+    <ClInclude Include="ResManager\Texture.h" />
+    <ClInclude Include="World\Chunk.h" />
+    <ClInclude Include="View\Window.h" />
+    <ClInclude Include="View\Camera.h" />
+    <ClInclude Include="Maths\GlmCommon.h" />
   </ItemGroup>
 </Project>

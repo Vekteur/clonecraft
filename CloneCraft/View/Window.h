@@ -4,6 +4,10 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include "Game.h"
+
+#include <memory>
+
 class Window
 {
 public:
@@ -19,8 +23,14 @@ public:
 	void initCallbacks();
 	void pollEvents();
 
+	Game& getGame();
+
 private:
 	GLFWwindow* window;
+	static std::unique_ptr<Game> m_game;
+
+	static bool firstMouse;
+	static double lastX, lastY;
 
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 	static void mouse_callback(GLFWwindow* window, double xpos, double ypos);

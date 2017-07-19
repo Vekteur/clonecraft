@@ -1,9 +1,7 @@
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-
 #include <iostream>
 
 #include "Window.h"
+#include "Game.h"
 
 int main()
 {
@@ -13,7 +11,7 @@ int main()
 	GLfloat secondAccumulator = 0.0f;
 	GLuint fps = 0;
 
-	//CloneCraft.init();
+	Game& game = window.getGame();
 
 	GLfloat lastFrame = 0.0f;
 
@@ -30,6 +28,9 @@ int main()
 		if (secondAccumulator >= 1.0f)
 		{
 			std::cout << fps << std::endl;
+
+			std::cout << game.getCamera().getPosition() << '\n';
+			std::cout << game.getCamera().getYaw() << ' ' << game.getCamera().getPitch() << '\n';
 			
 			secondAccumulator -= 1.0f;
 			fps = 0;
@@ -37,12 +38,12 @@ int main()
 
 		window.pollEvents();
 
-		//CloneCraft.processInput(deltaTime);
-		//CloneCraft.update(deltaTime);
+		game.processInput(deltaTime);
+		game.update(deltaTime);
 
 		window.clear();
 
-		//CloneCraft.render();
+		game.render();
 
 		window.swapBuffers();
 	}

@@ -1,4 +1,4 @@
-#include "ResourceManager.h"
+#include "ResManager.h"
 
 #include <iostream>
 #include <sstream>
@@ -7,38 +7,38 @@
 #include <SOIL/SOIL.h>
 
 // Instantiate static variables
-std::map<std::string, Texture2D>    ResManager::Textures;
-std::map<std::string, Shader>       ResManager::Shaders;
+std::map<std::string, Texture2D>    ResManager::textures;
+std::map<std::string, Shader>       ResManager::shaders;
 
 Shader ResManager::loadShader(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile, std::string name)
 {
-	Shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
-	return Shaders[name];
+	shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
+	return shaders[name];
 }
 
 Shader ResManager::getShader(std::string name)
 {
-	return Shaders[name];
+	return shaders[name];
 }
 
 Texture2D ResManager::loadTexture(const GLchar *file, GLboolean alpha, std::string name)
 {
-	Textures[name] = loadTextureFromFile(file, alpha);
-	return Textures[name];
+	textures[name] = loadTextureFromFile(file, alpha);
+	return textures[name];
 }
 
 Texture2D ResManager::getTexture(std::string name)
 {
-	return Textures[name];
+	return textures[name];
 }
 
 void ResManager::clear()
 {
 	// Properly delete all shaders	
-	for (auto iter : Shaders)
+	for (auto iter : shaders)
 		glDeleteProgram(iter.second.getId());
 	// Properly delete all textures
-	for (auto iter : Textures)
+	for (auto iter : textures)
 	{
 		GLuint id{ iter.second.getId() };
 		glDeleteTextures(1, &id);
