@@ -4,6 +4,8 @@
 #include "ResManager.h"
 #include "Chunk.h"
 
+#include <memory>
+
 class Game
 {
 public:
@@ -19,7 +21,7 @@ public:
 
 private:
 	Camera m_camera;
-	Chunk m_chunk;
+	std::unique_ptr<Chunk> m_chunks[10][10];
 
 	GLboolean m_keys[1024];
 };

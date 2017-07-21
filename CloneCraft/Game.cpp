@@ -1,13 +1,19 @@
 #include "Game.h"
 
-Game::Game() : m_camera{}, m_chunk{ glm::ivec2{0.0f, 0.0f} }
+Game::Game() : m_camera{ vec3{0.0f, 0.0f, 0.0f } }
 {
 	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
 	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
 
-	m_chunk.load();
+	for (int i = 0; i < 10; i++)
+	{
+		for (int j = 0; j < 10; j++)
+		{
+			m_chunks[i][j] = std::move(std::make_unique<Chunk>(glm::vec2{i, j}));
+			m_chunks[i][j]->load();
+		}
+	}
 }
-
 
 Game::~Game()
 {
@@ -33,7 +39,9 @@ void Game::update(GLfloat dt)
 
 void Game::render()
 {
-	m_chunk.render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
+	for (int i = 0; i < 10; i++)
+		for (int j = 0; j < 10; j++)
+			m_chunks[i][j]->render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
 }
 
 Camera& Game::getCamera()

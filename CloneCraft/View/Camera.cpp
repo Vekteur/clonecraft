@@ -5,7 +5,7 @@
 
 #include "Window.h"
 
-const GLfloat Camera::SPEED{ 1.0f };
+const GLfloat Camera::SPEED{ 30.0f };
 const GLfloat Camera::SENSITIVTY{ 0.25f };
 const GLfloat Camera::ZOOM{ 45.0f };
 const GLfloat Camera::YAW{ -90.0f };
@@ -52,7 +52,7 @@ GLfloat Camera::getPitch()
 
 void Camera::move(Direction direction, GLfloat deltaTime)
 {
-	GLfloat velocity = m_movementSpeed * deltaTime;
+	GLfloat velocity = m_speed * deltaTime;
 	if (direction == FORWARD)
 		m_position += m_front * velocity;
 	if (direction == BACKWARD)
@@ -79,8 +79,8 @@ void Camera::setPosition(vec3 position)
 
 void Camera::processMouse(GLfloat xOffset, GLfloat yOffset)
 {
-	xOffset *= m_mouseSensitivity;
-	yOffset *= m_mouseSensitivity;
+	xOffset *= m_sensitivity;
+	yOffset *= m_sensitivity;
 
 	m_yaw = fmod(m_yaw + xOffset + 360, 360);
 	m_pitch += yOffset;

@@ -28,9 +28,6 @@ int main()
 		if (secondAccumulator >= 1.0f)
 		{
 			std::cout << fps << std::endl;
-
-			std::cout << game.getCamera().getPosition() << '\n';
-			std::cout << game.getCamera().getYaw() << ' ' << game.getCamera().getPitch() << '\n';
 			
 			secondAccumulator -= 1.0f;
 			fps = 0;

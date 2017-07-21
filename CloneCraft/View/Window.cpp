@@ -26,7 +26,8 @@ Window::Window()
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	glEnable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CW);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glewExperimental = GL_TRUE;
@@ -49,7 +50,7 @@ bool Window::shouldClose()
 
 void Window::clear()
 {
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClearColor(70.0f / 255, 190.0f / 255, 240.0f / 255, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

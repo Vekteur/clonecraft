@@ -20,8 +20,8 @@ private:
 	GLfloat m_yaw;
 	GLfloat m_pitch;
 
-	GLfloat m_movementSpeed{ 15.0f };
-	GLfloat m_mouseSensitivity{ 0.25f };
+	GLfloat m_speed{ SPEED };
+	GLfloat m_sensitivity{ SENSITIVTY };
 	GLfloat m_zoom{ ZOOM };
 
 	void updateFromEuler();
