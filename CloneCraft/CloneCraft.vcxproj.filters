@@ -12,6 +12,8 @@
     <ClCompile Include="Maths\GlmCommon.cpp" />
     <ClCompile Include="Generator\PerlinNoise.cpp" />
     <ClCompile Include="Generator\OctavePerlin.cpp" />
+    <ClCompile Include="Maths\ConvertPos.cpp" />
+    <ClCompile Include="Section.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -25,5 +27,7 @@
     <ClInclude Include="Maths\GlmCommon.h" />
     <ClInclude Include="Generator\PerlinNoise.h" />
     <ClInclude Include="Generator\OctavePerlin.h" />
+    <ClInclude Include="Maths\ConvertPos.h" />
+    <ClInclude Include="Section.h" />
   </ItemGroup>
 </Project>

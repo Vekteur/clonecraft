@@ -19,12 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Maths\ConvertPos.h" />
     <ClInclude Include="Maths\GlmCommon.h">
       <FileType>CppCode</FileType>
     </ClInclude>
+    <ClCompile Include="Maths\ConvertPos.cpp" />
     <ClCompile Include="Maths\GlmCommon.cpp" />
     <ClCompile Include="Generator\PerlinNoise.cpp" />
     <ClCompile Include="Generator\OctavePerlin.cpp" />
+    <ClCompile Include="Section.cpp" />
     <ClCompile Include="World\Chunk.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="View\Camera.cpp" />
@@ -37,6 +40,7 @@
   <ItemGroup>
     <ClInclude Include="Generator\PerlinNoise.h" />
     <ClInclude Include="Generator\OctavePerlin.h" />
+    <ClInclude Include="Section.h" />
     <ClInclude Include="Util\Array3D.h" />
     <ClInclude Include="World\Chunk.h" />
     <ClInclude Include="Game.h" />
