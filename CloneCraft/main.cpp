@@ -2,9 +2,12 @@
 
 #include "Window.h"
 #include "Game.h"
+#include "PerlinNoise.h"
 
 int main()
 {
+	PerlinNoise::init();
+
 	Window window;
 	window.initCallbacks();
 

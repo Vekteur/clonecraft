@@ -1,6 +1,8 @@
 #include "Chunk.h"
+#include "OctavePerlin.h"
 
 #include <iostream>
+#include <Windows.h>
 
 Chunk::Chunk(ivec2 position)
 	:m_position{ position }, m_blocks{ ivec3{ CHUNK_SIDE, CHUNK_HEIGHT, CHUNK_SIDE } }
@@ -17,21 +19,28 @@ Chunk::~Chunk()
 
 void Chunk::loadBlocks()
 {
-	for (int i = 0; i < CHUNK_SIDE; i++)
-		for (int j = 0; j < CHUNK_HEIGHT; j++)
-			for (int k = 0; k < CHUNK_SIDE; k++)
+	OctavePerlin noise(4, 0.5, 0.5);
+
+	for (int x = 0; x < CHUNK_SIDE; x++)
+		for (int z = 0; z < CHUNK_SIDE; z++)
+		{
+			ivec2 globalPos{ x + m_position.x * CHUNK_SIDE, z + m_position.y * CHUNK_SIDE };
+			int height = 64 + floor(noise.getNoise(glm::vec2{ static_cast<float>(globalPos.x) / CHUNK_SIDE, static_cast<float>(globalPos.y) / CHUNK_SIDE }) * 4);
+			for (int y = 0; y < CHUNK_HEIGHT; y++)
 			{
-				vec3 globalPos{ i + m_position.x * CHUNK_SIDE, j, k + m_position.y * CHUNK_SIDE };
-				/// TODO GENERATION
-				if (j < 64 || j == 100 || (i == 5 && j == 80 && k == 5))
-					m_blocks.at(vec3{ i, j, k }) = 1;
+				if (y <= height)
+					m_blocks.at(vec3{ x, y, z }) = 1;
 				else
-					m_blocks.at(vec3{ i, j, k }) = 0;
+					m_blocks.at(vec3{ x, y, z }) = 0;
 			}
+		}
 }
 
 void Chunk::loadFaces()
 {
+	std::vector<GLfloat> faces;
+	std::vector<GLuint> indices;
+
 	for (int i = 0; i < CHUNK_SIDE; i++)
 		for (int j = 0; j < CHUNK_HEIGHT; j++)
 			for (int k = 0; k < CHUNK_SIDE; k++)
@@ -43,32 +52,34 @@ void Chunk::loadFaces()
 
 				if (!isInChunk(ivec3{ i + 1, j, k }) || m_blocks.at(ivec3{ i + 1, j, k }) == 0)
 					for (GLfloat c : getFace(globalPos, faceX1))
-						m_faces.push_back(c);
+						faces.push_back(c);
 
 				if (!isInChunk(ivec3{ i - 1, j, k }) || m_blocks.at(ivec3{ i - 1, j, k }) == 0)
 					for (GLfloat c : getFace(globalPos, faceX0))
-						m_faces.push_back(c);
+						faces.push_back(c);
 
 				if (!isInChunk(ivec3{ i, j + 1, k }) || m_blocks.at(ivec3{ i, j + 1, k }) == 0)
 					for (GLfloat c : getFace(globalPos, faceY1))
-						m_faces.push_back(c);
+						faces.push_back(c);
 
 				if (!isInChunk(ivec3{ i, j - 1, k }) || m_blocks.at(ivec3{ i, j - 1, k }) == 0)
 					for (GLfloat c : getFace(globalPos, faceY0))
-						m_faces.push_back(c);
+						faces.push_back(c);
 
 				if (!isInChunk(ivec3{ i, j, k + 1 }) || m_blocks.at(ivec3{ i, j, k + 1 }) == 0)
 					for (GLfloat c : getFace(globalPos, faceZ1))
-						m_faces.push_back(c);
+						faces.push_back(c);
 
 				if (!isInChunk(ivec3{ i, j, k - 1 }) || m_blocks.at(ivec3{ i, j, k - 1 }) == 0)
 					for (GLfloat c : getFace(globalPos, faceZ0))
-						m_faces.push_back(c);
+						faces.push_back(c);
 			}
 
-	for (int i = 0; i < m_faces.size() / 20; ++i) // Each 4 segments
-		for (GLuint index : indices) // Add the indices with an offset of 4 * i 
-			m_indices.push_back(index + 4 * i);
+	for (int i = 0; i < faces.size() / 20; ++i) // Each 4 segments
+		for (GLuint index : rectIndices) // Add the indices with an offset of 4 * i 
+			indices.push_back(index + 4 * i);
+
+	indicesNb = indices.size();
 
 	// Create and bind the VAO
 	glGenVertexArrays(1, &VAO);
@@ -77,12 +88,12 @@ void Chunk::loadFaces()
 	// The VBO stores the vertices
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * m_faces.size(), &m_faces[0], GL_STREAM_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * faces.size(), &faces[0], GL_STREAM_DRAW);
 
 	// The EBO stores the indices
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * m_indices.size(), &m_indices[0], GL_STREAM_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indices.size(), &indices[0], GL_STREAM_DRAW);
 
 	// Attributes of the VAO
 	glEnableVertexAttribArray(0);
@@ -116,7 +127,7 @@ void Chunk::render(Shader &shader, Texture2D &texture)
 	texture.bind();
 
 	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, indicesNb, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 
 	assert(glGetError() == GL_NO_ERROR);
@@ -143,7 +154,7 @@ std::array<GLfloat, 20> Chunk::getFace(glm::ivec3 pos, const std::array<GLfloat,
 	return finalFace;
 }
 
-const std::array<GLfloat, 6> Chunk::indices{
+const std::array<GLfloat, 6> Chunk::rectIndices{
 	0, 1, 2, 
 	2, 3, 0
 };

@@ -6,13 +6,11 @@ Game::Game() : m_camera{ vec3{0.0f, 0.0f, 0.0f } }
 	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
 
 	for (int i = 0; i < 10; i++)
-	{
 		for (int j = 0; j < 10; j++)
 		{
 			m_chunks[i][j] = std::move(std::make_unique<Chunk>(glm::vec2{i, j}));
 			m_chunks[i][j]->load();
 		}
-	}
 }
 
 Game::~Game()

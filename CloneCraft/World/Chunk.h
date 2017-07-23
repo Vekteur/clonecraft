@@ -26,17 +26,16 @@ private:
 
 	vec2 m_position;
 	Array3D<GLuint> m_blocks;
-	std::vector<GLfloat> m_faces;
-	std::vector<GLuint> m_indices;
 	GLuint VAO, VBO, EBO;
+	int indicesNb{ 0 };
 
 	void loadBlocks();
 	void loadFaces();
-	static bool isInChunk(ivec3 block);
 
+	static bool isInChunk(ivec3 block);
 	static std::array<GLfloat, 20> getFace(glm::ivec3 pos, const std::array<GLfloat, 12>& face);
 
-	static const std::array<GLfloat, 6> indices;
+	static const std::array<GLfloat, 6> rectIndices;
 	static const std::array<GLfloat, 8> textureCoords;
 
 	static const std::array<GLfloat, 12> faceX0;

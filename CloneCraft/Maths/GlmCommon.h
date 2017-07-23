@@ -14,6 +14,10 @@ using glm::ivec2;
 using glm::ivec3;
 using glm::ivec4;
 
+using glm::dvec2;
+using glm::dvec3;
+using glm::dvec4;
+
 using glm::mat3;
 using glm::mat4;
 
