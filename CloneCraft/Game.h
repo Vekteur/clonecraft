@@ -5,6 +5,7 @@
 #include "Chunk.h"
 
 #include <memory>
+#include <ChunkMap.h>
 
 class Game
 {
@@ -21,7 +22,7 @@ public:
 
 private:
 	Camera m_camera;
-	std::unique_ptr<Chunk> m_chunks[10][10];
+	ChunkMap m_chunks;
 
 	GLboolean m_keys[1024];
 };

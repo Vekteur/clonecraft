@@ -1,12 +1,14 @@
 #include "Section.h"
 
 #include "OctavePerlin.h"
+#include "Converter.h"
+#include "ChunkMap.h"
 
 #include <iostream>
 #include <Windows.h>
 
-Section::Section(ivec3 position)
-	:m_position{ position }, m_blocks{ ivec3{ SIDE, HEIGHT, SIDE } }
+Section::Section(ChunkMap* const chunkMap, ivec3 position)
+	: p_chunkMap{ chunkMap }, m_position{ position }, m_blocks{ ivec3{ SIDE, HEIGHT, SIDE } }
 {
 }
 
@@ -41,41 +43,41 @@ void Section::loadFaces()
 	std::vector<GLfloat> faces;
 	std::vector<GLuint> indices;
 
-	for (int i = 0; i < SIDE; i++)
-		for (int j = 0; j < HEIGHT; j++)
-			for (int k = 0; k < SIDE; k++)
+	for (int x = 0; x < SIDE; x++)
+		for (int y = 0; y < HEIGHT; y++)
+			for (int z = 0; z < SIDE; z++)
 			{
-				if (m_blocks.at(ivec3{ i, j, k }) == 0)
+				if (m_blocks.at(ivec3{ x, y, z }) == 0)
 					continue;
 
-				vec3 globalPos{ i + m_position.x * SIDE, j + m_position.y * HEIGHT, k + m_position.z * SIDE };
+				vec3 globalPos{ x + m_position.x * SIDE, y + m_position.y * HEIGHT, z + m_position.z * SIDE };
 
-				if (!isInSection(ivec3{ i + 1, j, k }) || m_blocks.at(ivec3{ i + 1, j, k }) == 0)
+				if (isAir(ivec3{ x + 1, y, z }))
 					for (GLfloat c : getFace(globalPos, faceX1))
 						faces.push_back(c);
 
-				if (!isInSection(ivec3{ i - 1, j, k }) || m_blocks.at(ivec3{ i - 1, j, k }) == 0)
+				if (isAir(ivec3{ x - 1, y, z }))
 					for (GLfloat c : getFace(globalPos, faceX0))
 						faces.push_back(c);
 
-				if (!isInSection(ivec3{ i, j + 1, k }) || m_blocks.at(ivec3{ i, j + 1, k }) == 0)
+				if (isAir(ivec3{ x, y + 1, z }))
 					for (GLfloat c : getFace(globalPos, faceY1))
 						faces.push_back(c);
 
-				if (!isInSection(ivec3{ i, j - 1, k }) || m_blocks.at(ivec3{ i, j - 1, k }) == 0)
+				if (isAir(ivec3{ x, y - 1, z }))
 					for (GLfloat c : getFace(globalPos, faceY0))
 						faces.push_back(c);
 
-				if (!isInSection(ivec3{ i, j, k + 1 }) || m_blocks.at(ivec3{ i, j, k + 1 }) == 0)
+				if (isAir(ivec3{ x, y, z + 1 }))
 					for (GLfloat c : getFace(globalPos, faceZ1))
 						faces.push_back(c);
 
-				if (!isInSection(ivec3{ i, j, k - 1 }) || m_blocks.at(ivec3{ i, j, k - 1 }) == 0)
+				if (isAir(ivec3{ x, y, z - 1 }))
 					for (GLfloat c : getFace(globalPos, faceZ0))
 						faces.push_back(c);
 			}
 
-	for (int i = 0; i < faces.size() / 20; ++i) // Each 4 segments
+	for (int i = 0; i < (int) (faces.size() / 20); ++i) // Each 4 segments
 		for (GLuint index : rectIndices) // Add the indices with an offset of 4 * i 
 			indices.push_back(index + 4 * i);
 
@@ -114,13 +116,7 @@ void Section::loadFaces()
 	}*/
 }
 
-void Section::load()
-{
-	loadBlocks();
-	loadFaces();
-}
-
-void Section::render(Shader &shader, Texture2D &texture)
+void Section::render(Shader &shader, Texture2D &texture) const
 {
 	shader.use();
 	glActiveTexture(GL_TEXTURE0);
@@ -133,9 +129,30 @@ void Section::render(Shader &shader, Texture2D &texture)
 	assert(glGetError() == GL_NO_ERROR);
 }
 
-bool Section::isInSection(ivec3 block)
+int Section::getBlock(ivec3 pos) const
 {
-	return 0 <= block.x && block.x < SIDE && 0 <= block.y && block.y < HEIGHT && 0 <= block.z && block.z < SIDE;
+	return m_blocks.at(pos);
+}
+
+bool Section::isInSection(ivec3 pos)
+{
+	return 0 <= pos.x && pos.x < SIDE && 0 <= pos.y && pos.y < HEIGHT && 0 <= pos.z && pos.z < SIDE;
+}
+
+bool Section::isAir(ivec3 pos)
+{
+	if (isInSection(pos))
+		return m_blocks.at(pos) == 0;
+	else
+	{
+		vec3 globalPos{ pos.x + m_position.x * SIDE, pos.y + m_position.y * HEIGHT, pos.z + m_position.z * SIDE };
+
+		if (globalPos.y < 0 || globalPos.y >= Chunk::HEIGHT)
+			return true;
+
+		return p_chunkMap->getSection(Converter::globalToSection(globalPos)).getBlock(
+			ivec3{ Converter::positiveMod(pos.x, SIDE), Converter::positiveMod(pos.y, HEIGHT), Converter::positiveMod(pos.z, SIDE) }) == 0;
+	}
 }
 
 std::array<GLfloat, 20> Section::getFace(glm::ivec3 pos, const std::array<GLfloat, 12>& face)
@@ -154,7 +171,7 @@ std::array<GLfloat, 20> Section::getFace(glm::ivec3 pos, const std::array<GLfloa
 	return finalFace;
 }
 
-const std::array<GLfloat, 6> Section::rectIndices{
+const std::array<GLuint, 6> Section::rectIndices{
 	0, 1, 2,
 	2, 3, 0
 };

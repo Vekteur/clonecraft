@@ -19,15 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Maths\ConvertPos.h" />
+    <ClInclude Include="ChunkGenerator.h" />
+    <ClInclude Include="ChunkMap.h" />
+    <ClInclude Include="Maths\Converter.h" />
     <ClInclude Include="Maths\GlmCommon.h">
       <FileType>CppCode</FileType>
     </ClInclude>
-    <ClCompile Include="Maths\ConvertPos.cpp" />
+    <ClCompile Include="ChunkGenerator.cpp" />
+    <ClCompile Include="ChunkMap.cpp" />
+    <ClCompile Include="Maths\Converter.cpp" />
     <ClCompile Include="Maths\GlmCommon.cpp" />
     <ClCompile Include="Generator\PerlinNoise.cpp" />
     <ClCompile Include="Generator\OctavePerlin.cpp" />
-    <ClCompile Include="Section.cpp" />
+    <ClCompile Include="World\Section.cpp" />
     <ClCompile Include="World\Chunk.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="View\Camera.cpp" />
@@ -40,7 +44,7 @@
   <ItemGroup>
     <ClInclude Include="Generator\PerlinNoise.h" />
     <ClInclude Include="Generator\OctavePerlin.h" />
-    <ClInclude Include="Section.h" />
+    <ClInclude Include="World\Section.h" />
     <ClInclude Include="Util\Array3D.h" />
     <ClInclude Include="World\Chunk.h" />
     <ClInclude Include="Game.h" />
@@ -104,6 +108,10 @@
     <IncludePath>C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Generator;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Maths;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\ResManager;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Util;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\View;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\World;C:\Users\vdheu\Informatique\Bibliothèques\OpenGL\includes;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>C:\Users\vdheu\Informatique\Bibliothèques\OpenGL\libs;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Generator;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Maths;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\ResManager;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Util;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\View;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\World;C:\Users\vdheu\Informatique\Bibliothèques\OpenGL\includes;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>C:\Users\vdheu\Informatique\Bibliothèques\OpenGL\libs;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -134,6 +142,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;SOIL.lib;assimp-vc140-mt.lib;irrKlang.lib;freetype.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

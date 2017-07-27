@@ -12,8 +12,10 @@
     <ClCompile Include="Maths\GlmCommon.cpp" />
     <ClCompile Include="Generator\PerlinNoise.cpp" />
     <ClCompile Include="Generator\OctavePerlin.cpp" />
-    <ClCompile Include="Maths\ConvertPos.cpp" />
-    <ClCompile Include="Section.cpp" />
+    <ClCompile Include="World\Section.cpp" />
+    <ClCompile Include="Maths\Converter.cpp" />
+    <ClCompile Include="ChunkGenerator.cpp" />
+    <ClCompile Include="ChunkMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -27,7 +29,9 @@
     <ClInclude Include="Maths\GlmCommon.h" />
     <ClInclude Include="Generator\PerlinNoise.h" />
     <ClInclude Include="Generator\OctavePerlin.h" />
-    <ClInclude Include="Maths\ConvertPos.h" />
-    <ClInclude Include="Section.h" />
+    <ClInclude Include="World\Section.h" />
+    <ClInclude Include="Maths\Converter.h" />
+    <ClInclude Include="ChunkGenerator.h" />
+    <ClInclude Include="ChunkMap.h" />
   </ItemGroup>
 </Project>

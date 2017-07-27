@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "Window.h"
+#include "Converter.h"
 
 const GLfloat Camera::SPEED{ 30.0f };
 const GLfloat Camera::SENSITIVTY{ 0.25f };
@@ -19,7 +20,7 @@ const GLfloat Camera::NEARPLANE{ 0.1f };
 const GLfloat Camera::FARPLANE{ 1000.0f };
 
 Camera::Camera(vec3 position, GLfloat yaw, GLfloat pitch)
-	:m_position{ position }, m_yaw{ yaw }, m_pitch{ pitch }
+	:m_position{ position }, m_yaw{ yaw }, m_pitch{ pitch }, m_chunk{ Converter::globalToChunk(position) }
 {
 	// Init up and right vectors from front vector
 	this->updateFromEuler();
@@ -112,4 +113,9 @@ void Camera::updateFromEuler()
 
 	m_right = normalize(cross(m_front, WORLDUP));
 	m_up = normalize(cross(m_right, m_front));
+}
+
+bool Camera::isInNewChunk()
+{
+	return newChunk;
 }

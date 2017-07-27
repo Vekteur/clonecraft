@@ -11,8 +11,8 @@
 class Window
 {
 public:
-	static const int SCREEN_WIDTH{ 1780 };
-	static const int SCREEN_HEIGHT{ 920 };
+	static const int SCREEN_WIDTH{ 1080 };
+	static const int SCREEN_HEIGHT{ 720 };
 
 	Window();
 	~Window();

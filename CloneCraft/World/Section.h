@@ -11,31 +11,35 @@
 #include "Shader.h"
 #include "Texture.h"
 
+class ChunkMap;
+
 class Section
 {
 public:
-	Section(ivec3 pos);
+	Section(ChunkMap* const chunkMap, ivec3 position = ivec3{ 0, 0, 0 });
 	~Section();
 
-	void load();
-	void render(Shader &shader, Texture2D &texture);
+	void loadBlocks();
+	void loadFaces();
+	void render(Shader &shader, Texture2D &texture) const;
+
+	int getBlock(ivec3 pos) const;
 
 	static const int SIDE{ 16 }, HEIGHT{ 16 };
 
 private:
-	ivec3 m_position;
+	ChunkMap* const p_chunkMap{ nullptr };
+	const ivec3 m_position;
 
 	Array3D<GLuint> m_blocks;
 	GLuint VAO, VBO, EBO;
 	int indicesNb{ 0 };
 
-	void loadBlocks();
-	void loadFaces();
-
-	static bool isInSection(ivec3 block);
+	bool isInSection(ivec3 block);
+	bool isAir(ivec3 block);
 	static std::array<GLfloat, 20> getFace(glm::ivec3 pos, const std::array<GLfloat, 12>& face);
 
-	static const std::array<GLfloat, 6> rectIndices;
+	static const std::array<GLuint, 6> rectIndices;
 	static const std::array<GLfloat, 8> textureCoords;
 
 	static const std::array<GLfloat, 12> faceX0;

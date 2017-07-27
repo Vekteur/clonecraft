@@ -13,6 +13,7 @@ private:
 	static const vec3 POSITION, FRONT, WORLDUP;
 
 	vec3 m_position;
+	vec2 m_chunk;
 	vec3 m_front{ FRONT };
 	vec3 m_up;
 	vec3 m_right;
@@ -24,6 +25,7 @@ private:
 	GLfloat m_sensitivity{ SENSITIVTY };
 	GLfloat m_zoom{ ZOOM };
 
+	bool newChunk{ false };
 	void updateFromEuler();
 
 public:
@@ -50,4 +52,6 @@ public:
 	void setPosition(vec3 position);
 	void processMouse(GLfloat xOffset, GLfloat yOffset);
 	void processMouseScroll(GLfloat yOffset);
+
+	bool isInNewChunk();
 };
