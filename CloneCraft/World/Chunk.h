@@ -7,7 +7,6 @@ class Chunk
 {
 public:
 	Chunk(ChunkMap* const chunkMap = nullptr, ivec2 position = ivec2{0, 0});
-	Chunk(Chunk&& c);
 	~Chunk();
 
 	void loadBlocks();

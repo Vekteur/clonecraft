@@ -25,22 +25,12 @@ public:
 		}
 	}
 
-	Array3D(const Array3D& a) : m_size{ a.m_size }
+	Array3D(const Array3D& a) : Array3D{ a.m_size }
 	{
-		m_array = new T**[m_size.x];
-
 		for (int i = 0; i < m_size.x; i++)
-		{
-			m_array[i] = new T*[m_size.y];
-
 			for (int j = 0; j < m_size.y; j++)
-			{
-				m_array[i][j] = new T[m_size.z];
-
 				for (int k = 0; k < m_size.z; k++)
 					m_array[i][j][k] = a.m_array[i][j][k];
-			}
-		}
 	}
 
 	~Array3D()

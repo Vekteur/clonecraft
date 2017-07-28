@@ -1,7 +1,6 @@
 #pragma once
 
-#define GLEW_STATIC
-#include <GL/glew.h>
+#include <glad\glad.h>
 #include <GLFW/glfw3.h>
 
 #include "Game.h"
@@ -23,10 +22,13 @@ public:
 	void initCallbacks();
 	void pollEvents();
 
+	GLFWwindow* getGLFWMainWindow();
+	GLFWwindow* getGLFWChunkMapThreadWindow();
+
 	Game& getGame();
 
 private:
-	GLFWwindow* window;
+	GLFWwindow *mainWindow, *chunkMapThread;
 	static std::unique_ptr<Game> m_game;
 
 	static bool firstMouse;

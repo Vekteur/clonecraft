@@ -3,6 +3,7 @@
 #include "OctavePerlin.h"
 #include "Converter.h"
 #include "ChunkMap.h"
+#include "Debug.h"
 
 #include <iostream>
 #include <Windows.h>
@@ -125,8 +126,6 @@ void Section::render(Shader &shader, Texture2D &texture) const
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indicesNb, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
-
-	assert(glGetError() == GL_NO_ERROR);
 }
 
 int Section::getBlock(ivec3 pos) const

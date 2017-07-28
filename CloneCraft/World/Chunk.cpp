@@ -7,13 +7,6 @@ Chunk::Chunk(ChunkMap* const chunkMap, ivec2 position)
 		m_sections[i] = std::make_unique<Section>(p_chunkMap, ivec3{ m_position.x, i, m_position.y });
 }
 
-Chunk::Chunk(Chunk&& c)
-	: p_chunkMap{ c.p_chunkMap }, m_position{ c.m_position }
-{
-	for (int i = 0; i < SECTION_HEIGHT; ++i)
-		m_sections[i] = std::move(c.m_sections[i]);
-}
-
 Chunk::~Chunk()
 {
 }

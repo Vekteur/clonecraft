@@ -7,7 +7,15 @@ std::unique_ptr<Game> Window::m_game{};
 
 Window::Window()
 {
-	glfwInit();
+	// Init glfw
+	assert(glfwInit());
+
+	// chunkMapThread context
+	glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+	mainWindow = glfwCreateWindow(1, 1, "ChunkMap Thread", nullptr, nullptr);
+
+	// mainWindow context
+	glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -15,26 +23,33 @@ Window::Window()
 
 	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "CloneCraft", nullptr, nullptr);
+	// Share OpenGL resources of mainWindow with chunkMapThread
+	mainWindow = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "CloneCraft", nullptr, mainWindow);
+	// Center the window
 	int width, height;
-	glfwGetFramebufferSize(window, &width, &height);
-	glfwSetWindowPos(window, (mode->width - width) / 2, (mode->height - height) / 2);
-	glfwMakeContextCurrent(window);
+	glfwGetFramebufferSize(mainWindow, &width, &height);
+	glfwSetWindowPos(mainWindow, (mode->width - width) / 2, (mode->height - height) / 2);
+	glfwMakeContextCurrent(mainWindow);
 
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+	// Init GLAD
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cout << "Failed to initialize GLAD" << std::endl;
+		exit(-1);
+	}
+
+	// OpenGL settings
 	glEnable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CW);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glewExperimental = GL_TRUE;
-	glewInit();
-	glGetError();
+	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	m_game = std::move(std::make_unique<Game>());
+	m_game = std::move(std::make_unique<Game>(this));
 }
 
 
@@ -45,7 +60,7 @@ Window::~Window()
 
 bool Window::shouldClose()
 {
-	return glfwWindowShouldClose(window);
+	return glfwWindowShouldClose(mainWindow);
 }
 
 void Window::clear()
@@ -56,19 +71,29 @@ void Window::clear()
 
 void Window::swapBuffers()
 {
-	glfwSwapBuffers(window);
+	glfwSwapBuffers(mainWindow);
 }
 
 void Window::initCallbacks()
 {
-	glfwSetKeyCallback(window, Window::key_callback);
-	glfwSetCursorPosCallback(window, Window::mouse_callback);
-	glfwSetScrollCallback(window, Window::scroll_callback);
+	glfwSetKeyCallback(mainWindow, Window::key_callback);
+	glfwSetCursorPosCallback(mainWindow, Window::mouse_callback);
+	glfwSetScrollCallback(mainWindow, Window::scroll_callback);
 }
 
 void Window::pollEvents()
 {
 	glfwPollEvents();
+}
+
+GLFWwindow * Window::getGLFWMainWindow()
+{
+	return mainWindow;
+}
+
+GLFWwindow * Window::getGLFWChunkMapThreadWindow()
+{
+	return chunkMapThread;
 }
 
 Game& Window::getGame()

@@ -19,14 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ChunkGenerator.h" />
-    <ClInclude Include="ChunkMap.h" />
+    <ClInclude Include="Debug.h" />
+    <ClInclude Include="Generator\ChunkGenerator.h" />
+    <ClInclude Include="World\ChunkMap.h" />
     <ClInclude Include="Maths\Converter.h" />
     <ClInclude Include="Maths\GlmCommon.h">
       <FileType>CppCode</FileType>
     </ClInclude>
-    <ClCompile Include="ChunkGenerator.cpp" />
-    <ClCompile Include="ChunkMap.cpp" />
+    <ClCompile Include="Debug.cpp" />
+    <ClCompile Include="Generator\ChunkGenerator.cpp" />
+    <ClCompile Include="Util\glad.c" />
+    <ClCompile Include="World\ChunkMap.cpp" />
     <ClCompile Include="Maths\Converter.cpp" />
     <ClCompile Include="Maths\GlmCommon.cpp" />
     <ClCompile Include="Generator\PerlinNoise.cpp" />

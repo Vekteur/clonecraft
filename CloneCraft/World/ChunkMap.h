@@ -5,6 +5,9 @@
 #include <unordered_map>
 #include <memory>
 #include <utility>
+#include <mutex>
+
+struct GLFWwindow;
 
 class ChunkMap
 {
@@ -24,17 +27,21 @@ public:
 		}
 	};
 
-	ChunkMap();
+	ChunkMap(ivec2 center = ivec2{ 0, 0 });
 	~ChunkMap();
 
-	void load(ivec2 position);
+	void load(GLFWwindow* window);
 	void render();
+	void setCenter(ivec2 center);
+	ivec2 getCenter();
 
 	Chunk& getChunk(ivec2 pos);
 	Section& getSection(ivec3 pos);
 
 private:
-	std::unordered_map<ivec2, Chunk, KeyComp, KeyComp> m_chunks;
+	std::unordered_map<ivec2, std::unique_ptr<Chunk>, KeyComp, KeyComp> m_chunks;
+	ivec2 m_center;
+	//std::mutex lock; // Be sure that the load function is executed by one thread
 
 	void loadBlocks(ivec2 pos);
 	void loadFaces(ivec2 pos);
