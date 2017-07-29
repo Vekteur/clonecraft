@@ -13,18 +13,9 @@ ChunkMap::~ChunkMap()
 {
 }
 
-void ChunkMap::load(GLFWwindow* window)
+void ChunkMap::load()
 {
-	glfwMakeContextCurrent(window);
-
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
-		exit(-1);
-	}
-
 	std::cout << "Begin loading" << '\n';
-	//lock.lock();
 
 	loadBlocks(ivec2{ m_center.x, m_center.y }); // Base case : load the blocks of the center chunk
 	for (int d = 1; d <= RENDER_DISTANCE + 1; ++d)
@@ -39,6 +30,9 @@ void ChunkMap::load(GLFWwindow* window)
 		for (int y = m_center.y - d; y < m_center.y + d; ++y) // Bottom left to top left
 			loadBlocks(ivec2{ m_center.x - d, y });
 
+		if (d == 1)
+			loadFaces(ivec2{ m_center.x, m_center.y }); // Load the faces in the center chunk
+
 		// load the faces in the chunks at distance d - 1
 		int c = d - 1;
 		for (int x = m_center.x - c; x < m_center.x + c; ++x) // Top left to top right
@@ -50,11 +44,14 @@ void ChunkMap::load(GLFWwindow* window)
 		for (int y = m_center.y - c; y < m_center.y + c; ++y) // Bottom left to top left
 			loadFaces(ivec2{ m_center.x - c, y });
 		std::cout << "Distance " << d << " loaded" << '\n';
-	}
-	if (RENDER_DISTANCE >= 1)
-		loadFaces(ivec2{ m_center.x, m_center.y }); // Load the faces in the center chunk
 
-	//lock.unlock();
+		if (m_newCenter != m_center)
+		{
+			m_center = m_newCenter;
+			break;
+		}
+	}
+
 	glFlush();
 	std::cout << "End loading" << '\n';
 }
@@ -85,13 +82,17 @@ void ChunkMap::loadFaces(ivec2 pos)
 void ChunkMap::render()
 {
 	for (auto& c : m_chunks)
-		if(c.second->hasLoadedFaces())
+		if (c.second->hasLoadedFaces())
+		{
+			if (!c.second->hasLoadedVAOs())
+				c.second->loadVAOs();
 			c.second->render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
+		}
 }
 
 void ChunkMap::setCenter(ivec2 center)
 {
-	m_center = center;
+	m_newCenter = center;
 }
 
 ivec2 ChunkMap::getCenter()

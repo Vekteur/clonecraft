@@ -14,6 +14,7 @@ public:
 	void loadVAOs();
 	bool hasLoadedBlocks() const;
 	bool hasLoadedFaces() const;
+	bool hasLoadedVAOs() const;
 	void render(Shader &shader, Texture2D &texture) const;
 
 	Section& getSection(int height);
@@ -27,6 +28,7 @@ private:
 
 	bool loadedFaces{ false };
 	bool loadedBlocks{ false };
+	bool loadedVAOs{ false };
 
 	std::array<std::unique_ptr<Section>, SECTION_HEIGHT> m_sections;
 };

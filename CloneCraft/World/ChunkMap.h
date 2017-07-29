@@ -30,7 +30,7 @@ public:
 	ChunkMap(ivec2 center = ivec2{ 0, 0 });
 	~ChunkMap();
 
-	void load(GLFWwindow* window);
+	void load();
 	void loadVAOs();
 	void render();
 	void setCenter(ivec2 center);
@@ -43,7 +43,7 @@ public:
 private:
 	std::unordered_map<ivec2, std::unique_ptr<Chunk>, KeyComp, KeyComp> m_chunks;
 	ivec2 m_center;
-	//std::mutex lock; // Be sure that the load function is executed by one thread
+	ivec2 m_newCenter;
 
 	void loadBlocks(ivec2 pos);
 	void loadFaces(ivec2 pos);

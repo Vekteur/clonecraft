@@ -29,6 +29,7 @@ void Chunk::loadVAOs()
 {
 	for (int i = 0; i < SECTION_HEIGHT; ++i)
 		m_sections[i]->loadVAOs();
+	loadedVAOs = true;
 }
 
 bool Chunk::hasLoadedBlocks() const
@@ -39,6 +40,11 @@ bool Chunk::hasLoadedBlocks() const
 bool Chunk::hasLoadedFaces() const
 {
 	return loadedFaces;
+}
+
+bool Chunk::hasLoadedVAOs() const
+{
+	return loadedVAOs;
 }
 
 void Chunk::render(Shader & shader, Texture2D & texture) const

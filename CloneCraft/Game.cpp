@@ -9,15 +9,29 @@ Game::Game(Window* const window) : m_camera{ vec3{0.0f, 0.0f, 0.0f } }, p_window
 	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
 	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
 	
-	m_chunkMapThread = std::thread{ &ChunkMap::load, &m_chunks, p_window->getGLFWChunkMapThreadWindow() };
-	m_chunkMapThread.join();
-
-	m_chunks.loadVAOs();
+	m_chunkMapThread = std::thread{ &Game::runChunkLoadingLoop, this };
 }
 
 Game::~Game()
 {
-	//m_chunkMapThread.join();
+	stopChunkMapThread = true;
+	m_chunkMapThread.join();
+}
+
+void Game::runChunkLoadingLoop()
+{
+	glfwMakeContextCurrent(p_window->getGLFWChunkMapThreadWindow());
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cout << "Failed to initialize GLAD" << std::endl;
+		exit(-1);
+	}
+
+	while (!stopChunkMapThread)
+	{
+		m_chunks.load();
+	}
 }
 
 void Game::processInput(GLfloat dt)
@@ -37,18 +51,9 @@ void Game::update(GLfloat dt)
 	ResManager::getShader("cube").use().setMatrix4("projection", m_camera.getProjectionMatrix());
 	ResManager::getShader("cube").use().setMatrix4("view", m_camera.getViewMatrix());
 
-	/*ivec2 newCenter = Converter::globalToChunk(m_camera.getPosition());
+	ivec2 newCenter = Converter::globalToChunk(m_camera.getPosition());
 	if (m_chunks.getCenter() != newCenter)
-	{
-		std::cout << "a";
-		if (m_chunkMapThread.joinable())
-		{
-			std::cout << "chunkMapThread joined" << '\n';
-			m_chunkMapThread.join();
-			m_chunks.setCenter(newCenter);
-			m_chunkMapThread = std::thread{ &ChunkMap::load, &m_chunks };
-		}
-	}*/
+		m_chunks.setCenter(newCenter);
 }
 
 void Game::render()
