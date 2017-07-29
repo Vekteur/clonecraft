@@ -21,6 +21,7 @@ public:
 
 	void loadBlocks();
 	void loadFaces();
+	void loadVAOs();
 	void render(Shader &shader, Texture2D &texture) const;
 
 	int getBlock(ivec3 pos) const;

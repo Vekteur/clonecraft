@@ -11,8 +11,11 @@ Window::Window()
 	assert(glfwInit());
 
 	// chunkMapThread context
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-	mainWindow = glfwCreateWindow(1, 1, "ChunkMap Thread", nullptr, nullptr);
+	chunkMapThread = glfwCreateWindow(1, 1, "ChunkMap Thread", nullptr, nullptr);
 
 	// mainWindow context
 	glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
@@ -24,7 +27,7 @@ Window::Window()
 	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 	// Share OpenGL resources of mainWindow with chunkMapThread
-	mainWindow = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "CloneCraft", nullptr, mainWindow);
+	mainWindow = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "CloneCraft", nullptr, chunkMapThread);
 	// Center the window
 	int width, height;
 	glfwGetFramebufferSize(mainWindow, &width, &height);

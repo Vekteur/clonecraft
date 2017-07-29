@@ -15,16 +15,13 @@ ChunkMap::~ChunkMap()
 
 void ChunkMap::load(GLFWwindow* window)
 {
-	/*glfwMakeContextCurrent(window);
-	// Init glew
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glewExperimental = GL_TRUE;
-	glewInit();
-	glGetError();*/
+	glfwMakeContextCurrent(window);
 
-	//Debug::glCheckError();
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cout << "Failed to initialize GLAD" << std::endl;
+		exit(-1);
+	}
 
 	std::cout << "Begin loading" << '\n';
 	//lock.lock();
@@ -60,6 +57,13 @@ void ChunkMap::load(GLFWwindow* window)
 	//lock.unlock();
 	glFlush();
 	std::cout << "End loading" << '\n';
+}
+
+void ChunkMap::loadVAOs()
+{
+	for (int x = m_center.x - RENDER_DISTANCE; x <= m_center.x + RENDER_DISTANCE; ++x)
+		for (int y = m_center.y - RENDER_DISTANCE; y <= m_center.y + RENDER_DISTANCE; ++y)
+			m_chunks[ivec2{ x, y }]->loadVAOs();
 }
 
 void ChunkMap::loadBlocks(ivec2 pos)
@@ -104,4 +108,9 @@ Section& ChunkMap::getSection(ivec3 pos)
 {
 	ivec2 chunkPos{ pos.x, pos.z };
 	return getChunk(chunkPos).getSection(pos.y);
+}
+
+int ChunkMap::getSize()
+{
+	return m_chunks.size();
 }

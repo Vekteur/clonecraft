@@ -31,12 +31,14 @@ public:
 	~ChunkMap();
 
 	void load(GLFWwindow* window);
+	void loadVAOs();
 	void render();
 	void setCenter(ivec2 center);
 	ivec2 getCenter();
 
 	Chunk& getChunk(ivec2 pos);
 	Section& getSection(ivec3 pos);
+	int getSize();
 
 private:
 	std::unordered_map<ivec2, std::unique_ptr<Chunk>, KeyComp, KeyComp> m_chunks;

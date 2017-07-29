@@ -84,19 +84,27 @@ void Section::loadFaces()
 
 	indicesNb = indices.size();
 
-	// Create and bind the VAO
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
 	// The VBO stores the vertices
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * faces.size(), faces.data(), GL_STREAM_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// The EBO stores the indices
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indices.size(), indices.data(), GL_STREAM_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void Section::loadVAOs()
+{
+	// Create and bind the VAO
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
 	// Attributes of the VAO
 	glEnableVertexAttribArray(0);
@@ -106,15 +114,6 @@ void Section::loadFaces()
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
-	/*for (int i = 0; i < m_faces.size() / 5; ++i)
-	{
-	for (int j = 0; j < 5; j++)
-	{
-	std::cout << m_faces[i * 5 + j] << ' ';
-	}
-	std::cout << '\n';
-	}*/
 }
 
 void Section::render(Shader &shader, Texture2D &texture) const
@@ -126,6 +125,8 @@ void Section::render(Shader &shader, Texture2D &texture) const
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indicesNb, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
+
+	Debug::glCheckError();
 }
 
 int Section::getBlock(ivec3 pos) const

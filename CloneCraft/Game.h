@@ -7,6 +7,7 @@
 #include <memory>
 #include <ChunkMap.h>
 #include <thread>
+#include <chrono>
 
 class Window;
 

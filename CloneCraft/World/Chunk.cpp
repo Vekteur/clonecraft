@@ -25,6 +25,12 @@ void Chunk::loadFaces()
 	loadedFaces = true;
 }
 
+void Chunk::loadVAOs()
+{
+	for (int i = 0; i < SECTION_HEIGHT; ++i)
+		m_sections[i]->loadVAOs();
+}
+
 bool Chunk::hasLoadedBlocks() const
 {
 	return loadedBlocks;

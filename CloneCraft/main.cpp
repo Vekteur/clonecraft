@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "Game.h"
 #include "PerlinNoise.h"
+#include "Debug.h"
 
 int main()
 {
@@ -17,7 +18,6 @@ int main()
 	Game& game = window.getGame();
 
 	GLfloat lastFrame = 0.0f;
-
 	while (!window.shouldClose())
 	{
 		// Calculate delta time of the current frame

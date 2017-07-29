@@ -11,6 +11,7 @@ public:
 
 	void loadBlocks();
 	void loadFaces();
+	void loadVAOs();
 	bool hasLoadedBlocks() const;
 	bool hasLoadedFaces() const;
 	void render(Shader &shader, Texture2D &texture) const;

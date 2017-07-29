@@ -2,15 +2,17 @@
 
 #include "Converter.h"
 #include "Window.h"
+#include "Debug.h"
 
 Game::Game(Window* const window) : m_camera{ vec3{0.0f, 0.0f, 0.0f } }, p_window{ window }
 {
 	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
 	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
 	
-	//m_chunkMapThread = std::thread{ &ChunkMap::load, &m_chunks, p_window->getGLFWChunkMapThreadWindow() };
-	//m_chunkMapThread.join();
-	m_chunks.load(p_window->getGLFWChunkMapThreadWindow());
+	m_chunkMapThread = std::thread{ &ChunkMap::load, &m_chunks, p_window->getGLFWChunkMapThreadWindow() };
+	m_chunkMapThread.join();
+
+	m_chunks.loadVAOs();
 }
 
 Game::~Game()
