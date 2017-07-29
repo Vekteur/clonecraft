@@ -47,6 +47,11 @@ bool Chunk::hasLoadedVAOs() const
 	return loadedVAOs;
 }
 
+ivec2 Chunk::getPosition() const
+{
+	return m_position;
+}
+
 void Chunk::render(Shader & shader, Texture2D & texture) const
 {
 	for (int i = 0; i < SECTION_HEIGHT; ++i)

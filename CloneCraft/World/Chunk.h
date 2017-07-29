@@ -15,6 +15,7 @@ public:
 	bool hasLoadedBlocks() const;
 	bool hasLoadedFaces() const;
 	bool hasLoadedVAOs() const;
+	ivec2 getPosition() const;
 	void render(Shader &shader, Texture2D &texture) const;
 
 	Section& getSection(int height);

@@ -15,10 +15,8 @@ ChunkMap::~ChunkMap()
 
 void ChunkMap::load()
 {
-	std::cout << "Begin loading" << '\n';
-
 	loadBlocks(ivec2{ m_center.x, m_center.y }); // Base case : load the blocks of the center chunk
-	for (int d = 1; d <= RENDER_DISTANCE + 1; ++d)
+	for (int d = 1; d <= DISTANCE + 1; ++d)
 	{
 		// Load the blocks in the chunks at distance d
 		for (int x = m_center.x - d; x < m_center.x + d; ++x) // Top left to top right
@@ -45,21 +43,33 @@ void ChunkMap::load()
 			loadFaces(ivec2{ m_center.x - c, y });
 		std::cout << "Distance " << d << " loaded" << '\n';
 
+		glFlush();
+
 		if (m_newCenter != m_center)
 		{
 			m_center = m_newCenter;
 			break;
 		}
 	}
+}
 
-	glFlush();
-	std::cout << "End loading" << '\n';
+void ChunkMap::unloadFarChunks()
+{
+	m_deleteChunksMutex.lock();
+	for (auto it = m_chunks.begin(); it != m_chunks.end();)
+	{
+		if (!isInChunkMap(it->second->getPosition()))
+			it = m_chunks.erase(it);
+		else
+			it++;
+	}
+	m_deleteChunksMutex.unlock();
 }
 
 void ChunkMap::loadVAOs()
 {
-	for (int x = m_center.x - RENDER_DISTANCE; x <= m_center.x + RENDER_DISTANCE; ++x)
-		for (int y = m_center.y - RENDER_DISTANCE; y <= m_center.y + RENDER_DISTANCE; ++y)
+	for (int x = m_center.x - DISTANCE; x <= m_center.x + DISTANCE; ++x)
+		for (int y = m_center.y - DISTANCE; y <= m_center.y + DISTANCE; ++y)
 			m_chunks[ivec2{ x, y }]->loadVAOs();
 }
 
@@ -81,6 +91,7 @@ void ChunkMap::loadFaces(ivec2 pos)
 
 void ChunkMap::render()
 {
+	m_deleteChunksMutex.lock();
 	for (auto& c : m_chunks)
 		if (c.second->hasLoadedFaces())
 		{
@@ -88,11 +99,18 @@ void ChunkMap::render()
 				c.second->loadVAOs();
 			c.second->render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
 		}
+	m_deleteChunksMutex.unlock();
 }
 
 void ChunkMap::setCenter(ivec2 center)
 {
 	m_newCenter = center;
+}
+
+bool ChunkMap::isInChunkMap(ivec2 pos)
+{
+	return m_center.x - DISTANCE <= pos.x && pos.x <= m_center.x + DISTANCE &&
+		m_center.y - DISTANCE <= pos.y && pos.y <= m_center.y + DISTANCE;
 }
 
 ivec2 ChunkMap::getCenter()

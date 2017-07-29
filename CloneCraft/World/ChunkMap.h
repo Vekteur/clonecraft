@@ -12,9 +12,9 @@ struct GLFWwindow;
 class ChunkMap
 {
 public:
-	static const int RENDER_DISTANCE{ 4 };
+	static const int DISTANCE{ 10 }, SIDE{ 2 * DISTANCE + 1 };
 
-	struct KeyComp
+	struct Comp_ivec2
 	{
 		size_t operator()(const ivec2& vec) const
 		{
@@ -38,14 +38,17 @@ public:
 
 	Chunk& getChunk(ivec2 pos);
 	Section& getSection(ivec3 pos);
+	void unloadFarChunks();
 	int getSize();
 
 private:
-	std::unordered_map<ivec2, std::unique_ptr<Chunk>, KeyComp, KeyComp> m_chunks;
+	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2> m_chunks;
 	ivec2 m_center;
 	ivec2 m_newCenter;
+	std::mutex m_deleteChunksMutex;
 
 	void loadBlocks(ivec2 pos);
 	void loadFaces(ivec2 pos);
+	bool isInChunkMap(ivec2 pos);
 };
 

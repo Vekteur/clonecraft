@@ -31,6 +31,7 @@ void Game::runChunkLoadingLoop()
 	while (!stopChunkMapThread)
 	{
 		m_chunks.load();
+		m_chunks.unloadFarChunks();
 	}
 }
 
@@ -53,7 +54,10 @@ void Game::update(GLfloat dt)
 
 	ivec2 newCenter = Converter::globalToChunk(m_camera.getPosition());
 	if (m_chunks.getCenter() != newCenter)
+	{
 		m_chunks.setCenter(newCenter);
+	}
+		
 }
 
 void Game::render()
