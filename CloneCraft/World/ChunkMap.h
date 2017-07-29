@@ -12,7 +12,7 @@ struct GLFWwindow;
 class ChunkMap
 {
 public:
-	static const int DISTANCE{ 10 }, SIDE{ 2 * DISTANCE + 1 };
+	static const int DISTANCE{ 4 }, SIDE{ 2 * DISTANCE + 1 };
 
 	struct Comp_ivec2
 	{

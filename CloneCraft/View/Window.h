@@ -2,6 +2,7 @@
 
 #include <glad\glad.h>
 #include <GLFW/glfw3.h>
+#include <GlmCommon.h>
 
 #include "Game.h"
 
@@ -12,6 +13,8 @@ class Window
 public:
 	static const int SCREEN_WIDTH{ 1080 };
 	static const int SCREEN_HEIGHT{ 720 };
+
+	static const vec3 clearColor;
 
 	Window();
 	~Window();

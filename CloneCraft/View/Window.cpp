@@ -2,6 +2,7 @@
 
 double Window::lastX{ SCREEN_WIDTH / 2 };
 double Window::lastY{ SCREEN_HEIGHT / 2 };
+const vec3 Window::clearColor{ 70.0f / 255, 190.0f / 255, 240.0f / 255 };
 bool Window::firstMouse{ GL_FALSE };
 std::unique_ptr<Game> Window::m_game{};
 
@@ -68,7 +69,7 @@ bool Window::shouldClose()
 
 void Window::clear()
 {
-	glClearColor(70.0f / 255, 190.0f / 255, 240.0f / 255, 1.0f);
+	glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

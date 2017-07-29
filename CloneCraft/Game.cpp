@@ -8,6 +8,12 @@ Game::Game(Window* const window) : m_camera{ vec3{0.0f, 0.0f, 0.0f } }, p_window
 {
 	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
 	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
+
+	ResManager::getShader("cube").use().setMatrix4("projection", m_camera.getProjectionMatrix());
+	ResManager::getShader("cube").use().setFloat("distance", ChunkMap::DISTANCE);
+
+	if (glGetError())
+		std::cin.get();
 	
 	m_chunkMapThread = std::thread{ &Game::runChunkLoadingLoop, this };
 }
@@ -49,8 +55,8 @@ void Game::processInput(GLfloat dt)
 
 void Game::update(GLfloat dt)
 {
-	ResManager::getShader("cube").use().setMatrix4("projection", m_camera.getProjectionMatrix());
 	ResManager::getShader("cube").use().setMatrix4("view", m_camera.getViewMatrix());
+	ResManager::getShader("cube").use().setVector3f("skyColor", p_window->clearColor);
 
 	ivec2 newCenter = Converter::globalToChunk(m_camera.getPosition());
 	if (m_chunks.getCenter() != newCenter)
