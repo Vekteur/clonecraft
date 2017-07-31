@@ -23,15 +23,14 @@ public:
 	void runChunkLoadingLoop();
 
 	Camera& getCamera();
-	void setKey(int key, GLboolean enable);
 
 private:
 	Window* const p_window{ nullptr };
 	Camera m_camera;
 	ChunkMap m_chunks;
 
+	vec2 m_lastMousePosition;
+
 	std::thread m_chunkMapThread;
 	bool stopChunkMapThread{ false };
-
-	GLboolean m_keys[1024];
 };

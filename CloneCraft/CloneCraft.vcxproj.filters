@@ -16,8 +16,10 @@
     <ClCompile Include="Maths\Converter.cpp" />
     <ClCompile Include="World\ChunkMap.cpp" />
     <ClCompile Include="Generator\ChunkGenerator.cpp" />
-    <ClCompile Include="Debug.cpp" />
     <ClCompile Include="Util\glad.c" />
+    <ClCompile Include="Input\Keyboard.cpp" />
+    <ClCompile Include="Util\Debug.cpp" />
+    <ClCompile Include="Input\Mouse.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -35,6 +37,8 @@
     <ClInclude Include="Maths\Converter.h" />
     <ClInclude Include="World\ChunkMap.h" />
     <ClInclude Include="Generator\ChunkGenerator.h" />
-    <ClInclude Include="Debug.h" />
+    <ClInclude Include="Input\Keyboard.h" />
+    <ClInclude Include="Util\Debug.h" />
+    <ClInclude Include="Input\Mouse.h" />
   </ItemGroup>
 </Project>

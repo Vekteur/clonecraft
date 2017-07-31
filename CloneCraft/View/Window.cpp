@@ -1,10 +1,8 @@
 #include "Window.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 
-double Window::lastX{ SCREEN_WIDTH / 2 };
-double Window::lastY{ SCREEN_HEIGHT / 2 };
 const vec3 Window::clearColor{ 70.0f / 255, 190.0f / 255, 240.0f / 255 };
-bool Window::firstMouse{ GL_FALSE };
-std::unique_ptr<Game> Window::m_game{};
 
 Window::Window()
 {
@@ -52,8 +50,8 @@ Window::Window()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-	m_game = std::move(std::make_unique<Game>(this));
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	m_game = std::make_unique<Game>(this);
 }
 
 
@@ -65,6 +63,11 @@ Window::~Window()
 bool Window::shouldClose()
 {
 	return glfwWindowShouldClose(mainWindow);
+}
+
+void Window::close()
+{
+	glfwSetWindowShouldClose(mainWindow, GL_TRUE);
 }
 
 void Window::clear()
@@ -107,37 +110,21 @@ Game& Window::getGame()
 
 void Window::key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
 {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GL_TRUE);
-
-	if (key >= 0 && key < 1024)
+	if (0 <= key && key < 1024)
 	{
 		if (action == GLFW_PRESS)
-			m_game->setKey(key, GL_TRUE);
+			Keyboard::setKey(key, GL_TRUE);
 		else if (action == GLFW_RELEASE)
-			m_game->setKey(key, GL_FALSE);
+			Keyboard::setKey(key, GL_FALSE);
 	}
 }
 
 void Window::mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
-	if (firstMouse)
-	{
-		lastX = xpos;
-		lastY = ypos;
-		firstMouse = false;
-	}
-
-	double xoffset = xpos - lastX;
-	double yoffset = lastY - ypos;
-
-	lastX = xpos;
-	lastY = ypos;
-
-	m_game->getCamera().processMouse(xoffset, yoffset);
+	Mouse::setPosition(vec2{ static_cast<float>(xpos), static_cast<float>(ypos) });
 }
 
 void Window::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-	m_game->getCamera().processMouseScroll(yoffset);
+	Mouse::addScrolling(vec2{ static_cast<float>(xoffset), static_cast<float>(yoffset) });
 }

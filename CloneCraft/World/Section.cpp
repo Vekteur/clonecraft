@@ -102,22 +102,24 @@ void Section::loadVAOs()
 	// Create and bind the VAO
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
-
+	// Bind the buffers
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
 	// Attributes of the VAO
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-
+	// Unbind all
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+	// Unbind the EBO after unbinding the VAO else the EBO will be removed from the VAO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void Section::render(Shader &shader, Texture2D &texture) const
 {
+	// Activate shader and texture to draw the object
 	shader.use();
 	glActiveTexture(GL_TEXTURE0);
 	texture.bind();

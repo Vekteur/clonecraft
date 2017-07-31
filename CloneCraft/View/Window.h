@@ -20,6 +20,7 @@ public:
 	~Window();
 
 	bool shouldClose();
+	void close();
 	void clear();
 	void swapBuffers();
 	void initCallbacks();
@@ -32,10 +33,7 @@ public:
 
 private:
 	GLFWwindow *mainWindow, *chunkMapThread;
-	static std::unique_ptr<Game> m_game;
-
-	static bool firstMouse;
-	static double lastX, lastY;
+	std::unique_ptr<Game> m_game;
 
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 	static void mouse_callback(GLFWwindow* window, double xpos, double ypos);

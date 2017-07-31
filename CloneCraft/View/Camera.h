@@ -8,8 +8,8 @@ class Camera
 private:
 
 	// Default values
-	static const GLfloat SPEED, SENSITIVTY, ZOOM, YAW, PITCH;
-	static const GLfloat NEARPLANE, FARPLANE;
+	static const float SPEED, SENSITIVTY, SCROLLSPEED, ZOOM, YAW, PITCH;
+	static const float NEARPLANE, FARPLANE;
 	static const vec3 POSITION, FRONT, WORLDUP;
 
 	vec3 m_position;
@@ -18,12 +18,12 @@ private:
 	vec3 m_up;
 	vec3 m_right;
 
-	GLfloat m_yaw;
-	GLfloat m_pitch;
+	float m_yaw;
+	float m_pitch;
 
-	GLfloat m_speed{ SPEED };
-	GLfloat m_sensitivity{ SENSITIVTY };
-	GLfloat m_zoom{ ZOOM };
+	float m_speed{ SPEED };
+	float m_sensitivity{ SENSITIVTY };
+	float m_zoom{ ZOOM };
 
 	bool newChunk{ false };
 	void updateFromEuler();
@@ -39,19 +39,19 @@ public:
 		DOWN
 	};
 
-	Camera(vec3 position = vec3{ 0.0f, 0.0f, 0.0f }, GLfloat yaw = YAW, GLfloat pitch = PITCH);
+	Camera(vec3 position = vec3{ 0.0f, 0.0f, 0.0f }, float yaw = YAW, float pitch = PITCH);
 
 	mat4 getViewMatrix();
 	mat4 getProjectionMatrix();
 	vec3 getPosition();
-	GLfloat getYaw();
-	GLfloat getPitch();
+	float getYaw();
+	float getPitch();
 
-	void move(Direction direction, GLfloat deltaTime);
+	void move(Direction direction, float deltaTime);
 	void move(vec3 offset);
 	void setPosition(vec3 position);
-	void processMouse(GLfloat xOffset, GLfloat yOffset);
-	void processMouseScroll(GLfloat yOffset);
+	void processMouse(vec2 offset);
+	void processMouseScroll(float yOffset);
 
 	bool isInNewChunk();
 };

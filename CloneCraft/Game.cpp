@@ -3,14 +3,15 @@
 #include "Converter.h"
 #include "Window.h"
 #include "Debug.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 
 Game::Game(Window* const window) : m_camera{ vec3{0.0f, 0.0f, 0.0f } }, p_window{ window }
 {
 	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
 	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
 
-	ResManager::getShader("cube").use().setMatrix4("projection", m_camera.getProjectionMatrix());
-	ResManager::getShader("cube").use().setFloat("distance", ChunkMap::DISTANCE);
+	ResManager::getShader("cube").use().setInteger("distance", ChunkMap::DISTANCE);
 
 	if (glGetError())
 		std::cin.get();
@@ -43,19 +44,29 @@ void Game::runChunkLoadingLoop()
 
 void Game::processInput(GLfloat dt)
 {
-	if (m_keys[GLFW_KEY_W])
+	if (Keyboard::isKeyPressed(GLFW_KEY_W))
 		m_camera.move(Camera::FORWARD, dt);
-	if (m_keys[GLFW_KEY_S])
+	if (Keyboard::isKeyPressed(GLFW_KEY_S))
 		m_camera.move(Camera::BACKWARD, dt);
-	if (m_keys[GLFW_KEY_A])
+	if (Keyboard::isKeyPressed(GLFW_KEY_A))
 		m_camera.move(Camera::LEFT, dt);
-	if (m_keys[GLFW_KEY_D])
+	if (Keyboard::isKeyPressed(GLFW_KEY_D))
 		m_camera.move(Camera::RIGHT, dt);
+	if (Keyboard::isKeyPressed(GLFW_KEY_ESCAPE))
+		p_window->close();
+
+	vec2 mouseOffset{ Mouse::getPosition().x - m_lastMousePosition.x, m_lastMousePosition.y - Mouse::getPosition().y };
+	m_lastMousePosition = Mouse::getPosition();
+	m_camera.processMouse(mouseOffset);
+
+	m_camera.processMouseScroll(Mouse::getScrolling().y);
+	Mouse::resetScrolling();
 }
 
 void Game::update(GLfloat dt)
 {
 	ResManager::getShader("cube").use().setMatrix4("view", m_camera.getViewMatrix());
+	ResManager::getShader("cube").use().setMatrix4("projection", m_camera.getProjectionMatrix());
 	ResManager::getShader("cube").use().setVector3f("skyColor", p_window->clearColor);
 
 	ivec2 newCenter = Converter::globalToChunk(m_camera.getPosition());
@@ -74,10 +85,4 @@ void Game::render()
 Camera& Game::getCamera()
 {
 	return m_camera;
-}
-
-void Game::setKey(int key, GLboolean enable)
-{
-	assert(0 <= key && key < 1024);
-	m_keys[key] = enable;
 }

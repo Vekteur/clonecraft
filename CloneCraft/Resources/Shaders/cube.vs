@@ -7,7 +7,7 @@ out float visibility;
 
 uniform mat4 view;
 uniform mat4 projection;
-uniform float distance;
+uniform int distance;
 
 const float density = 0.06f;
 const float gradient = 15.0f;
