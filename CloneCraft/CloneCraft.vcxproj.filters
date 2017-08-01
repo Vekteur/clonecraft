@@ -20,6 +20,7 @@
     <ClCompile Include="Input\Keyboard.cpp" />
     <ClCompile Include="Util\Debug.cpp" />
     <ClCompile Include="Input\Mouse.cpp" />
+    <ClCompile Include="Util\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -40,5 +41,7 @@
     <ClInclude Include="Input\Keyboard.h" />
     <ClInclude Include="Util\Debug.h" />
     <ClInclude Include="Input\Mouse.h" />
+    <ClInclude Include="World\WorldConstants.h" />
+    <ClInclude Include="Util\stb_image.h" />
   </ItemGroup>
 </Project>

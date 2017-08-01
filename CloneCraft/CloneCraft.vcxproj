@@ -23,6 +23,7 @@
     <ClInclude Include="Util\Debug.h" />
     <ClInclude Include="Generator\ChunkGenerator.h" />
     <ClInclude Include="Input\Keyboard.h" />
+    <ClInclude Include="Util\stb_image.h" />
     <ClInclude Include="World\ChunkMap.h" />
     <ClInclude Include="Maths\Converter.h" />
     <ClInclude Include="Maths\GlmCommon.h">
@@ -33,6 +34,7 @@
     <ClCompile Include="Generator\ChunkGenerator.cpp" />
     <ClCompile Include="Input\Keyboard.cpp" />
     <ClCompile Include="Util\glad.c" />
+    <ClCompile Include="Util\stb_image.cpp" />
     <ClCompile Include="World\ChunkMap.cpp" />
     <ClCompile Include="Maths\Converter.cpp" />
     <ClCompile Include="Maths\GlmCommon.cpp" />
@@ -47,6 +49,7 @@
     <ClCompile Include="ResManager\Shader.cpp" />
     <ClCompile Include="ResManager\Texture.cpp" />
     <ClCompile Include="View\Window.cpp" />
+    <ClInclude Include="World\WorldConstants.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Generator\PerlinNoise.h" />

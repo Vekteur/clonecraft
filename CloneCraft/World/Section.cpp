@@ -8,8 +8,8 @@
 #include <iostream>
 #include <Windows.h>
 
-Section::Section(ChunkMap* const chunkMap, ivec3 position)
-	: p_chunkMap{ chunkMap }, m_position{ position }, m_blocks{ ivec3{ SIDE, HEIGHT, SIDE } }
+Section::Section(ChunkMap* const chunkMap, Chunk* const chunk, ivec3 position)
+	: p_chunkMap{ chunkMap }, p_chunk{ chunk }, m_position { position }, m_blocks{ ivec3{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE } }
 {
 }
 
@@ -22,21 +22,13 @@ Section::~Section()
 
 void Section::loadBlocks()
 {
-	OctavePerlin noise(4, 0.5, 0.5);
-
-	for (int x = 0; x < SIDE; x++)
-		for (int z = 0; z < SIDE; z++)
-		{
-			ivec2 globalPos{ x + m_position.x * SIDE, z + m_position.z * SIDE };
-			int height = 64 + floor(noise.getNoise(glm::vec2{ static_cast<float>(globalPos.x) / SIDE, static_cast<float>(globalPos.y) / SIDE }) * 4);
-			for (int y = 0; y < HEIGHT; y++)
+	for (int x = 0; x < Const::SECTION_SIDE; x++)
+		for (int z = 0; z < Const::SECTION_SIDE; z++)	
+			for (int y = 0; y < Const::SECTION_HEIGHT; y++)
 			{
-				if (y + m_position.y * HEIGHT <= height)
-					m_blocks.at(vec3{ x, y, z }) = 1;
-				else
-					m_blocks.at(vec3{ x, y, z }) = 0;
+				ivec3 globalPos{ x + m_position.x * Const::SECTION_SIDE, y + m_position.y * Const::SECTION_HEIGHT, z + m_position.z * Const::SECTION_SIDE };
+				m_blocks.at(ivec3{ x, y, z }) = p_chunk->getChunkGenerator().getBlock(globalPos);
 			}
-		}
 }
 
 void Section::loadFaces()
@@ -44,14 +36,14 @@ void Section::loadFaces()
 	std::vector<GLfloat> faces;
 	std::vector<GLuint> indices;
 
-	for (int x = 0; x < SIDE; x++)
-		for (int y = 0; y < HEIGHT; y++)
-			for (int z = 0; z < SIDE; z++)
+	for (int x = 0; x < Const::SECTION_SIDE; x++)
+		for (int y = 0; y < Const::SECTION_HEIGHT; y++)
+			for (int z = 0; z < Const::SECTION_SIDE; z++)
 			{
 				if (m_blocks.at(ivec3{ x, y, z }) == 0)
 					continue;
 
-				vec3 globalPos{ x + m_position.x * SIDE, y + m_position.y * HEIGHT, z + m_position.z * SIDE };
+				vec3 globalPos{ x + m_position.x * Const::SECTION_SIDE, y + m_position.y * Const::SECTION_HEIGHT, z + m_position.z * Const::SECTION_SIDE };
 
 				if (isAir(ivec3{ x + 1, y, z }))
 					for (GLfloat c : getFace(globalPos, faceX1))
@@ -138,7 +130,7 @@ int Section::getBlock(ivec3 pos) const
 
 bool Section::isInSection(ivec3 pos)
 {
-	return 0 <= pos.x && pos.x < SIDE && 0 <= pos.y && pos.y < HEIGHT && 0 <= pos.z && pos.z < SIDE;
+	return 0 <= pos.x && pos.x < Const::SECTION_SIDE && 0 <= pos.y && pos.y < Const::SECTION_HEIGHT && 0 <= pos.z && pos.z < Const::SECTION_SIDE;
 }
 
 bool Section::isAir(ivec3 pos)
@@ -147,13 +139,13 @@ bool Section::isAir(ivec3 pos)
 		return m_blocks.at(pos) == 0;
 	else
 	{
-		vec3 globalPos{ pos.x + m_position.x * SIDE, pos.y + m_position.y * HEIGHT, pos.z + m_position.z * SIDE };
+		vec3 globalPos{ pos.x + m_position.x * Const::SECTION_SIDE, pos.y + m_position.y * Const::SECTION_HEIGHT, pos.z + m_position.z * Const::SECTION_SIDE };
 
-		if (globalPos.y < 0 || globalPos.y >= Chunk::HEIGHT)
+		if (globalPos.y < 0 || globalPos.y >= Const::CHUNK_HEIGHT)
 			return true;
 
 		return p_chunkMap->getSection(Converter::globalToSection(globalPos)).getBlock(
-			ivec3{ Converter::positiveMod(pos.x, SIDE), Converter::positiveMod(pos.y, HEIGHT), Converter::positiveMod(pos.z, SIDE) }) == 0;
+			ivec3{ Converter::positiveMod(pos.x, Const::SECTION_SIDE), Converter::positiveMod(pos.y, Const::SECTION_HEIGHT), Converter::positiveMod(pos.z, Const::SECTION_SIDE) }) == 0;
 	}
 }
 

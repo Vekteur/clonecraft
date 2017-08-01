@@ -12,11 +12,12 @@
 #include "Texture.h"
 
 class ChunkMap;
+class Chunk;
 
 class Section
 {
 public:
-	Section(ChunkMap* const chunkMap, ivec3 position = ivec3{ 0, 0, 0 });
+	Section(ChunkMap* const chunkMap, Chunk* const chunk, ivec3 position = ivec3{ 0, 0, 0 });
 	~Section();
 
 	void loadBlocks();
@@ -26,10 +27,9 @@ public:
 
 	int getBlock(ivec3 pos) const;
 
-	static const int SIDE{ 16 }, HEIGHT{ 16 };
-
 private:
 	ChunkMap* const p_chunkMap{ nullptr };
+	Chunk* const p_chunk{ nullptr };
 	const ivec3 m_position;
 
 	Array3D<GLuint> m_blocks;

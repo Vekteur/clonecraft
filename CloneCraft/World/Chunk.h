@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Section.h"
+#include "ChunkGenerator.h"
+#include "WorldConstants.h"
 #include <memory>
 
 class Chunk
@@ -17,19 +19,19 @@ public:
 	bool hasLoadedVAOs() const;
 	ivec2 getPosition() const;
 	void render(Shader &shader, Texture2D &texture) const;
+	ChunkGenerator& getChunkGenerator();
 
 	Section& getSection(int height);
-
-	static const int SECTION_HEIGHT{ 16 };
-	static const int SIDE{ Section::SIDE }, HEIGHT{ Section::HEIGHT * Chunk::SECTION_HEIGHT };
 
 private:
 	ChunkMap* const p_chunkMap{ nullptr };
 	const vec2 m_position;
+	ChunkGenerator m_chunkGenerator{ m_position };
 
 	bool loadedFaces{ false };
 	bool loadedBlocks{ false };
 	bool loadedVAOs{ false };
 
-	std::array<std::unique_ptr<Section>, SECTION_HEIGHT> m_sections;
+	//ChunkGenerator m_chunkGenerator;
+	std::array<std::unique_ptr<Section>, Const::CHUNK_NB_SECTIONS> m_sections;
 };

@@ -1,4 +1,5 @@
 #include <GlmCommon.h>
+#include <array>
 
 #pragma once
 class PerlinNoise
@@ -7,8 +8,6 @@ public:
 	PerlinNoise();
 	~PerlinNoise();
 
-	static void init();
-
 	double getNoise(vec2 pos);
 
 private:
@@ -16,6 +15,6 @@ private:
 	static double fade(double t);
 	static double grad(int hash, double x, double y);
 
-	static int perm[512];
+	static std::array<int, 512> perm;
 };
 

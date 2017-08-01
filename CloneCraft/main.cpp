@@ -7,8 +7,6 @@
 
 int main()
 {
-	PerlinNoise::init();
-
 	Window window;
 	window.initCallbacks();
 

@@ -4,7 +4,7 @@
 #include <sstream>
 #include <fstream>
 
-#include <SOIL/SOIL.h>
+#include "stb_image.h"
 
 // Instantiate static variables
 std::map<std::string, Texture2D>    ResManager::textures;
@@ -94,11 +94,16 @@ Texture2D ResManager::loadTextureFromFile(const GLchar *file, GLboolean alpha)
 		texture.setImageFormat(GL_RGBA);
 	}
 	// Load image
-	int width, height;
-	unsigned char* image = SOIL_load_image(file, &width, &height, 0, texture.getImageFormat() == GL_RGBA ? SOIL_LOAD_RGBA : SOIL_LOAD_RGB);
+	int width, height, nbChannels;
+	unsigned char* image = stbi_load(file, &width, &height, &nbChannels, STBI_rgb);
+
 	// Generate texture
-	texture.generate(width, height, image);
+	if (image)
+		texture.generate(width, height, image);
+	else
+		std::cout << "Failed to load texture" << std::endl;
+	
 	// Free image
-	SOIL_free_image_data(image);
+	stbi_image_free(image);
 	return texture;
 }
