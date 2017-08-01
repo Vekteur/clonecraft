@@ -8,15 +8,26 @@
 class Chunk
 {
 public:
+
+	enum State
+	{
+		EMPTY,
+		LOADED_BLOCKS,
+		LOADED_FACES,
+		LOADED_VAOS,
+		TO_UNLOAD_VAOS,
+		TO_REMOVE
+	};
+
 	Chunk(ChunkMap* const chunkMap = nullptr, ivec2 position = ivec2{0, 0});
 	~Chunk();
 
 	void loadBlocks();
 	void loadFaces();
 	void loadVAOs();
-	bool hasLoadedBlocks() const;
-	bool hasLoadedFaces() const;
-	bool hasLoadedVAOs() const;
+	void unloadVAOs();
+	State getState() const;
+	void setState(State state);
 	ivec2 getPosition() const;
 	void render(Shader &shader, Texture2D &texture) const;
 	ChunkGenerator& getChunkGenerator();
@@ -27,11 +38,7 @@ private:
 	ChunkMap* const p_chunkMap{ nullptr };
 	const vec2 m_position;
 	ChunkGenerator m_chunkGenerator{ m_position };
+	State m_state{ EMPTY };
 
-	bool loadedFaces{ false };
-	bool loadedBlocks{ false };
-	bool loadedVAOs{ false };
-
-	//ChunkGenerator m_chunkGenerator;
 	std::array<std::unique_ptr<Section>, Const::CHUNK_NB_SECTIONS> m_sections;
 };

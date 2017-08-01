@@ -2,7 +2,6 @@
 
 #include "Window.h"
 #include "Game.h"
-#include "PerlinNoise.h"
 #include "Debug.h"
 
 int main()

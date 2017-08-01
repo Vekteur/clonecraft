@@ -12,7 +12,7 @@ struct GLFWwindow;
 class ChunkMap
 {
 public:
-	static const int DISTANCE{ 4 }, SIDE{ 2 * DISTANCE + 1 };
+	static const int VIEW_DISTANCE{ 8 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 },  SIDE{ 2 * VIEW_DISTANCE + 1 };
 
 	struct Comp_ivec2
 	{
@@ -31,7 +31,7 @@ public:
 	~ChunkMap();
 
 	void load();
-	void loadVAOs();
+	//void loadVAOs();
 	void render();
 	void setCenter(ivec2 center);
 	ivec2 getCenter();

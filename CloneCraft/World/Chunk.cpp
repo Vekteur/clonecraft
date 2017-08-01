@@ -15,36 +15,38 @@ void Chunk::loadBlocks()
 {
 	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
 		m_sections[i]->loadBlocks();
-	loadedBlocks = true;
+	m_state = LOADED_BLOCKS;
 }
 
 void Chunk::loadFaces()
 {
 	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
 		m_sections[i]->loadFaces();
-	loadedFaces = true;
+	m_state = LOADED_FACES;
 }
 
 void Chunk::loadVAOs()
 {
 	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
 		m_sections[i]->loadVAOs();
-	loadedVAOs = true;
+	m_state = LOADED_VAOS;
 }
 
-bool Chunk::hasLoadedBlocks() const
+void Chunk::unloadVAOs()
 {
-	return loadedBlocks;
+	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
+		m_sections[i]->unloadVAOs();
+	m_state = TO_REMOVE;
 }
 
-bool Chunk::hasLoadedFaces() const
+Chunk::State Chunk::getState() const
 {
-	return loadedFaces;
+	return m_state;
 }
 
-bool Chunk::hasLoadedVAOs() const
+void Chunk::setState(State state)
 {
-	return loadedVAOs;
+	m_state = state;
 }
 
 ivec2 Chunk::getPosition() const

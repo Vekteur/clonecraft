@@ -6,12 +6,12 @@
 #include "Keyboard.h"
 #include "Mouse.h"
 
-Game::Game(Window* const window) : m_camera{ vec3{0.0f, 0.0f, 0.0f } }, p_window{ window }
+Game::Game(Window* const window) : m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }
 {
 	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
 	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
 
-	ResManager::getShader("cube").use().setInteger("distance", ChunkMap::DISTANCE);
+	ResManager::getShader("cube").use().setInteger("distance", ChunkMap::VIEW_DISTANCE);
 
 	if (glGetError())
 		std::cin.get();
@@ -28,12 +28,6 @@ Game::~Game()
 void Game::runChunkLoadingLoop()
 {
 	glfwMakeContextCurrent(p_window->getGLFWChunkMapThreadWindow());
-
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
-		exit(-1);
-	}
 
 	while (!stopChunkMapThread)
 	{
