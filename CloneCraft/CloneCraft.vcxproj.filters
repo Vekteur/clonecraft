@@ -21,6 +21,7 @@
     <ClCompile Include="Util\Debug.cpp" />
     <ClCompile Include="Input\Mouse.cpp" />
     <ClCompile Include="Util\stb_image.cpp" />
+    <ClCompile Include="Block\Block.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -43,5 +44,6 @@
     <ClInclude Include="Input\Mouse.h" />
     <ClInclude Include="World\WorldConstants.h" />
     <ClInclude Include="Util\stb_image.h" />
+    <ClInclude Include="Block\Block.h" />
   </ItemGroup>
 </Project>

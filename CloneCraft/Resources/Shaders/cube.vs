@@ -9,7 +9,7 @@ uniform mat4 view;
 uniform mat4 projection;
 uniform int distance;
 
-const float density = 0.06f;
+const float density = 2.15f;
 const float gradient = 15.0f;
 
 void main()
@@ -17,7 +17,7 @@ void main()
 	vec4 posRelativeToCam = view * vec4(position, 1.0f);
     gl_Position = projection * posRelativeToCam;
 	
-	float vDistance = length(posRelativeToCam.xyz);
+	float vDistance = length(posRelativeToCam.xz);
 	visibility = exp(-pow((vDistance * density / distance), gradient));
 	visibility = clamp(visibility, 0.0f, 1.0f);
 	

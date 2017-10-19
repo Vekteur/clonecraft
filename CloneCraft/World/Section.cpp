@@ -21,12 +21,11 @@ Section::~Section()
 
 void Section::loadBlocks()
 {
-	for (int x = 0; x < Const::SECTION_SIDE; x++)
-		for (int z = 0; z < Const::SECTION_SIDE; z++)	
-			for (int y = 0; y < Const::SECTION_HEIGHT; y++)
+	for (int x = 0; x < Const::SECTION_SIDE; ++x)
+		for (int z = 0; z < Const::SECTION_SIDE; ++z)	
+			for (int y = 0; y < Const::SECTION_HEIGHT; ++y)
 			{
-				ivec3 globalPos{ x + m_position.x * Const::SECTION_SIDE, y + m_position.y * Const::SECTION_HEIGHT, z + m_position.z * Const::SECTION_SIDE };
-				m_blocks.at(ivec3{ x, y, z }) = p_chunk->getChunkGenerator().getBlock(globalPos);
+				m_blocks.at(ivec3{ x, y, z }) = p_chunk->getChunkGenerator().getBlock(ivec3{ x, y, z } + Converter::sectionToGlobal(m_position));
 			}
 }
 
@@ -35,9 +34,9 @@ void Section::loadFaces()
 	std::vector<GLfloat> faces;
 	std::vector<GLuint> indices;
 
-	for (int x = 0; x < Const::SECTION_SIDE; x++)
-		for (int y = 0; y < Const::SECTION_HEIGHT; y++)
-			for (int z = 0; z < Const::SECTION_SIDE; z++)
+	for (int x = 0; x < Const::SECTION_SIDE; ++x)
+		for (int y = 0; y < Const::SECTION_HEIGHT; ++y)
+			for (int z = 0; z < Const::SECTION_SIDE; ++z)
 			{
 				if (m_blocks.at(ivec3{ x, y, z }) == 0)
 					continue;
@@ -143,7 +142,7 @@ bool Section::isAir(ivec3 pos)
 		return m_blocks.at(pos) == 0;
 	else
 	{
-		vec3 globalPos{ pos.x + m_position.x * Const::SECTION_SIDE, pos.y + m_position.y * Const::SECTION_HEIGHT, pos.z + m_position.z * Const::SECTION_SIDE };
+		ivec3 globalPos{ pos + Converter::sectionToGlobal(m_position) };
 
 		if (globalPos.y < 0 || globalPos.y >= Const::CHUNK_HEIGHT)
 			return true;

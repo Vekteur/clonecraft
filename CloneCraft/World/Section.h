@@ -51,4 +51,3 @@ private:
 	static const std::array<GLfloat, 12> faceZ0;
 	static const std::array<GLfloat, 12> faceZ1;
 };
-

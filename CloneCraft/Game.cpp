@@ -11,7 +11,7 @@ Game::Game(Window* const window) : m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_windo
 	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
 	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
 
-	ResManager::getShader("cube").use().setInteger("distance", ChunkMap::VIEW_DISTANCE);
+	ResManager::getShader("cube").use().setInteger("distance", ChunkMap::SIDE);
 
 	if (glGetError())
 		std::cin.get();
@@ -65,10 +65,9 @@ void Game::update(GLfloat dt)
 
 	ivec2 newCenter = Converter::globalToChunk(m_camera.getPosition());
 	if (m_chunks.getCenter() != newCenter)
-	{
 		m_chunks.setCenter(newCenter);
-	}
-		
+
+	m_chunks.update();
 }
 
 void Game::render()

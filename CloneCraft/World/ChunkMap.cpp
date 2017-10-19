@@ -2,6 +2,8 @@
 #include "ResManager.h"
 #include "Debug.h"
 
+#include "Array3D.h"
+
 #include <GLFW\glfw3.h>
 
 ChunkMap::ChunkMap(ivec2 center) : m_center{ center }
@@ -41,7 +43,7 @@ void ChunkMap::load()
 			loadFaces(ivec2{ x, m_center.y - c });
 		for (int y = m_center.y - c; y < m_center.y + c; ++y) // Bottom left to top left
 			loadFaces(ivec2{ m_center.x - c, y });
-		std::cout << "Distance " << d << " loaded" << '\n';
+		//std::cout << "Distance " << d << " loaded" << '\n';
 
 		glFlush();
 
@@ -59,14 +61,14 @@ void ChunkMap::unloadFarChunks()
 	for (auto it = m_chunks.begin(); it != m_chunks.end();)
 	{
 		if (it->second->getState() == Chunk::TO_REMOVE)
-			it = m_chunks.erase(it);
-		else if (!isInChunkMap(it->second->getPosition()))
 		{
-			it->second->setState(Chunk::TO_UNLOAD_VAOS);
-			it++;
+			it = m_chunks.erase(it);
+			continue;
 		}
-		else
-			it++;
+		else if (!isInChunkMap(it->second->getPosition()))
+			it->second->setState(Chunk::TO_UNLOAD_VAOS);
+		
+		it++;
 	}
 	m_deleteChunksMutex.unlock();
 }
@@ -75,7 +77,7 @@ void ChunkMap::loadBlocks(ivec2 pos)
 {
 	if (m_chunks.find(pos) == m_chunks.end()) // Chunk not in the ChunkMap
 		m_chunks.emplace(pos, std::make_unique<Chunk>(this, pos));
-	if(m_chunks[pos]->getState() < Chunk::LOADED_BLOCKS)
+	if(m_chunks[pos]->getState() == Chunk::TO_LOAD_BLOCKS)
 		m_chunks[pos]->loadBlocks(); // Load the blocks
 }
 
@@ -83,34 +85,32 @@ void ChunkMap::loadFaces(ivec2 pos)
 {
 	if (m_chunks.find(pos) == m_chunks.end()) // Chunk not in the ChunkMap
 		m_chunks.emplace(pos, std::make_unique<Chunk>(this, pos));
-	if (m_chunks[pos]->getState() < Chunk::LOADED_FACES)
+	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_FACES)
 		m_chunks[pos]->loadFaces(); // Load the faces
 }
 
-/*void ChunkMap::loadVAOs()
-{
-	for (int x = m_center.x - DISTANCE; x <= m_center.x + DISTANCE; ++x)
-		for (int y = m_center.y - DISTANCE; y <= m_center.y + DISTANCE; ++y)
-			m_chunks[ivec2{ x, y }]->loadVAOs();
-}*/
-
-void ChunkMap::render()
+void ChunkMap::update()
 {
 	m_deleteChunksMutex.lock();
 	for (auto& c : m_chunks)
 	{
 		Chunk::State state = c.second->getState();
-		if (state >= Chunk::LOADED_FACES)
-		{
-			if (state < Chunk::LOADED_VAOS)
-				c.second->loadVAOs();
-			else if (state == Chunk::TO_UNLOAD_VAOS)
-				c.second->unloadVAOs();
-
-			if (state <= Chunk::LOADED_VAOS)
-				c.second->render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
-		}
+		if (state == Chunk::TO_LOAD_VAOS)
+			c.second->loadVAOs();
+		else if (state == Chunk::TO_UNLOAD_VAOS)
+			c.second->unloadVAOs();
 	}
+	m_deleteChunksMutex.unlock();
+}
+
+void ChunkMap::render()
+{
+	m_deleteChunksMutex.lock();
+
+	for (auto& c : m_chunks)
+		if (c.second->getState() == Chunk::TO_RENDER)
+				c.second->render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
+
 	m_deleteChunksMutex.unlock();
 }
 

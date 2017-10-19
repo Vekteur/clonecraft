@@ -45,6 +45,15 @@ void ResManager::clear()
 	}
 }
 
+std::string ResManager::readFile(std::string fileName)
+{
+	std::ifstream is(fileName);
+	std::stringstream sstr;
+	sstr << is.rdbuf();
+	is.close();
+	return sstr.str();
+}
+
 Shader ResManager::loadShaderFromFile(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile)
 {
 	// Retrieve the vertex/fragment source code from filePath
@@ -53,26 +62,10 @@ Shader ResManager::loadShaderFromFile(const GLchar *vShaderFile, const GLchar *f
 	std::string geometryCode;
 	try
 	{
-		std::ifstream vertexShaderFile{ vShaderFile };
-		std::stringstream vShaderStream;
-		vShaderStream << vertexShaderFile.rdbuf();
-		vertexShaderFile.close();
-		vertexCode = vShaderStream.str();
-
-		std::ifstream fragmentShaderFile{ fShaderFile };
-		std::stringstream fShaderStream;
-		fShaderStream << fragmentShaderFile.rdbuf();
-		fragmentShaderFile.close();
-		fragmentCode = fShaderStream.str();
-
+		vertexCode = readFile(vShaderFile);
+		fragmentCode = readFile(fShaderFile);
 		if (gShaderFile != nullptr)
-		{
-			std::ifstream geometryShaderFile{ gShaderFile };
-			std::stringstream gShaderStream;
-			gShaderStream << geometryShaderFile.rdbuf();
-			geometryShaderFile.close();
-			geometryCode = gShaderStream.str();
-		}
+			geometryCode = readFile(gShaderFile);
 	}
 	catch (std::exception e)
 	{

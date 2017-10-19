@@ -11,10 +11,10 @@ public:
 
 	enum State
 	{
-		EMPTY,
-		LOADED_BLOCKS,
-		LOADED_FACES,
-		LOADED_VAOS,
+		TO_LOAD_BLOCKS,
+		TO_LOAD_FACES,
+		TO_LOAD_VAOS,
+		TO_RENDER,
 		TO_UNLOAD_VAOS,
 		TO_REMOVE
 	};
@@ -38,7 +38,7 @@ private:
 	ChunkMap* const p_chunkMap{ nullptr };
 	const vec2 m_position;
 	ChunkGenerator m_chunkGenerator{ m_position };
-	State m_state{ EMPTY };
+	State m_state{ TO_LOAD_BLOCKS };
 
 	std::array<std::unique_ptr<Section>, Const::CHUNK_NB_SECTIONS> m_sections;
 };

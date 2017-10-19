@@ -15,21 +15,21 @@ void Chunk::loadBlocks()
 {
 	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
 		m_sections[i]->loadBlocks();
-	m_state = LOADED_BLOCKS;
+	m_state = TO_LOAD_FACES;
 }
 
 void Chunk::loadFaces()
 {
 	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
 		m_sections[i]->loadFaces();
-	m_state = LOADED_FACES;
+	m_state = TO_LOAD_VAOS;
 }
 
 void Chunk::loadVAOs()
 {
 	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
 		m_sections[i]->loadVAOs();
-	m_state = LOADED_VAOS;
+	m_state = TO_RENDER;
 }
 
 void Chunk::unloadVAOs()

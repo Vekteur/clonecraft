@@ -1,0 +1,9 @@
+{
+	"opaque" : false,
+	"obstacle" : false,
+	"resistance" : 1,
+	"textures" :
+	{
+		"all" : null
+	}
+}

@@ -1,18 +1,17 @@
 #pragma once
 
 #include "Chunk.h"
+#include "WorldConstants.h"
 
 #include <unordered_map>
 #include <memory>
 #include <utility>
 #include <mutex>
 
-struct GLFWwindow;
-
 class ChunkMap
 {
 public:
-	static const int VIEW_DISTANCE{ 8 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 },  SIDE{ 2 * VIEW_DISTANCE + 1 };
+	static const int VIEW_DISTANCE{ 12 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
 
 	struct Comp_ivec2
 	{
@@ -31,7 +30,7 @@ public:
 	~ChunkMap();
 
 	void load();
-	//void loadVAOs();
+	void update();
 	void render();
 	void setCenter(ivec2 center);
 	ivec2 getCenter();

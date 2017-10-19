@@ -33,7 +33,7 @@ Window::Window()
 	glfwSetWindowPos(mainWindow, (mode->width - width) / 2, (mode->height - height) / 2);
 	glfwMakeContextCurrent(mainWindow);
 
-	glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// Init GLAD
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
