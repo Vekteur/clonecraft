@@ -14,9 +14,9 @@ std::ostream& operator <<(std::ostream& out, const vec4& vec)
 	return out;
 }
 
-std::ostream& operator <<(std::ostream& out, const mat4& vec)
+std::ostream& operator <<(std::ostream& out, const mat4& mat)
 {
 	for (int i = 0; i < 4; ++i)
-		out << vec[i] << '\n';
+		out << mat[i] << '\n';
 	return out;
 }

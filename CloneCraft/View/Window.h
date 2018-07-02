@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad\glad.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <GlmCommon.h>
 
@@ -29,11 +29,11 @@ public:
 	GLFWwindow* getGLFWMainWindow();
 	GLFWwindow* getGLFWChunkMapThreadWindow();
 
-	Game& getGame();
-
 private:
-	GLFWwindow *mainWindow, *chunkMapThread;
-	std::unique_ptr<Game> m_game;
+	GLFWwindow *mainWindow, *chunkMapWindow;
+
+	void initChunkMapWindow();
+	void initMainWindow();
 
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 	static void mouse_callback(GLFWwindow* window, double xpos, double ypos);

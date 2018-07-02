@@ -36,7 +36,7 @@ public:
 		return m_array[(index.x * m_size.y + index.y) * m_size.z + index.z];
 	}
 
-	vec3 size() const
+	ivec3 size() const
 	{
 		return m_size;
 	}

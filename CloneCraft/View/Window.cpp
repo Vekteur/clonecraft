@@ -2,38 +2,15 @@
 #include "Keyboard.h"
 #include "Mouse.h"
 
-const vec3 Window::clearColor{ 70.0f / 255, 190.0f / 255, 240.0f / 255 };
+const vec3 Window::clearColor{ 70.f / 255, 190.f / 255, 240.f / 255 };
 
 Window::Window()
 {
 	// Init glfw
 	assert(glfwInit());
 
-	// chunkMapThread context
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-	chunkMapThread = glfwCreateWindow(1, 1, "ChunkMap Thread", nullptr, nullptr);
-
-	// mainWindow context
-	glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
-	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-	// Share OpenGL resources of mainWindow with chunkMapThread
-	mainWindow = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "CloneCraft", nullptr, chunkMapThread);
-	// Center the window
-	int width, height;
-	glfwGetFramebufferSize(mainWindow, &width, &height);
-	glfwSetWindowPos(mainWindow, (mode->width - width) / 2, (mode->height - height) / 2);
-	glfwMakeContextCurrent(mainWindow);
-
-	//glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	initChunkMapWindow();
+	initMainWindow();
 
 	// Init GLAD
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -51,7 +28,6 @@ Window::Window()
 
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	m_game = std::make_unique<Game>(this);
 }
 
 
@@ -100,12 +76,37 @@ GLFWwindow * Window::getGLFWMainWindow()
 
 GLFWwindow * Window::getGLFWChunkMapThreadWindow()
 {
-	return chunkMapThread;
+	return chunkMapWindow;
 }
 
-Game& Window::getGame()
+void Window::initChunkMapWindow()
 {
-	return *m_game;
+	glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	chunkMapWindow = glfwCreateWindow(1, 1, "ChunkMap Thread", nullptr, nullptr);
+}
+
+void Window::initMainWindow()
+{
+	glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+
+	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+	// Share OpenGL resources of mainWindow with chunkMapThread
+	mainWindow = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "CloneCraft", nullptr, chunkMapWindow);
+	// Center the window
+	int width, height;
+	glfwGetFramebufferSize(mainWindow, &width, &height);
+	glfwSetWindowPos(mainWindow, (mode->width - width) / 2, (mode->height - height) / 2);
+	glfwMakeContextCurrent(mainWindow);
+
+	glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Window::key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)

@@ -9,10 +9,10 @@ int main()
 	Window window;
 	window.initCallbacks();
 
-	GLfloat secondAccumulator = 0.0f;
+	GLfloat accumulator = 0.0f;
 	GLuint fps = 0;
 
-	Game& game = window.getGame();
+	Game game{ &window };
 
 	GLfloat lastFrame = 0.0f;
 	while (!window.shouldClose())
@@ -23,13 +23,13 @@ int main()
 		lastFrame = currentFrame;
 
 		// show FPS
-		secondAccumulator += deltaTime;
-		fps++;
-		if (secondAccumulator >= 1.0f)
+		accumulator += deltaTime;
+		++fps;
+		if (accumulator >= 1.0f)
 		{
 			std::cout << fps << std::endl;
 			
-			secondAccumulator -= 1.0f;
+			accumulator -= 1.0f;
 			fps = 0;
 		}
 

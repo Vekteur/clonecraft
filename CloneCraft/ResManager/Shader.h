@@ -16,11 +16,11 @@ public:
 	void    compile(const GLchar *vertexSource, const GLchar *fragmentSource, const GLchar *geometrySource = nullptr);
 
 	void    setFloat(const GLchar *name, GLfloat value);
-	void    setInteger(const GLchar *name, GLint value);
-	void    setVector2f(const GLchar *name, const glm::vec2 &value);
-	void    setVector3f(const GLchar *name, const glm::vec3 &value);
-	void    setVector4f(const GLchar *name, const glm::vec4 &value);
-	void    setMatrix4(const GLchar *name, const glm::mat4 &matrix);
+	void    setInt(const GLchar *name, GLint value);
+	void    setVec2(const GLchar *name, const glm::vec2 &value);
+	void    setVec3(const GLchar *name, const glm::vec3 &value);
+	void    setVec4(const GLchar *name, const glm::vec4 &value);
+	void    setMat4(const GLchar *name, const glm::mat4 &matrix);
 
 	GLuint	getId();
 private:

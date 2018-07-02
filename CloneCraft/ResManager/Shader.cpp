@@ -10,17 +10,21 @@ Shader &Shader::use()
 
 void Shader::compile(const GLchar* vertexSource, const GLchar* fragmentSource, const GLchar* geometrySource)
 {
+	m_id = glCreateProgram();
+
 	GLuint sVertex, sFragment, sGeometry;
 	// Vertex Shader
 	sVertex = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(sVertex, 1, &vertexSource, NULL);
 	glCompileShader(sVertex);
 	checkCompileErrors(sVertex, "VERTEX");
+	glAttachShader(m_id, sVertex);
 	// Fragment Shader
 	sFragment = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(sFragment, 1, &fragmentSource, NULL);
 	glCompileShader(sFragment);
 	checkCompileErrors(sFragment, "FRAGMENT");
+	glAttachShader(m_id, sFragment);
 	// If geometry shader source code is given, also compile geometry shader
 	if (geometrySource != nullptr)
 	{
@@ -28,15 +32,11 @@ void Shader::compile(const GLchar* vertexSource, const GLchar* fragmentSource, c
 		glShaderSource(sGeometry, 1, &geometrySource, NULL);
 		glCompileShader(sGeometry);
 		checkCompileErrors(sGeometry, "GEOMETRY");
+		glAttachShader(m_id, sGeometry);
 	}
 	// Shader Program
-	this->m_id = glCreateProgram();
-	glAttachShader(this->m_id, sVertex);
-	glAttachShader(this->m_id, sFragment);
-	if (geometrySource != nullptr)
-		glAttachShader(this->m_id, sGeometry);
-	glLinkProgram(this->m_id);
-	checkCompileErrors(this->m_id, "PROGRAM");
+	glLinkProgram(m_id);
+	checkCompileErrors(m_id, "PROGRAM");
 	// Delete the shaders as they're linked into our program now and no longer necessery
 	glDeleteShader(sVertex);
 	glDeleteShader(sFragment);
@@ -49,27 +49,27 @@ void Shader::setFloat(const GLchar *name, GLfloat value)
 	glUniform1f(glGetUniformLocation(this->m_id, name), value);
 }
 
-void Shader::setInteger(const GLchar *name, GLint value)
+void Shader::setInt(const GLchar *name, GLint value)
 {
 	glUniform1i(glGetUniformLocation(this->m_id, name), value);
 }
 
-void Shader::setVector2f(const GLchar *name, const glm::vec2 &value)
+void Shader::setVec2(const GLchar *name, const glm::vec2 &value)
 {
 	glUniform2f(glGetUniformLocation(this->m_id, name), value.x, value.y);
 }
 
-void Shader::setVector3f(const GLchar *name, const glm::vec3 &value)
+void Shader::setVec3(const GLchar *name, const glm::vec3 &value)
 {
 	glUniform3f(glGetUniformLocation(this->m_id, name), value.x, value.y, value.z);
 }
 
-void Shader::setVector4f(const GLchar *name, const glm::vec4 &value)
+void Shader::setVec4(const GLchar *name, const glm::vec4 &value)
 {
 	glUniform4f(glGetUniformLocation(this->m_id, name), value.x, value.y, value.z, value.w);
 }
 
-void Shader::setMatrix4(const GLchar *name, const glm::mat4 &matrix)
+void Shader::setMat4(const GLchar *name, const glm::mat4 &matrix)
 {
 	glUniformMatrix4fv(glGetUniformLocation(this->m_id, name), 1, GL_FALSE, glm::value_ptr(matrix));
 }
@@ -78,7 +78,6 @@ GLuint Shader::getId()
 {
 	return m_id;
 }
-
 
 void Shader::checkCompileErrors(GLuint object, std::string type)
 {

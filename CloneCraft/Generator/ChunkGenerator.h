@@ -15,7 +15,7 @@ public:
 private:
 	ivec2 m_position;
 
-	OctavePerlin m_perlin{ 4, 0.5, 0.5 };
+	OctavePerlin m_perlin{ 4, 0.5, 0.5};
 	float m_noise[Const::SECTION_SIDE][Const::SECTION_SIDE];
 };
 

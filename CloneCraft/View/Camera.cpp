@@ -13,18 +13,18 @@ const float Camera::ZOOM{ 45.0f };
 const float Camera::YAW{ -90.0f };
 const float Camera::PITCH{ 0.0f };
 
+const float Camera::NEARPLANE{ 0.1f };
+const float Camera::FARPLANE{ 1000.0f };
+
 const vec3 Camera::POSITION{ vec3{0.0f, 0.0f, 0.0f } };
 const vec3 Camera::FRONT{ vec3{ 0.0f, 0.0f, -1.0f } };
 const vec3 Camera::WORLDUP{ vec3{ 0.0f, 1.0f, 0.0f } };
-
-const float Camera::NEARPLANE{ 0.1f };
-const float Camera::FARPLANE{ 1000.0f };
 
 Camera::Camera(vec3 position, float yaw, float pitch)
 	:m_position{ position }, m_yaw{ yaw }, m_pitch{ pitch }, m_chunk{ Converter::globalToChunk(position) }
 {
 	// Init up and right vectors from front vector
-	this->updateFromEuler();
+	updateFromEuler();
 }
 
 mat4 Camera::getViewMatrix()
@@ -34,7 +34,8 @@ mat4 Camera::getViewMatrix()
 
 mat4 Camera::getProjectionMatrix()
 {
-	return glm::perspective(glm::radians(m_zoom), static_cast<float>(Window::SCREEN_WIDTH) / static_cast<float>(Window::SCREEN_HEIGHT), NEARPLANE, FARPLANE);
+	return glm::perspective(glm::radians(m_zoom), 
+		static_cast<float>(Window::SCREEN_WIDTH) / static_cast<float>(Window::SCREEN_HEIGHT), NEARPLANE, FARPLANE);
 }
 
 vec3 Camera::getPosition()
@@ -114,9 +115,4 @@ void Camera::updateFromEuler()
 
 	m_right = normalize(cross(m_front, WORLDUP));
 	m_up = normalize(cross(m_right, m_front));
-}
-
-bool Camera::isInNewChunk()
-{
-	return newChunk;
 }

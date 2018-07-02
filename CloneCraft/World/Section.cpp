@@ -38,10 +38,11 @@ void Section::loadFaces()
 		for (int y = 0; y < Const::SECTION_HEIGHT; ++y)
 			for (int z = 0; z < Const::SECTION_SIDE; ++z)
 			{
-				if (m_blocks.at(ivec3{ x, y, z }) == 0)
+				ivec3 pos{ x, y, z };
+				if (m_blocks.at(pos) == 0)
 					continue;
 
-				vec3 globalPos{ x + m_position.x * Const::SECTION_SIDE, y + m_position.y * Const::SECTION_HEIGHT, z + m_position.z * Const::SECTION_SIDE };
+				ivec3 globalPos{ Converter::sectionToGlobal(m_position) + pos };
 
 				if (isAir(ivec3{ x + 1, y, z }))
 					for (GLfloat c : getFace(globalPos, faceX1))
@@ -77,13 +78,15 @@ void Section::loadFaces()
 	// The VBO stores the vertices
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * faces.size(), faces.data(), GL_DYNAMIC_DRAW);
+	if(!faces.empty())
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * faces.size(), faces.data(), GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// The EBO stores the indices
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indices.size(), indices.data(), GL_DYNAMIC_DRAW);
+	if(!indices.empty())
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indices.size(), indices.data(), GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
