@@ -2,16 +2,12 @@
 
 #include "texture.h"
 
-
 Texture2D::Texture2D(GLuint internalFormat, GLuint imageFormat, GLuint wrapS, GLuint wrapT, GLuint filterMin, GLuint filterMax)
-	:m_internalFormat(internalFormat), m_imageFormat(imageFormat), m_wrapS(wrapS), m_wrapT(wrapT), m_filterMin(filterMin), m_filterMax(filterMax)
-{
+	:m_internalFormat(internalFormat), m_imageFormat(imageFormat), m_wrapS(wrapS), m_wrapT(wrapT), m_filterMin(filterMin), m_filterMax(filterMax) {
 	glGenTextures(1, &m_id);
 }
 
-
-void Texture2D::generate(GLuint width, GLuint height, unsigned char* data)
-{
+void Texture2D::generate(GLuint width, GLuint height, unsigned char* data) {
 	// Save dimension
 	m_width = width;
 	m_height = height;
@@ -28,32 +24,26 @@ void Texture2D::generate(GLuint width, GLuint height, unsigned char* data)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture2D::bind() const
-{
+void Texture2D::bind() const {
 	glBindTexture(GL_TEXTURE_2D, m_id);
 }
 
-GLuint Texture2D::getId() const
-{
+GLuint Texture2D::getId() const {
 	return m_id;
 }
 
-GLuint Texture2D::getInternalFormat() const
-{
+GLuint Texture2D::getInternalFormat() const {
 	return m_internalFormat;
 }
 
-GLuint Texture2D::getImageFormat() const
-{
+GLuint Texture2D::getImageFormat() const {
 	return m_imageFormat;
 }
 
-void Texture2D::setInternalFormat(GLuint internalFormat)
-{
+void Texture2D::setInternalFormat(GLuint internalFormat) {
 	m_internalFormat = internalFormat;
 }
 
-void Texture2D::setImageFormat(GLuint imageFormat)
-{
+void Texture2D::setImageFormat(GLuint imageFormat) {
 	m_imageFormat = imageFormat;
 }

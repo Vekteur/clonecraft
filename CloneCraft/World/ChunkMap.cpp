@@ -6,20 +6,15 @@
 
 #include <GLFW\glfw3.h>
 
-ChunkMap::ChunkMap(ivec2 center) : m_center{ center }
-{
+ChunkMap::ChunkMap(ivec2 center) : m_center{ center } {
 }
 
-
-ChunkMap::~ChunkMap()
-{
+ChunkMap::~ChunkMap() {
 }
 
-void ChunkMap::load()
-{
+void ChunkMap::load() {
 	loadBlocks(ivec2{ m_center.x, m_center.y }); // Base case : load the blocks of the center chunk
-	for (int d = 1; d <= LOAD_DISTANCE; ++d)
-	{
+	for (int d = 1; d <= LOAD_DISTANCE; ++d) {
 		// Load the blocks in the chunks at distance d
 		for (int x = m_center.x - d; x < m_center.x + d; ++x) // Top left to top right
 			loadBlocks(ivec2{ x, m_center.y + d });
@@ -47,53 +42,45 @@ void ChunkMap::load()
 
 		glFlush();
 
-		if (m_newCenter != m_center)
-		{
+		if (m_newCenter != m_center) {
 			m_center = m_newCenter;
 			break;
 		}
 	}
 }
 
-void ChunkMap::unloadFarChunks()
-{
+void ChunkMap::unloadFarChunks() {
 	m_deleteChunksMutex.lock();
-	for (auto it = m_chunks.begin(); it != m_chunks.end();)
-	{
-		if (it->second->getState() == Chunk::TO_REMOVE)
-		{
+	for (auto it = m_chunks.begin(); it != m_chunks.end();) {
+		if (it->second->getState() == Chunk::TO_REMOVE) {
 			it = m_chunks.erase(it);
 			continue;
 		}
 		else if (!isInChunkMap(it->second->getPosition()))
 			it->second->setState(Chunk::TO_UNLOAD_VAOS);
-		
+
 		it++;
 	}
 	m_deleteChunksMutex.unlock();
 }
 
-void ChunkMap::loadBlocks(ivec2 pos)
-{
+void ChunkMap::loadBlocks(ivec2 pos) {
 	if (m_chunks.find(pos) == m_chunks.end()) // Chunk not in the ChunkMap
 		m_chunks.emplace(pos, std::make_unique<Chunk>(this, pos));
-	if(m_chunks[pos]->getState() == Chunk::TO_LOAD_BLOCKS)
+	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_BLOCKS)
 		m_chunks[pos]->loadBlocks(); // Load the blocks
 }
 
-void ChunkMap::loadFaces(ivec2 pos)
-{
+void ChunkMap::loadFaces(ivec2 pos) {
 	if (m_chunks.find(pos) == m_chunks.end()) // Chunk not in the ChunkMap
 		m_chunks.emplace(pos, std::make_unique<Chunk>(this, pos));
 	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_FACES)
 		m_chunks[pos]->loadFaces(); // Load the faces
 }
 
-void ChunkMap::update()
-{
+void ChunkMap::update() {
 	m_deleteChunksMutex.lock();
-	for (auto& c : m_chunks)
-	{
+	for (auto& c : m_chunks) {
 		Chunk::State state = c.second->getState();
 		if (state == Chunk::TO_LOAD_VAOS)
 			c.second->loadVAOs();
@@ -103,45 +90,38 @@ void ChunkMap::update()
 	m_deleteChunksMutex.unlock();
 }
 
-void ChunkMap::render()
-{
+void ChunkMap::render() {
 	m_deleteChunksMutex.lock();
 
 	for (auto& c : m_chunks)
 		if (c.second->getState() == Chunk::TO_RENDER)
-				c.second->render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
+			c.second->render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
 
 	m_deleteChunksMutex.unlock();
 }
 
-void ChunkMap::setCenter(ivec2 center)
-{
+void ChunkMap::setCenter(ivec2 center) {
 	m_newCenter = center;
 }
 
-bool ChunkMap::isInChunkMap(ivec2 pos)
-{
+bool ChunkMap::isInChunkMap(ivec2 pos) {
 	return m_center.x - LOAD_DISTANCE <= pos.x && pos.x <= m_center.x + LOAD_DISTANCE &&
 		m_center.y - LOAD_DISTANCE <= pos.y && pos.y <= m_center.y + LOAD_DISTANCE;
 }
 
-ivec2 ChunkMap::getCenter()
-{
+ivec2 ChunkMap::getCenter() {
 	return m_center;
 }
 
-Chunk& ChunkMap::getChunk(ivec2 pos)
-{
+Chunk& ChunkMap::getChunk(ivec2 pos) {
 	return *m_chunks[pos].get();
 }
 
-Section& ChunkMap::getSection(ivec3 pos)
-{
+Section& ChunkMap::getSection(ivec3 pos) {
 	ivec2 chunkPos{ pos.x, pos.z };
 	return getChunk(chunkPos).getSection(pos.y);
 }
 
-int ChunkMap::getSize()
-{
+int ChunkMap::getSize() {
 	return m_chunks.size();
 }

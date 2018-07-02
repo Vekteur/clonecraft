@@ -1,21 +1,15 @@
 #include "OctavePerlin.h"
 
-
-
 OctavePerlin::OctavePerlin(int octaves, double persistence, double frequency)
-	: m_octaves{ octaves }, m_persistence{ persistence }, m_frequency{ frequency }
-{
+	: m_octaves{ octaves }, m_persistence{ persistence }, m_frequency{ frequency } {
 	for (int i = 0; i < m_octaves; i++)
 		noises.push_back(PerlinNoise());
 }
 
-
-OctavePerlin::~OctavePerlin()
-{
+OctavePerlin::~OctavePerlin() {
 }
 
-double OctavePerlin::getNoise(vec2 pos)
-{
+double OctavePerlin::getNoise(vec2 pos) {
 	double total = 0;
 	double frequency = m_frequency;
 	double amplitude = 1;

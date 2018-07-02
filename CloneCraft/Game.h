@@ -11,8 +11,7 @@
 
 class Window;
 
-class Game
-{
+class Game {
 public:
 	Game(Window* const window);
 	~Game();
@@ -25,7 +24,7 @@ public:
 	Camera& getCamera();
 
 private:
-	Window* const p_window{ nullptr };
+	Window * const p_window{ nullptr };
 	Camera m_camera;
 	ChunkMap m_chunks;
 

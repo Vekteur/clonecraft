@@ -3,12 +3,10 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
-class Block
-{
+class Block {
 public:
 
-	enum Direction
-	{
+	enum Direction {
 		UP,
 		DOWN,
 		NORTH,
@@ -32,4 +30,3 @@ private:
 	bool m_obstacle;
 	int m_resistance;
 };
-

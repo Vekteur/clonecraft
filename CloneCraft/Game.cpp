@@ -6,38 +6,34 @@
 #include "Keyboard.h"
 #include "Mouse.h"
 
-Game::Game(Window* const window) : m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }
-{
+Game::Game(Window* const window) 
+		: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window } {
 	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
 	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
-	
+
 	ResManager::getShader("cube").use().setInt("distance", ChunkMap::SIDE);
 
 	if (glGetError())
 		std::cin.get();
-	
+
 	m_chunkMapThread = std::thread{ &Game::runChunkLoadingLoop, this };
 }
 
-Game::~Game()
-{
+Game::~Game() {
 	stopChunkMapThread = true;
 	m_chunkMapThread.join();
 }
 
-void Game::runChunkLoadingLoop()
-{
+void Game::runChunkLoadingLoop() {
 	glfwMakeContextCurrent(p_window->getGLFWChunkMapThreadWindow());
 
-	while (!stopChunkMapThread)
-	{
+	while (!stopChunkMapThread) {
 		m_chunks.load();
 		m_chunks.unloadFarChunks();
 	}
 }
 
-void Game::processInput(GLfloat dt)
-{
+void Game::processInput(GLfloat dt) {
 	if (Keyboard::isKeyPressed(GLFW_KEY_W))
 		m_camera.move(Camera::FORWARD, dt);
 	if (Keyboard::isKeyPressed(GLFW_KEY_S))
@@ -57,8 +53,7 @@ void Game::processInput(GLfloat dt)
 	Mouse::resetScrolling();
 }
 
-void Game::update(GLfloat dt)
-{
+void Game::update(GLfloat dt) {
 	ResManager::getShader("cube").use().setMat4("view", m_camera.getViewMatrix());
 	ResManager::getShader("cube").use().setMat4("projection", m_camera.getProjectionMatrix());
 	ResManager::getShader("cube").use().setVec3("skyColor", p_window->clearColor);
@@ -70,12 +65,10 @@ void Game::update(GLfloat dt)
 	m_chunks.update();
 }
 
-void Game::render()
-{
+void Game::render() {
 	m_chunks.render();
 }
 
-Camera& Game::getCamera()
-{
+Camera& Game::getCamera() {
 	return m_camera;
 }

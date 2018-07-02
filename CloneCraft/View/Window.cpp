@@ -4,8 +4,7 @@
 
 const vec3 Window::clearColor{ 70.f / 255, 190.f / 255, 240.f / 255 };
 
-Window::Window()
-{
+Window::Window() {
 	// Init glfw
 	assert(glfwInit());
 
@@ -13,8 +12,7 @@ Window::Window()
 	initMainWindow();
 
 	// Init GLAD
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		exit(-1);
 	}
@@ -30,57 +28,46 @@ Window::Window()
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
-
-Window::~Window()
-{
+Window::~Window() {
 	glfwTerminate();
 }
 
-bool Window::shouldClose()
-{
+bool Window::shouldClose() {
 	return glfwWindowShouldClose(mainWindow);
 }
 
-void Window::close()
-{
+void Window::close() {
 	glfwSetWindowShouldClose(mainWindow, GL_TRUE);
 }
 
-void Window::clear()
-{
+void Window::clear() {
 	glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Window::swapBuffers()
-{
+void Window::swapBuffers() {
 	glfwSwapBuffers(mainWindow);
 }
 
-void Window::initCallbacks()
-{
+void Window::initCallbacks() {
 	glfwSetKeyCallback(mainWindow, Window::key_callback);
 	glfwSetCursorPosCallback(mainWindow, Window::mouse_callback);
 	glfwSetScrollCallback(mainWindow, Window::scroll_callback);
 }
 
-void Window::pollEvents()
-{
+void Window::pollEvents() {
 	glfwPollEvents();
 }
 
-GLFWwindow * Window::getGLFWMainWindow()
-{
+GLFWwindow * Window::getGLFWMainWindow() {
 	return mainWindow;
 }
 
-GLFWwindow * Window::getGLFWChunkMapThreadWindow()
-{
+GLFWwindow * Window::getGLFWChunkMapThreadWindow() {
 	return chunkMapWindow;
 }
 
-void Window::initChunkMapWindow()
-{
+void Window::initChunkMapWindow() {
 	glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -88,8 +75,7 @@ void Window::initChunkMapWindow()
 	chunkMapWindow = glfwCreateWindow(1, 1, "ChunkMap Thread", nullptr, nullptr);
 }
 
-void Window::initMainWindow()
-{
+void Window::initMainWindow() {
 	glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -109,10 +95,8 @@ void Window::initMainWindow()
 	glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
-void Window::key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
-{
-	if (0 <= key && key < 1024)
-	{
+void Window::key_callback(GLFWwindow *window, int key, int scancode, int action, int mode) {
+	if (0 <= key && key < 1024) {
 		if (action == GLFW_PRESS)
 			Keyboard::setKey(key, GL_TRUE);
 		else if (action == GLFW_RELEASE)
@@ -120,12 +104,10 @@ void Window::key_callback(GLFWwindow *window, int key, int scancode, int action,
 	}
 }
 
-void Window::mouse_callback(GLFWwindow *window, double xpos, double ypos)
-{
+void Window::mouse_callback(GLFWwindow *window, double xpos, double ypos) {
 	Mouse::setPosition(vec2{ static_cast<float>(xpos), static_cast<float>(ypos) });
 }
 
-void Window::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
-{
+void Window::scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 	Mouse::addScrolling(vec2{ static_cast<float>(xoffset), static_cast<float>(yoffset) });
 }

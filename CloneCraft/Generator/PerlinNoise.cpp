@@ -1,15 +1,13 @@
 #include "PerlinNoise.h"
 
-PerlinNoise::PerlinNoise()
-{ }
+PerlinNoise::PerlinNoise() {
+}
 
-
-PerlinNoise::~PerlinNoise()
-{ }
+PerlinNoise::~PerlinNoise() {
+}
 
 // p has coordinates in [0, 1[
-double PerlinNoise::getNoise(vec2 p)
-{
+double PerlinNoise::getNoise(vec2 p) {
 	// Get the gradient vectors
 	ivec2 pi{ (int)floor(p.x) & 255 , (int)floor(p.y) & 255 };
 
@@ -26,7 +24,7 @@ double PerlinNoise::getNoise(vec2 p)
 	double d4 = grad(g4, pf.x - 1, pf.y - 1);
 
 	pf = { fade(pf.x), fade(pf.y) };
-	
+
 	// Do bilinear interpolation
 	double x1Inter = lerp(pf.x, d1, d2);
 	double x2Inter = lerp(pf.x, d3, d4);
@@ -36,20 +34,17 @@ double PerlinNoise::getNoise(vec2 p)
 }
 
 // Linear interpolation
-double PerlinNoise::lerp(double amount, double left, double right)
-{
+double PerlinNoise::lerp(double amount, double left, double right) {
 	return ((1 - amount) * left + amount * right);
 }
 
 // Fade function
-double PerlinNoise::fade(double t)
-{
+double PerlinNoise::fade(double t) {
 	return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
-// Get dot product of 
-double PerlinNoise::grad(int hash, double x, double y)
-{
+// Get dot product of
+double PerlinNoise::grad(int hash, double x, double y) {
 	switch (hash & 3) {
 	case 0: return x + y;
 	case 1: return -x + y;
@@ -59,8 +54,7 @@ double PerlinNoise::grad(int hash, double x, double y)
 	}
 }
 
-std::array<int, 512> PerlinNoise::perm = []()
-{
+std::array<int, 512> PerlinNoise::perm = []() {
 	std::array<int, 512> temp{ 151,160,137,91,90,15,
 		131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
 		190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,

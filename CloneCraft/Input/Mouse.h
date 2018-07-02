@@ -2,8 +2,7 @@
 
 #include <GlmCommon.h>
 
-class Mouse
-{
+class Mouse {
 public:
 	Mouse() = delete;
 
@@ -17,4 +16,3 @@ private:
 	static vec2 s_position;
 	static vec2 s_scrolling;
 };
-

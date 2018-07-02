@@ -9,35 +9,30 @@
 #include <Windows.h>
 
 Section::Section(ChunkMap* const chunkMap, Chunk* const chunk, ivec3 position)
-	: p_chunkMap{ chunkMap }, p_chunk{ chunk }, m_position { position }, m_blocks{ ivec3{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE } }
-{
+		: p_chunkMap{ chunkMap }, p_chunk{ chunk }, m_position{ position }, 
+		m_blocks{ ivec3{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE } } {
 }
 
-Section::~Section()
-{
+Section::~Section() {
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
 }
 
-void Section::loadBlocks()
-{
+void Section::loadBlocks() {
 	for (int x = 0; x < Const::SECTION_SIDE; ++x)
-		for (int z = 0; z < Const::SECTION_SIDE; ++z)	
-			for (int y = 0; y < Const::SECTION_HEIGHT; ++y)
-			{
-				m_blocks.at(ivec3{ x, y, z }) = p_chunk->getChunkGenerator().getBlock(ivec3{ x, y, z } + Converter::sectionToGlobal(m_position));
+		for (int z = 0; z < Const::SECTION_SIDE; ++z)
+			for (int y = 0; y < Const::SECTION_HEIGHT; ++y) {
+				m_blocks.at(ivec3{ x, y, z }) = p_chunk->getChunkGenerator().getBlock(ivec3{ x, y, z } +Converter::sectionToGlobal(m_position));
 			}
 }
 
-void Section::loadFaces()
-{
+void Section::loadFaces() {
 	std::vector<GLfloat> faces;
 	std::vector<GLuint> indices;
 
 	for (int x = 0; x < Const::SECTION_SIDE; ++x)
 		for (int y = 0; y < Const::SECTION_HEIGHT; ++y)
-			for (int z = 0; z < Const::SECTION_SIDE; ++z)
-			{
+			for (int z = 0; z < Const::SECTION_SIDE; ++z) {
 				ivec3 pos{ x, y, z };
 				if (m_blocks.at(pos) == 0)
 					continue;
@@ -69,8 +64,8 @@ void Section::loadFaces()
 						faces.push_back(c);
 			}
 
-	for (int i = 0; i < (int) (faces.size() / 20); ++i) // Each 4 segments
-		for (GLuint index : rectIndices) // Add the indices with an offset of 4 * i 
+	for (int i = 0; i < (int)(faces.size() / 20); ++i) // Each 4 segments
+		for (GLuint index : rectIndices) // Add the indices with an offset of 4 * i
 			indices.push_back(index + 4 * i);
 
 	indicesNb = indices.size();
@@ -78,20 +73,19 @@ void Section::loadFaces()
 	// The VBO stores the vertices
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	if(!faces.empty())
+	if (!faces.empty())
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * faces.size(), faces.data(), GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// The EBO stores the indices
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	if(!indices.empty())
+	if (!indices.empty())
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indices.size(), indices.data(), GL_DYNAMIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Section::loadVAOs()
-{
+void Section::loadVAOs() {
 	// Create and bind the VAO
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -110,13 +104,11 @@ void Section::loadVAOs()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void Section::unloadVAOs()
-{
+void Section::unloadVAOs() {
 	glDeleteVertexArrays(1, &VAO);
 }
 
-void Section::render(Shader &shader, Texture2D &texture) const
-{
+void Section::render(Shader &shader, Texture2D &texture) const {
 	// Activate shader and texture to draw the object
 	shader.use();
 	glActiveTexture(GL_TEXTURE0);
@@ -129,22 +121,18 @@ void Section::render(Shader &shader, Texture2D &texture) const
 	Debug::glCheckError();
 }
 
-int Section::getBlock(ivec3 pos) const
-{
+int Section::getBlock(ivec3 pos) const {
 	return m_blocks.at(pos);
 }
 
-bool Section::isInSection(ivec3 pos)
-{
+bool Section::isInSection(ivec3 pos) {
 	return 0 <= pos.x && pos.x < Const::SECTION_SIDE && 0 <= pos.y && pos.y < Const::SECTION_HEIGHT && 0 <= pos.z && pos.z < Const::SECTION_SIDE;
 }
 
-bool Section::isAir(ivec3 pos)
-{
+bool Section::isAir(ivec3 pos) {
 	if (isInSection(pos))
 		return m_blocks.at(pos) == 0;
-	else
-	{
+	else {
 		ivec3 globalPos{ pos + Converter::sectionToGlobal(m_position) };
 
 		if (globalPos.y < 0 || globalPos.y >= Const::CHUNK_HEIGHT)
@@ -155,12 +143,10 @@ bool Section::isAir(ivec3 pos)
 	}
 }
 
-std::array<GLfloat, 20> Section::getFace(glm::ivec3 pos, const std::array<GLfloat, 12>& face)
-{
+std::array<GLfloat, 20> Section::getFace(glm::ivec3 pos, const std::array<GLfloat, 12>& face) {
 	std::array<GLfloat, 20> finalFace;
 	// Each vertex
-	for (int i = 0; i < 4; ++i)
-	{
+	for (int i = 0; i < 4; ++i) {
 		// Compute coordinates of the vertex
 		for (int j = 0; j < 3; ++j)
 			finalFace[5 * i + j] = face[3 * i + j] + pos[j];

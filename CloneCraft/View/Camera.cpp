@@ -21,40 +21,33 @@ const vec3 Camera::FRONT{ vec3{ 0.0f, 0.0f, -1.0f } };
 const vec3 Camera::WORLDUP{ vec3{ 0.0f, 1.0f, 0.0f } };
 
 Camera::Camera(vec3 position, float yaw, float pitch)
-	:m_position{ position }, m_yaw{ yaw }, m_pitch{ pitch }, m_chunk{ Converter::globalToChunk(position) }
-{
+	:m_position{ position }, m_yaw{ yaw }, m_pitch{ pitch }, m_chunk{ Converter::globalToChunk(position) } {
 	// Init up and right vectors from front vector
 	updateFromEuler();
 }
 
-mat4 Camera::getViewMatrix()
-{
+mat4 Camera::getViewMatrix() {
 	return glm::lookAt(m_position, m_position + m_front, WORLDUP);
 }
 
-mat4 Camera::getProjectionMatrix()
-{
-	return glm::perspective(glm::radians(m_zoom), 
+mat4 Camera::getProjectionMatrix() {
+	return glm::perspective(glm::radians(m_zoom),
 		static_cast<float>(Window::SCREEN_WIDTH) / static_cast<float>(Window::SCREEN_HEIGHT), NEARPLANE, FARPLANE);
 }
 
-vec3 Camera::getPosition()
-{
+vec3 Camera::getPosition() {
 	return m_position;
 }
 
-float Camera::getYaw()
-{
+float Camera::getYaw() {
 	return m_yaw;
 }
 
-float Camera::getPitch()
-{
+float Camera::getPitch() {
 	return m_pitch;
 }
 
-void Camera::move(Direction direction, float deltaTime)
-{
+void Camera::move(Direction direction, float deltaTime) {
 	float velocity = m_speed * deltaTime;
 	if (direction == FORWARD)
 		m_position += m_front * velocity;
@@ -70,18 +63,15 @@ void Camera::move(Direction direction, float deltaTime)
 		m_position -= m_up * velocity;
 }
 
-void Camera::move(vec3 offset)
-{
+void Camera::move(vec3 offset) {
 	m_position += offset;
 }
 
-void Camera::setPosition(vec3 position)
-{
+void Camera::setPosition(vec3 position) {
 	m_position = position;
 }
 
-void Camera::processMouse(vec2 offset)
-{
+void Camera::processMouse(vec2 offset) {
 	offset.x *= m_sensitivity;
 	offset.y *= m_sensitivity;
 
@@ -96,8 +86,7 @@ void Camera::processMouse(vec2 offset)
 	this->updateFromEuler();
 }
 
-void Camera::processMouseScroll(float yOffset)
-{
+void Camera::processMouseScroll(float yOffset) {
 	m_zoom -= yOffset * SCROLLSPEED;
 	if (m_zoom < 1.0f)
 		m_zoom = 1.0f;
@@ -105,8 +94,7 @@ void Camera::processMouseScroll(float yOffset)
 		m_zoom = 45.0f;
 }
 
-void Camera::updateFromEuler()
-{
+void Camera::updateFromEuler() {
 	vec3 front;
 	front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
 	front.y = sin(glm::radians(m_pitch));

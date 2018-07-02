@@ -4,8 +4,7 @@
 #include "Game.h"
 #include "Debug.h"
 
-int main()
-{
+int main() {
 	Window window;
 	window.initCallbacks();
 
@@ -15,8 +14,7 @@ int main()
 	Game game{ &window };
 
 	GLfloat lastFrame = 0.0f;
-	while (!window.shouldClose())
-	{
+	while (!window.shouldClose()) {
 		// Calculate delta time of the current frame
 		GLfloat currentFrame = static_cast<GLfloat>(glfwGetTime());
 		GLfloat deltaTime = currentFrame - lastFrame;
@@ -25,10 +23,9 @@ int main()
 		// show FPS
 		accumulator += deltaTime;
 		++fps;
-		if (accumulator >= 1.0f)
-		{
+		if (accumulator >= 1.0f) {
 			std::cout << fps << std::endl;
-			
+
 			accumulator -= 1.0f;
 			fps = 0;
 		}
