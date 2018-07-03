@@ -1,43 +1,31 @@
 #include "Window.h"
-#include "Keyboard.h"
-#include "Mouse.h"
 
 const vec3 Window::clearColor{ 70.f / 255, 190.f / 255, 240.f / 255 };
 
 Window::Window() {
-	// Init glfw
-	assert(glfwInit());
-
-	initChunkMapWindow();
-	initMainWindow();
+	sf::ContextSettings settings;
+	settings.majorVersion = 3;
+	settings.minorVersion = 3;
+	settings.depthBits = 24;
+	settings.stencilBits = 8;
+	window.create(sf::VideoMode{ 1080, 720 }, "CloneCraft", sf::Style::Default, settings);
+	window.setMouseCursorVisible(false);
 
 	// Init GLAD
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+	if (!gladLoadGL()) {
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		exit(-1);
 	}
 
-	// OpenGL settings
-	glEnable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glFrontFace(GL_CW);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-}
-
-Window::~Window() {
-	glfwTerminate();
-}
-
-bool Window::shouldClose() {
-	return glfwWindowShouldClose(mainWindow);
+	initSettings();
 }
 
 void Window::close() {
-	glfwSetWindowShouldClose(mainWindow, GL_TRUE);
+	toClose = true;
+}
+
+bool Window::shouldClose() {
+	return toClose;
 }
 
 void Window::clear() {
@@ -45,69 +33,24 @@ void Window::clear() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Window::swapBuffers() {
-	glfwSwapBuffers(mainWindow);
+void Window::display() {
+	window.display();
 }
 
-void Window::initCallbacks() {
-	glfwSetKeyCallback(mainWindow, Window::key_callback);
-	glfwSetCursorPosCallback(mainWindow, Window::mouse_callback);
-	glfwSetScrollCallback(mainWindow, Window::scroll_callback);
+ivec2 Window::getCenter() {
+	return { window.getSize().x / 2, window.getSize().y / 2 };
 }
 
-void Window::pollEvents() {
-	glfwPollEvents();
+bool Window::pollEvent(sf::Event & event) {
+	return window.pollEvent(event);
 }
 
-GLFWwindow * Window::getGLFWMainWindow() {
-	return mainWindow;
-}
-
-GLFWwindow * Window::getGLFWChunkMapThreadWindow() {
-	return chunkMapWindow;
-}
-
-void Window::initChunkMapWindow() {
-	glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	chunkMapWindow = glfwCreateWindow(1, 1, "ChunkMap Thread", nullptr, nullptr);
-}
-
-void Window::initMainWindow() {
-	glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
-	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-	// Share OpenGL resources of mainWindow with chunkMapThread
-	mainWindow = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "CloneCraft", nullptr, chunkMapWindow);
-	// Center the window
-	int width, height;
-	glfwGetFramebufferSize(mainWindow, &width, &height);
-	glfwSetWindowPos(mainWindow, (mode->width - width) / 2, (mode->height - height) / 2);
-	glfwMakeContextCurrent(mainWindow);
-
-	glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-}
-
-void Window::key_callback(GLFWwindow *window, int key, int scancode, int action, int mode) {
-	if (0 <= key && key < 1024) {
-		if (action == GLFW_PRESS)
-			Keyboard::setKey(key, GL_TRUE);
-		else if (action == GLFW_RELEASE)
-			Keyboard::setKey(key, GL_FALSE);
-	}
-}
-
-void Window::mouse_callback(GLFWwindow *window, double xpos, double ypos) {
-	Mouse::setPosition(vec2{ static_cast<float>(xpos), static_cast<float>(ypos) });
-}
-
-void Window::scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-	Mouse::addScrolling(vec2{ static_cast<float>(xoffset), static_cast<float>(yoffset) });
+void Window::initSettings() {
+	// OpenGL settings
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CW);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }

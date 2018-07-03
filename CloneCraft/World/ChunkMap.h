@@ -11,7 +11,7 @@
 class ChunkMap
 {
 public:
-	static const int VIEW_DISTANCE{ 16 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
+	static const int VIEW_DISTANCE{ 4 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
 
 	struct Comp_ivec2
 	{

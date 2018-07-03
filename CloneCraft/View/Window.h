@@ -1,10 +1,9 @@
 #pragma once
 
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <SFML/OpenGL.hpp>
+#include <SFML/Window.hpp>
 #include <GlmCommon.h>
-
-#include "Game.h"
 
 #include <memory>
 
@@ -17,25 +16,17 @@ public:
 	static const vec3 clearColor;
 
 	Window();
-	~Window();
 
-	bool shouldClose();
 	void close();
+	bool shouldClose();
 	void clear();
-	void swapBuffers();
-	void initCallbacks();
-	void pollEvents();
-
-	GLFWwindow* getGLFWMainWindow();
-	GLFWwindow* getGLFWChunkMapThreadWindow();
+	void display();
+	ivec2 getCenter();
+	bool pollEvent(sf::Event& event);
 
 private:
-	GLFWwindow *mainWindow, *chunkMapWindow;
+	sf::Window window;
+	bool toClose{ false };
 
-	void initChunkMapWindow();
-	void initMainWindow();
-
-	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
-	static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-	static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+	void initSettings();
 };

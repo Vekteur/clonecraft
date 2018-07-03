@@ -1,6 +1,7 @@
 #include "ChunkMap.h"
 #include "ResManager.h"
 #include "Debug.h"
+#include "Dir2D.h"
 
 #include "Array3D.h"
 
@@ -13,32 +14,35 @@ ChunkMap::~ChunkMap() {
 }
 
 void ChunkMap::load() {
-	loadBlocks(ivec2{ m_center.x, m_center.y }); // Base case : load the blocks of the center chunk
+	loadBlocks(ivec2{ m_center.x, m_center.y }); // load the blocks of the center chunk
 	for (int d = 1; d <= LOAD_DISTANCE; ++d) {
-		// Load the blocks in the chunks at distance d
-		for (int x = m_center.x - d; x < m_center.x + d; ++x) // Top left to top right
-			loadBlocks(ivec2{ x, m_center.y + d });
-		for (int y = m_center.y + d; y > m_center.y - d; --y) // Top right to bottom right
-			loadBlocks(ivec2{ m_center.x + d, y });
-		for (int x = m_center.x + d; x > m_center.x - d; --x) // Bottom right to bottom left
-			loadBlocks(ivec2{ x, m_center.y - d });
-		for (int y = m_center.y - d; y < m_center.y + d; ++y) // Bottom left to top left
-			loadBlocks(ivec2{ m_center.x - d, y });
-
-		if (d == 1)
-			loadFaces(ivec2{ m_center.x, m_center.y }); // Load the faces in the center chunk
+		// load the blocks in the chunks at distance d
+		for (int dir = 0; dir < Dir2D::SIZE; ++dir) {
+			ivec2 curr = Dir2D::find(static_cast<Dir2D::Dir>(dir));
+			ivec2 prev = Dir2D::prev(static_cast<Dir2D::Dir>(dir));
+			ivec2 next = Dir2D::next(static_cast<Dir2D::Dir>(dir));
+			for (ivec2 relPos = prev * d; relPos != next * d; relPos += next) {
+				ivec2 pos = relPos + m_center + curr * d;
+				loadBlocks(pos);
+			}
+		}
 
 		// load the faces in the chunks at distance d - 1
 		int c = d - 1;
-		for (int x = m_center.x - c; x < m_center.x + c; ++x) // Top left to top right
-			loadFaces(ivec2{ x, m_center.y + c });
-		for (int y = m_center.y + c; y > m_center.y - c; --y) // Top right to bottom right
-			loadFaces(ivec2{ m_center.x + c, y });
-		for (int x = m_center.x + c; x > m_center.x - c; --x) // Bottom right to bottom left
-			loadFaces(ivec2{ x, m_center.y - c });
-		for (int y = m_center.y - c; y < m_center.y + c; ++y) // Bottom left to top left
-			loadFaces(ivec2{ m_center.x - c, y });
-		//std::cout << "Distance " << d << " loaded" << '\n';
+		if (c == 0) {
+			loadFaces(ivec2{ m_center.x, m_center.y });
+		} else {
+			for (int dir = 0; dir < Dir2D::SIZE; ++dir) {
+				ivec2 curr = Dir2D::find(static_cast<Dir2D::Dir>(dir));
+				ivec2 prev = Dir2D::prev(static_cast<Dir2D::Dir>(dir));
+				ivec2 next = Dir2D::next(static_cast<Dir2D::Dir>(dir));
+				for (ivec2 relPos = prev * c; relPos != next * c; relPos += next) {
+					ivec2 pos = relPos + m_center + curr * c;
+					loadFaces(pos);
+				}
+			}
+		}
+
 
 		glFlush();
 
@@ -55,11 +59,10 @@ void ChunkMap::unloadFarChunks() {
 		if (it->second->getState() == Chunk::TO_REMOVE) {
 			it = m_chunks.erase(it);
 			continue;
-		}
-		else if (!isInChunkMap(it->second->getPosition()))
+		} else if (!isInChunkMap(it->second->getPosition())) {
 			it->second->setState(Chunk::TO_UNLOAD_VAOS);
-
-		it++;
+		}
+		++it;
 	}
 	m_deleteChunksMutex.unlock();
 }

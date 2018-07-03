@@ -2,34 +2,39 @@
 
 Chunk::Chunk(ChunkMap* const chunkMap, ivec2 position)
 	: p_chunkMap{ chunkMap }, m_position{ position } {
-	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
+	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i) {
 		m_sections[i] = std::make_unique<Section>(p_chunkMap, this, ivec3{ m_position.x, i, m_position.y });
+	}
 }
 
 Chunk::~Chunk() {
 }
 
 void Chunk::loadBlocks() {
-	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
-		m_sections[i]->loadBlocks();
+	for (auto& section : m_sections) {
+		section->loadBlocks();
+	}
 	m_state = TO_LOAD_FACES;
 }
 
 void Chunk::loadFaces() {
-	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
-		m_sections[i]->loadFaces();
+	for (auto& section : m_sections) {
+		section->loadFaces();
+	}
 	m_state = TO_LOAD_VAOS;
 }
 
 void Chunk::loadVAOs() {
-	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
-		m_sections[i]->loadVAOs();
+	for (auto& section : m_sections) {
+		section->loadVAOs();
+	}
 	m_state = TO_RENDER;
 }
 
 void Chunk::unloadVAOs() {
-	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
-		m_sections[i]->unloadVAOs();
+	for (auto& section : m_sections) {
+		section->unloadVAOs();
+	}
 	m_state = TO_REMOVE;
 }
 
@@ -46,8 +51,9 @@ ivec2 Chunk::getPosition() const {
 }
 
 void Chunk::render(Shader & shader, Texture2D & texture) const {
-	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i)
-		m_sections[i]->render(shader, texture);
+	for (auto& section : m_sections) {
+		section->render(shader, texture);
+	}
 }
 
 ChunkGenerator& Chunk::getChunkGenerator() {

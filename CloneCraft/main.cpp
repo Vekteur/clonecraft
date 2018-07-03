@@ -1,45 +1,72 @@
 #include <iostream>
+#include <glad/glad.h>
+#include <SFML/OpenGL.hpp>
+#include <SFML/Window.hpp>
 
-#include "Window.h"
 #include "Game.h"
 #include "Debug.h"
+#include "Window.h"
 
-int main() {
-	Window window;
-	window.initCallbacks();
+class FPSCounter {
+private:
+	const sf::Time countTime = sf::seconds(1.f);
+	sf::Time accumulator{ sf::seconds(0.f) };
+	int fps = 0;
 
-	GLfloat accumulator = 0.0f;
-	GLuint fps = 0;
-
-	Game game{ &window };
-
-	GLfloat lastFrame = 0.0f;
-	while (!window.shouldClose()) {
-		// Calculate delta time of the current frame
-		GLfloat currentFrame = static_cast<GLfloat>(glfwGetTime());
-		GLfloat deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
-		// show FPS
+public:
+	void update(sf::Time deltaTime) {
 		accumulator += deltaTime;
 		++fps;
-		if (accumulator >= 1.0f) {
-			std::cout << fps << std::endl;
-
-			accumulator -= 1.0f;
+		if (accumulator >= countTime) {
+			std::cout << "FPS : " << fps << std::endl;
+			accumulator -= countTime;
 			fps = 0;
 		}
+	}
+};
 
-		window.pollEvents();
+int main() {
+	sf::Context context;
 
-		game.processInput(deltaTime);
-		game.update(deltaTime);
+	Window window;
 
+	Game game{ &window, &context };
+	
+	sf::Clock clock;
+	FPSCounter fpsCounter;
+
+	while (!window.shouldClose()) {
+		sf::Time deltaTime = clock.getElapsedTime();
+		clock.restart();
+		fpsCounter.update(deltaTime);
+
+		sf::Event event;
+		while (window.pollEvent(event)) {
+			switch (event.type) {
+			case sf::Event::KeyPressed:
+				if (event.key.code == sf::Keyboard::Escape)
+					window.close();
+				break;
+			case sf::Event::Closed:
+				window.close();
+				break;
+			case sf::Event::Resized:
+				glViewport(0, 0, event.size.width, event.size.height);
+				break;
+			case sf::Event::MouseWheelScrolled:
+				if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
+					game.processMouseWheel(event.mouseWheelScroll.delta);
+				}
+				break;
+			}
+		}
+		
+		game.processInput(deltaTime.asSeconds());
+		game.update(deltaTime.asSeconds());
+		
 		window.clear();
-
 		game.render();
-
-		window.swapBuffers();
+		window.display();
 	}
 
 	return 0;

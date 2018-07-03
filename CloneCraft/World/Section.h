@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glad\glad.h>
-#include <GLFW\glfw3.h>
 #include <GlmCommon.h>
 
 #include <array>
@@ -10,6 +9,7 @@
 #include "Array3D.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "Dir3D.h"
 
 class ChunkMap;
 class Chunk;
@@ -33,7 +33,7 @@ private:
 	Chunk* const p_chunk{ nullptr };
 	const ivec3 m_position;
 
-	Array3D<GLuint> m_blocks;
+	Array3D<GLchar> m_blocks;
 	GLuint VAO, VBO, EBO;
 	int indicesNb{ 0 };
 
@@ -50,4 +50,6 @@ private:
 	static const std::array<GLfloat, 12> faceY1;
 	static const std::array<GLfloat, 12> faceZ0;
 	static const std::array<GLfloat, 12> faceZ1;
+
+	static const std::array<std::array<GLfloat, 12>, Dir3D::SIZE> dirToFace;
 };

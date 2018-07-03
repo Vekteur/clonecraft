@@ -20,10 +20,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Block\Block.h" />
-    <ClInclude Include="Input\Mouse.h" />
+    <ClInclude Include="Maths\Dir3D.h" />
+    <ClInclude Include="Maths\Dir2D.h" />
     <ClInclude Include="Util\Debug.h" />
     <ClInclude Include="Generator\ChunkGenerator.h" />
-    <ClInclude Include="Input\Keyboard.h" />
     <ClInclude Include="Util\stb_image.h" />
     <ClInclude Include="World\ChunkMap.h" />
     <ClInclude Include="Maths\Converter.h" />
@@ -31,10 +31,10 @@
       <FileType>CppCode</FileType>
     </ClInclude>
     <ClCompile Include="Block\Block.cpp" />
-    <ClCompile Include="Input\Mouse.cpp" />
+    <ClCompile Include="Maths\Dir3D.cpp" />
+    <ClCompile Include="Maths\Dir2D.cpp" />
     <ClCompile Include="Util\Debug.cpp" />
     <ClCompile Include="Generator\ChunkGenerator.cpp" />
-    <ClCompile Include="Input\Keyboard.cpp" />
     <ClCompile Include="Util\glad.c" />
     <ClCompile Include="Util\stb_image.cpp" />
     <ClCompile Include="World\ChunkMap.cpp" />
@@ -117,12 +117,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Block;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Input;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Generator;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Maths;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\ResManager;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Util;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\View;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\World;C:\Users\vdheu\Informatique\Bibliothèques\OpenGL\includes;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\vdheu\Informatique\Bibliothèques\OpenGL\libs;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
+    <IncludePath>C:\Users\vdheu\Informatique\Libraries\SFML-2.5.0\include;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Block;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Input;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Generator;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Maths;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\ResManager;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Util;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\View;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\World;C:\Users\vdheu\Informatique\Libraries\OpenGL\includes;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\vdheu\Informatique\Libraries\SFML-2.5.0\lib;C:\Users\vdheu\Informatique\Libraries\OpenGL\libs;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Block;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Input;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Generator;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Maths;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\ResManager;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Util;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\View;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\World;C:\Users\vdheu\Informatique\Bibliothèques\OpenGL\includes;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\vdheu\Informatique\Bibliothèques\OpenGL\libs;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
+    <IncludePath>C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Block;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Input;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Generator;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Maths;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\ResManager;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\Util;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\View;C:\Users\vdheu\Informatique\C++\Visual Studio\CloneCraft\CloneCraft\World;C:\Users\vdheu\Informatique\Libraries\SFML-2.5.0\include;C:\Users\vdheu\Informatique\Libraries\OpenGL\includes;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\vdheu\Informatique\Libraries\SFML-2.5.0\lib;C:\Users\vdheu\Informatique\Libraries\OpenGL\libs;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -132,7 +132,7 @@
       <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;SOIL.lib;assimp-vc140-mt.lib;irrKlang.lib;freetype.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;SOIL.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;assimp-vc140-mt.lib;irrKlang.lib;freetype.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/VERBOSE:LIB %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
@@ -154,7 +154,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;SOIL.lib;assimp-vc140-mt.lib;irrKlang.lib;freetype.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;SOIL.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;assimp-vc140-mt.lib;irrKlang.lib;freetype.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

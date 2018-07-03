@@ -76,7 +76,7 @@ void Camera::processMouse(vec2 offset) {
 	offset.y *= m_sensitivity;
 
 	m_yaw = fmod(m_yaw + offset.x + 360, 360);
-	m_pitch += offset.y;
+	m_pitch -= offset.y;
 
 	if (m_pitch > 89.0f)
 		m_pitch = 89.0f;

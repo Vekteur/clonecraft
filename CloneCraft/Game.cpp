@@ -1,13 +1,10 @@
 #include "Game.h"
 
 #include "Converter.h"
-#include "Window.h"
 #include "Debug.h"
-#include "Keyboard.h"
-#include "Mouse.h"
 
-Game::Game(Window* const window) 
-		: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window } {
+Game::Game(Window* const window, sf::Context* const context)
+	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context{ context } {
 	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
 	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
 
@@ -15,7 +12,6 @@ Game::Game(Window* const window)
 
 	if (glGetError())
 		std::cin.get();
-
 	m_chunkMapThread = std::thread{ &Game::runChunkLoadingLoop, this };
 }
 
@@ -25,7 +21,7 @@ Game::~Game() {
 }
 
 void Game::runChunkLoadingLoop() {
-	glfwMakeContextCurrent(p_window->getGLFWChunkMapThreadWindow());
+	p_context->setActive(true);
 
 	while (!stopChunkMapThread) {
 		m_chunks.load();
@@ -33,30 +29,31 @@ void Game::runChunkLoadingLoop() {
 	}
 }
 
+void Game::processMouseWheel(GLfloat delta) {
+	m_camera.processMouseScroll(delta);
+}
+
 void Game::processInput(GLfloat dt) {
-	if (Keyboard::isKeyPressed(GLFW_KEY_W))
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
 		m_camera.move(Camera::FORWARD, dt);
-	if (Keyboard::isKeyPressed(GLFW_KEY_S))
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 		m_camera.move(Camera::BACKWARD, dt);
-	if (Keyboard::isKeyPressed(GLFW_KEY_A))
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
 		m_camera.move(Camera::LEFT, dt);
-	if (Keyboard::isKeyPressed(GLFW_KEY_D))
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 		m_camera.move(Camera::RIGHT, dt);
-	if (Keyboard::isKeyPressed(GLFW_KEY_ESCAPE))
-		p_window->close();
 
-	vec2 mouseOffset{ Mouse::getPosition().x - m_lastMousePosition.x, m_lastMousePosition.y - Mouse::getPosition().y };
-	m_lastMousePosition = Mouse::getPosition();
+	ivec2 mousePosition{ sf::Mouse::getPosition().x, sf::Mouse::getPosition().y };
+	ivec2 windowCenter{ p_window->getCenter() };
+	ivec2 mouseOffset{ mousePosition - windowCenter };
 	m_camera.processMouse(mouseOffset);
-
-	m_camera.processMouseScroll(Mouse::getScrolling().y);
-	Mouse::resetScrolling();
+	sf::Mouse::setPosition(sf::Vector2i{ windowCenter.x, windowCenter.y });
 }
 
 void Game::update(GLfloat dt) {
 	ResManager::getShader("cube").use().setMat4("view", m_camera.getViewMatrix());
 	ResManager::getShader("cube").use().setMat4("projection", m_camera.getProjectionMatrix());
-	ResManager::getShader("cube").use().setVec3("skyColor", p_window->clearColor);
+	ResManager::getShader("cube").use().setVec3("skyColor", { 70.f / 255, 190.f / 255, 240.f / 255 });
 
 	ivec2 newCenter = Converter::globalToChunk(m_camera.getPosition());
 	if (m_chunks.getCenter() != newCenter)
