@@ -1,30 +1,16 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <SFML/OpenGL.hpp>
-#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 
 #include "Game.h"
 #include "Debug.h"
 #include "Window.h"
 #include "Logger.h"
+#include "FPSCounter.h"
+#include "WorldConstants.h"
+#include "WindowTextDrawer.h"
 
-class FPSCounter {
-private:
-	const sf::Time countTime = sf::seconds(1.f);
-	sf::Time accumulator{ sf::seconds(0.f) };
-	int fps = 0;
-
-public:
-	void update(sf::Time deltaTime) {
-		accumulator += deltaTime;
-		++fps;
-		if (accumulator >= countTime) {
-			LOG(Level::INFO) << "FPS : " << fps << std::endl;
-			accumulator -= countTime;
-			fps = 0;
-		}
-	}
-};
 int main(int argc, char* argv[]) {
 	LOG.setFileOutputLevel(Level::DEBUG);
 	LOG.setOutputFile("Logs/global.log");
@@ -32,10 +18,10 @@ int main(int argc, char* argv[]) {
 	LOG(Level::INFO) << "Application launched" << std::endl;
 	
 	sf::Context context;
-
 	Window window;
-
 	Game game{ &window, &context };
+
+	WindowTextDrawer textDrawer{ &window };
 	
 	sf::Clock clock;
 	FPSCounter fpsCounter;
@@ -71,6 +57,18 @@ int main(int argc, char* argv[]) {
 		
 		window.clear();
 		game.render();
+
+		window.pushGLStates();
+
+		textDrawer.drawFPS(fpsCounter.get());
+		textDrawer.drawPosition(game.getCamera().getPosition());
+		textDrawer.drawDirection(game.getCamera().getYaw(), game.getCamera().getPitch());
+		textDrawer.drawChunksInfos(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES), 
+			game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_VAOS));
+		textDrawer.drawBlockNumber(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES) * 
+			Const::CHUNK_SIDE * Const::CHUNK_SIDE * Const::CHUNK_HEIGHT);
+
+		window.popGLStates();
 
 		window.display();
 	}

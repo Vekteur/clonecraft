@@ -34,13 +34,19 @@ public:
 	Chunk& getChunk(ivec2 pos);
 	Section& getSection(ivec3 pos);
 	void unloadFarChunks();
-	int getSize();
+	int size();
+
+	void onChangeChunkState(Chunk& chunk, Chunk::State nextState);
+	int chunksAtLeastInState(Chunk::State state);
+	int chunksInState(Chunk::State state);
 
 private:
 	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2> m_chunks;
 	ivec2 m_center;
 	ivec2 m_newCenter;
 	std::mutex m_deleteChunksMutex;
+
+	std::array<int, Chunk::STATE_SIZE> countChunks;
 
 	void loadBlocks(ivec2 pos);
 	void loadFaces(ivec2 pos);

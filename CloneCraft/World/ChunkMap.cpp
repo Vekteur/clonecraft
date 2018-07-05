@@ -43,7 +43,6 @@ void ChunkMap::load() {
 			}
 		}
 
-
 		glFlush();
 
 		if (m_newCenter != m_center) {
@@ -67,28 +66,37 @@ void ChunkMap::unloadFarChunks() {
 	m_deleteChunksMutex.unlock();
 }
 
+void ChunkMap::onChangeChunkState(Chunk& chunk, Chunk::State nextState) {
+	if (chunk.getState() != Chunk::STATE_SIZE)
+		--countChunks[chunk.getState()];
+	if (nextState != Chunk::STATE_SIZE)
+		++countChunks[nextState];
+}
+
 void ChunkMap::loadBlocks(ivec2 pos) {
-	if (m_chunks.find(pos) == m_chunks.end()) // Chunk not in the ChunkMap
+	if (m_chunks.find(pos) == m_chunks.end()) { // Chunk not in the ChunkMap
 		m_chunks.emplace(pos, std::make_unique<Chunk>(this, pos));
-	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_BLOCKS)
+	}
+	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_BLOCKS) {
 		m_chunks[pos]->loadBlocks(); // Load the blocks
+	}
 }
 
 void ChunkMap::loadFaces(ivec2 pos) {
-	if (m_chunks.find(pos) == m_chunks.end()) // Chunk not in the ChunkMap
-		m_chunks.emplace(pos, std::make_unique<Chunk>(this, pos));
-	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_FACES)
+	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_FACES) {
 		m_chunks[pos]->loadFaces(); // Load the faces
+	}
 }
 
 void ChunkMap::update() {
 	m_deleteChunksMutex.lock();
 	for (auto& c : m_chunks) {
 		Chunk::State state = c.second->getState();
-		if (state == Chunk::TO_LOAD_VAOS)
+		if (state == Chunk::TO_LOAD_VAOS) {
 			c.second->loadVAOs();
-		else if (state == Chunk::TO_UNLOAD_VAOS)
+		} else if (state == Chunk::TO_UNLOAD_VAOS) {
 			c.second->unloadVAOs();
+		}
 	}
 	m_deleteChunksMutex.unlock();
 }
@@ -97,8 +105,9 @@ void ChunkMap::render() {
 	m_deleteChunksMutex.lock();
 
 	for (auto& c : m_chunks)
-		if (c.second->getState() == Chunk::TO_RENDER)
+		if (c.second->getState() == Chunk::TO_RENDER) {
 			c.second->render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
+		}
 
 	m_deleteChunksMutex.unlock();
 }
@@ -125,6 +134,19 @@ Section& ChunkMap::getSection(ivec3 pos) {
 	return getChunk(chunkPos).getSection(pos.y);
 }
 
-int ChunkMap::getSize() {
+int ChunkMap::size() {
 	return m_chunks.size();
 }
+
+int ChunkMap::chunksAtLeastInState(Chunk::State minState) {
+	int sum = 0;
+	for (int state = minState; state < Chunk::STATE_SIZE; ++state) {
+		sum += countChunks[state];
+	}
+	return sum;
+}
+
+int ChunkMap::chunksInState(Chunk::State state) {
+	return countChunks[state];
+}
+

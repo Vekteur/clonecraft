@@ -1,5 +1,7 @@
 #include "Logger.h"
 
+#include <iomanip>
+
 template<typename E>
 constexpr auto toInt(E e) -> typename std::underlying_type<E>::type {
 	return static_cast<typename std::underlying_type<E>::type>(e);
@@ -56,7 +58,7 @@ std::string Logger::timeFromStart() {
 	auto sTime = std::chrono::duration_cast<std::chrono::seconds>(time);
 	auto microTime = std::chrono::duration_cast<std::chrono::microseconds>(time - sTime);
 	std::ostringstream oss;
-	oss << sTime.count() << ',' << microTime.count();
+	oss << sTime.count() << ',' << std::setw(6) << std::setfill('0') << microTime.count();
 	return oss.str();
 }
 
@@ -66,12 +68,12 @@ Logger& Logger::operator()(Level level) {
 	return *this;
 }
 
-Logger & Logger::operator<<(standardEndLine manip) {
+Logger & Logger::operator<<(std::ostream&(*func)(std::ostream&)) {
 	if (isStandardOutputLevelActive(activeLevel)) {
-		manip(std::cout);
+		func(std::cout);
 	}
 	if (isFileOutputLevelActive(activeLevel)) {
-		manip(fstream);
+		func(fstream);
 	}
 	return *this;
 }

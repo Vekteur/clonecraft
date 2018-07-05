@@ -69,3 +69,7 @@ void Game::render() {
 Camera& Game::getCamera() {
 	return m_camera;
 }
+
+ChunkMap & Game::getChunkMap() {
+	return m_chunks;
+}

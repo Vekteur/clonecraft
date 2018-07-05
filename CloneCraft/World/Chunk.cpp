@@ -1,42 +1,45 @@
 #include "Chunk.h"
 #include "GlmCommon.h"
+#include "ChunkMap.h"
 
 Chunk::Chunk(ChunkMap* const chunkMap, ivec2 position)
 	: p_chunkMap{ chunkMap }, m_position{ position } {
+	setState(TO_LOAD_BLOCKS);
 	for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i) {
 		m_sections[i] = std::make_unique<Section>(p_chunkMap, this, ivec3{ m_position.x, i, m_position.y });
 	}
 }
 
 Chunk::~Chunk() {
+	setState(STATE_SIZE);
 }
 
 void Chunk::loadBlocks() {
 	for (auto& section : m_sections) {
 		section->loadBlocks();
 	}
-	m_state = TO_LOAD_FACES;
+	setState(TO_LOAD_FACES);
 }
 
 void Chunk::loadFaces() {
 	for (auto& section : m_sections) {
 		section->loadFaces();
 	}
-	m_state = TO_LOAD_VAOS;
+	setState(TO_LOAD_VAOS);
 }
 
 void Chunk::loadVAOs() {
 	for (auto& section : m_sections) {
 		section->loadVAOs();
 	}
-	m_state = TO_RENDER;
+	setState(TO_RENDER);
 }
 
 void Chunk::unloadVAOs() {
 	for (auto& section : m_sections) {
 		section->unloadVAOs();
 	}
-	m_state = TO_REMOVE;
+	setState(TO_REMOVE);
 }
 
 Chunk::State Chunk::getState() const {
@@ -44,6 +47,7 @@ Chunk::State Chunk::getState() const {
 }
 
 void Chunk::setState(State state) {
+	p_chunkMap->onChangeChunkState(*this, state);
 	m_state = state;
 }
 

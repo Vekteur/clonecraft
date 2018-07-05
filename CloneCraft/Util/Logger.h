@@ -7,7 +7,7 @@
 
 #undef ERROR
 enum class Level {
-	DEBUG, TRACE, ERROR, WARNING, INFO, OFF
+	DEBUG, TRACE, INFO, WARNING, ERROR, OFF
 };
 
 class Logger
@@ -30,9 +30,7 @@ public:
 	template <typename T>
 	friend Logger& operator<<(Logger& logger, const T& message);
 
-	using coutType = std::basic_ostream<char, std::char_traits<char> >;
-	using standardEndLine = coutType&(*)(coutType&);
-	Logger& operator<<(standardEndLine manip);
+	Logger& operator<<(std::ostream&(*func)(std::ostream&));
 
 private:
 #ifdef _DEBUG

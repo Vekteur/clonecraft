@@ -2,14 +2,14 @@
 
 const vec3 Window::clearColor{ 70.f / 255, 190.f / 255, 240.f / 255 };
 
-Window::Window() {
+Window::Window() : sf::RenderWindow{} {
 	sf::ContextSettings settings;
 	settings.majorVersion = 3;
 	settings.minorVersion = 3;
 	settings.depthBits = 24;
 	settings.stencilBits = 8;
-	m_window.create(sf::VideoMode{ 1080, 720 }, "CloneCraft", sf::Style::Default, settings);
-	m_window.setMouseCursorVisible(false);
+	this->create(sf::VideoMode{ SCREEN_WIDTH, SCREEN_HEIGHT }, "CloneCraft", sf::Style::Default, settings);
+	this->setMouseCursorVisible(false);
 
 	// Init GLAD
 	if (!gladLoadGL()) {
@@ -33,16 +33,8 @@ void Window::clear() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Window::display() {
-	m_window.display();
-}
-
 ivec2 Window::getCenter() {
-	return { m_window.getSize().x / 2, m_window.getSize().y / 2 };
-}
-
-bool Window::pollEvent(sf::Event & event) {
-	return m_window.pollEvent(event);
+	return { this->getSize().x / 2, this->getSize().y / 2 };
 }
 
 void Window::initSettings() {

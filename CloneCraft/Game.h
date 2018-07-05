@@ -25,6 +25,7 @@ public:
 	void runChunkLoadingLoop();
 
 	Camera& getCamera();
+	ChunkMap& getChunkMap();
 
 private:
 	Window* const p_window{ nullptr };

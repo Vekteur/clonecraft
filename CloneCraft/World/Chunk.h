@@ -16,7 +16,8 @@ public:
 		TO_LOAD_VAOS,
 		TO_RENDER,
 		TO_UNLOAD_VAOS,
-		TO_REMOVE
+		TO_REMOVE,
+		STATE_SIZE
 	};
 
 	Chunk(ChunkMap* const chunkMap = nullptr, ivec2 position = ivec2{0, 0});
@@ -38,7 +39,7 @@ private:
 	ChunkMap* const p_chunkMap{ nullptr };
 	const vec2 m_position;
 	ChunkGenerator m_chunkGenerator{ m_position };
-	State m_state{ TO_LOAD_BLOCKS };
+	State m_state{ STATE_SIZE };
 
 	std::array<std::unique_ptr<Section>, Const::CHUNK_NB_SECTIONS> m_sections;
 };
