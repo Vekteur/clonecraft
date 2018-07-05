@@ -12,8 +12,8 @@ public:
 	static ivec3 sectionToGlobal(ivec3 pos);
 	static ivec3 globalToSection(ivec3 pos);
 
-	static int positiveMod(int base, int modulo);
-
 private:
 	static int floorDiv(int base, int divider);
 };
+
+int posMod(int base, int modulo);

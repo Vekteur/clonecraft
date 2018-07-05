@@ -8,16 +8,19 @@ PerlinNoise::~PerlinNoise() {
 
 // p has coordinates in [0, 1[
 double PerlinNoise::getNoise(vec2 p) {
-	// Get the gradient vectors
+	// Unit square that contains the coordinates p, modulo 255
 	ivec2 pi{ (int)floor(p.x) & 255 , (int)floor(p.y) & 255 };
 
+	// Give random values to each corner of the square (only the 2 last bits matter)
 	int g1 = perm[perm[pi.x] + pi.y];
 	int g2 = perm[perm[pi.x + 1] + pi.y];
 	int g3 = perm[perm[pi.x] + pi.y + 1];
 	int g4 = perm[perm[pi.x + 1] + pi.y + 1];
 
+	// Coordinates of p in the unit square
 	dvec2 pf{ p.x - floor(p.x), p.y - floor(p.y) };
 
+	// Calculate the dot product of pf and a random vector in the corner of the square
 	double d1 = grad(g1, pf.x, pf.y);
 	double d2 = grad(g2, pf.x - 1, pf.y);
 	double d3 = grad(g3, pf.x, pf.y - 1);
@@ -35,7 +38,7 @@ double PerlinNoise::getNoise(vec2 p) {
 
 // Linear interpolation
 double PerlinNoise::lerp(double amount, double left, double right) {
-	return ((1 - amount) * left + amount * right);
+	return left + amount * (right - left);
 }
 
 // Fade function

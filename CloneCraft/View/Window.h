@@ -2,7 +2,7 @@
 
 #include <glad/glad.h>
 #include <SFML/OpenGL.hpp>
-#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
 #include <GlmCommon.h>
 
 #include <memory>
@@ -17,7 +17,7 @@ public:
 
 	Window();
 
-	void close();
+	void toClose();
 	bool shouldClose();
 	void clear();
 	void display();
@@ -25,8 +25,8 @@ public:
 	bool pollEvent(sf::Event& event);
 
 private:
-	sf::Window window;
-	bool toClose{ false };
+	sf::RenderWindow m_window;
+	bool m_toClose{ false };
 
 	void initSettings();
 };

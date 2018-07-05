@@ -127,7 +127,7 @@ bool Section::isAir(ivec3 pos) {
 			return true;
 
 		return p_chunkMap->getSection(Converter::globalToSection(globalPos)).getBlock(
-			ivec3{ Converter::positiveMod(pos.x, Const::SECTION_SIDE), Converter::positiveMod(pos.y, Const::SECTION_HEIGHT), Converter::positiveMod(pos.z, Const::SECTION_SIDE) }) == 0;
+			ivec3{ posMod(pos.x, Const::SECTION_SIDE), posMod(pos.y, Const::SECTION_HEIGHT), posMod(pos.z, Const::SECTION_SIDE) }) == 0;
 	}
 }
 

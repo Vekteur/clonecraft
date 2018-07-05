@@ -6,6 +6,7 @@
 #include "Game.h"
 #include "Debug.h"
 #include "Window.h"
+#include "Logger.h"
 
 class FPSCounter {
 private:
@@ -18,14 +19,18 @@ public:
 		accumulator += deltaTime;
 		++fps;
 		if (accumulator >= countTime) {
-			std::cout << "FPS : " << fps << std::endl;
+			LOG(Level::INFO) << "FPS : " << fps << std::endl;
 			accumulator -= countTime;
 			fps = 0;
 		}
 	}
 };
+int main(int argc, char* argv[]) {
+	LOG.setFileOutputLevel(Level::DEBUG);
+	LOG.setOutputFile("Logs/global.log");
 
-int main() {
+	LOG(Level::INFO) << "Application launched" << std::endl;
+	
 	sf::Context context;
 
 	Window window;
@@ -45,10 +50,10 @@ int main() {
 			switch (event.type) {
 			case sf::Event::KeyPressed:
 				if (event.key.code == sf::Keyboard::Escape)
-					window.close();
+					window.toClose();
 				break;
 			case sf::Event::Closed:
-				window.close();
+				window.toClose();
 				break;
 			case sf::Event::Resized:
 				glViewport(0, 0, event.size.width, event.size.height);
@@ -66,8 +71,10 @@ int main() {
 		
 		window.clear();
 		game.render();
+
 		window.display();
 	}
-
+	
+	LOG(Level::INFO) << "Application terminated" << std::endl;
 	return 0;
 }

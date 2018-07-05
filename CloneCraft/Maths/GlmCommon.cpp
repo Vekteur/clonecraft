@@ -1,19 +1,38 @@
 #include "GlmCommon.h"
 
-std::ostream& operator <<(std::ostream& out, const vec3& vec) {
-	for (int i = 0; i < 3; ++i)
+template<typename T, int S>
+std::ostream& operator <<(std::ostream& out, const T& vec) {
+	out << '(';
+	for (int i = 0; i < S - 1; ++i)
 		out << vec[i] << ' ';
+	out << vec[S - 1] << ')';
 	return out;
+}
+
+std::ostream& operator <<(std::ostream& out, const vec2& vec) {
+	return operator << <vec2, 2>(out, vec);
+}
+
+std::ostream& operator <<(std::ostream& out, const vec3& vec) {
+	return operator << <vec3, 3>(out, vec);
 }
 
 std::ostream& operator <<(std::ostream& out, const vec4& vec) {
-	for (int i = 0; i < 4; ++i)
-		out << vec[i] << ' ';
-	return out;
+	return operator << <vec4, 4>(out, vec);
 }
 
 std::ostream& operator <<(std::ostream& out, const mat4& mat) {
-	for (int i = 0; i < 4; ++i)
-		out << mat[i] << '\n';
-	return out;
+	return operator << <mat4, 4>(out, mat);
+}
+
+std::ostream& operator <<(std::ostream& out, const ivec2& vec) {
+	return operator << <ivec2, 2>(out, vec);
+}
+
+std::ostream& operator <<(std::ostream& out, const ivec3& vec) {
+	return operator << <ivec3, 3>(out, vec);
+}
+
+std::ostream& operator <<(std::ostream& out, const ivec4& vec) {
+	return operator << <ivec4, 4>(out, vec);
 }

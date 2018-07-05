@@ -13,15 +13,11 @@ class ChunkMap
 public:
 	static const int VIEW_DISTANCE{ 4 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
 
-	struct Comp_ivec2
-	{
-		size_t operator()(const ivec2& vec) const
-		{
+	struct Comp_ivec2 {
+		size_t operator()(const ivec2& vec) const {
 			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1);
 		}
-
-		bool operator()(const ivec2& a, const ivec2& b) const
-		{
+		bool operator()(const ivec2& a, const ivec2& b) const {
 			return a.x == b.x && a.y == b.y;
 		}
 	};

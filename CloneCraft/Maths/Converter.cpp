@@ -18,10 +18,10 @@ ivec3 Converter::globalToSection(ivec3 pos) {
 	return ivec3{ floorDiv(pos.x, Const::SECTION_SIDE), floorDiv(pos.y, Const::SECTION_HEIGHT), floorDiv(pos.z, Const::SECTION_SIDE) };
 }
 
-int Converter::positiveMod(int base, int modulo) {
-	return ((base % modulo) + modulo) % modulo;
-}
-
 int Converter::floorDiv(int base, int divider) {
 	return base >= 0 ? base / divider : (base - divider + 1) / divider;
+}
+
+int posMod(int base, int modulo) {
+	return ((base % modulo) + modulo) % modulo;
 }

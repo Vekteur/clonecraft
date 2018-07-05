@@ -2,8 +2,9 @@
 
 OctavePerlin::OctavePerlin(int octaves, double persistence, double frequency)
 	: m_octaves{ octaves }, m_persistence{ persistence }, m_frequency{ frequency } {
-	for (int i = 0; i < m_octaves; i++)
+	for (int i = 0; i < m_octaves; ++i) {
 		noises.push_back(PerlinNoise());
+	}
 }
 
 OctavePerlin::~OctavePerlin() {

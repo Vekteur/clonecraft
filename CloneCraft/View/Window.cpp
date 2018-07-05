@@ -8,8 +8,8 @@ Window::Window() {
 	settings.minorVersion = 3;
 	settings.depthBits = 24;
 	settings.stencilBits = 8;
-	window.create(sf::VideoMode{ 1080, 720 }, "CloneCraft", sf::Style::Default, settings);
-	window.setMouseCursorVisible(false);
+	m_window.create(sf::VideoMode{ 1080, 720 }, "CloneCraft", sf::Style::Default, settings);
+	m_window.setMouseCursorVisible(false);
 
 	// Init GLAD
 	if (!gladLoadGL()) {
@@ -20,12 +20,12 @@ Window::Window() {
 	initSettings();
 }
 
-void Window::close() {
-	toClose = true;
+void Window::toClose() {
+	m_toClose = true;
 }
 
 bool Window::shouldClose() {
-	return toClose;
+	return m_toClose;
 }
 
 void Window::clear() {
@@ -34,15 +34,15 @@ void Window::clear() {
 }
 
 void Window::display() {
-	window.display();
+	m_window.display();
 }
 
 ivec2 Window::getCenter() {
-	return { window.getSize().x / 2, window.getSize().y / 2 };
+	return { m_window.getSize().x / 2, m_window.getSize().y / 2 };
 }
 
 bool Window::pollEvent(sf::Event & event) {
-	return window.pollEvent(event);
+	return m_window.pollEvent(event);
 }
 
 void Window::initSettings() {

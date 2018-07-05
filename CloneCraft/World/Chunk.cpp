@@ -1,4 +1,5 @@
 #include "Chunk.h"
+#include "GlmCommon.h"
 
 Chunk::Chunk(ChunkMap* const chunkMap, ivec2 position)
 	: p_chunkMap{ chunkMap }, m_position{ position } {

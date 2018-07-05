@@ -21,6 +21,11 @@ using glm::dvec4;
 using glm::mat3;
 using glm::mat4;
 
+std::ostream& operator <<(std::ostream& out, const vec2& vec);
 std::ostream& operator <<(std::ostream& out, const vec3& vec);
 std::ostream& operator <<(std::ostream& out, const vec4& vec);
 std::ostream& operator <<(std::ostream& out, const mat4& vec);
+
+std::ostream& operator <<(std::ostream& out, const ivec2& vec);
+std::ostream& operator <<(std::ostream& out, const ivec3& vec);
+std::ostream& operator <<(std::ostream& out, const ivec4& vec);

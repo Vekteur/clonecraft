@@ -24,6 +24,8 @@
     <ClInclude Include="Maths\Dir2D.h" />
     <ClInclude Include="Util\Debug.h" />
     <ClInclude Include="Generator\ChunkGenerator.h" />
+    <ClInclude Include="Util\json.hpp" />
+    <ClInclude Include="Util\Logger.h" />
     <ClInclude Include="Util\stb_image.h" />
     <ClInclude Include="World\ChunkMap.h" />
     <ClInclude Include="Maths\Converter.h" />
@@ -36,6 +38,7 @@
     <ClCompile Include="Util\Debug.cpp" />
     <ClCompile Include="Generator\ChunkGenerator.cpp" />
     <ClCompile Include="Util\glad.c" />
+    <ClCompile Include="Util\Logger.cpp" />
     <ClCompile Include="Util\stb_image.cpp" />
     <ClCompile Include="World\ChunkMap.cpp" />
     <ClCompile Include="Maths\Converter.cpp" />

@@ -22,6 +22,8 @@
     <ClCompile Include="Block\Block.cpp" />
     <ClCompile Include="Maths\Dir2D.cpp" />
     <ClCompile Include="Maths\Dir3D.cpp" />
+    <ClCompile Include="Util\easylogging++.cc" />
+    <ClCompile Include="Util\Logger.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -45,5 +47,8 @@
     <ClInclude Include="Block\Block.h" />
     <ClInclude Include="Maths\Dir2D.h" />
     <ClInclude Include="Maths\Dir3D.h" />
+    <ClInclude Include="Util\easylogging++.h" />
+    <ClInclude Include="Util\json.hpp" />
+    <ClInclude Include="Util\Logger.h" />
   </ItemGroup>
 </Project>
