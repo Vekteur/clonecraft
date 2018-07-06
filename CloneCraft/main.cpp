@@ -10,6 +10,11 @@
 #include "FPSCounter.h"
 #include "WorldConstants.h"
 #include "WindowTextDrawer.h"
+#include "CaptureMouse.h"
+
+extern "C" {
+	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+}
 
 int main(int argc, char* argv[]) {
 	LOG.setFileOutputLevel(Level::DEBUG);
@@ -20,6 +25,7 @@ int main(int argc, char* argv[]) {
 	sf::Context context;
 	Window window;
 	Game game{ &window, &context };
+	CaptureMouse captureMouse{ &window };
 
 	WindowTextDrawer textDrawer{ &window };
 	
@@ -35,8 +41,9 @@ int main(int argc, char* argv[]) {
 		while (window.pollEvent(event)) {
 			switch (event.type) {
 			case sf::Event::KeyPressed:
-				if (event.key.code == sf::Keyboard::Escape)
-					window.toClose();
+				if (event.key.code == sf::Keyboard::Escape) {
+					captureMouse.toggle();
+				}
 				break;
 			case sf::Event::Closed:
 				window.toClose();
@@ -52,22 +59,17 @@ int main(int argc, char* argv[]) {
 			}
 		}
 		
-		game.processInput(deltaTime.asSeconds());
+		game.processKeyboard(deltaTime.asSeconds());
+		if (captureMouse.isEnabled())
+			game.processMouseMove(deltaTime.asSeconds());
 		game.update(deltaTime.asSeconds());
+		captureMouse.update();
 		
 		window.clear();
 		game.render();
 
 		window.pushGLStates();
-
-		textDrawer.drawFPS(fpsCounter.get());
-		textDrawer.drawPosition(game.getCamera().getPosition());
-		textDrawer.drawDirection(game.getCamera().getYaw(), game.getCamera().getPitch());
-		textDrawer.drawChunksInfos(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES), 
-			game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_VAOS));
-		textDrawer.drawBlockNumber(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES) * 
-			Const::CHUNK_SIDE * Const::CHUNK_SIDE * Const::CHUNK_HEIGHT);
-
+		textDrawer.draw(fpsCounter.get(), game);
 		window.popGLStates();
 
 		window.display();

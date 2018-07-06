@@ -51,5 +51,6 @@
     <ClInclude Include="Util\Logger.h" />
     <ClInclude Include="FPSCounter.h" />
     <ClInclude Include="WindowTextDrawer.h" />
+    <ClInclude Include="CaptureMouse.h" />
   </ItemGroup>
 </Project>

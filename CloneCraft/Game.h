@@ -18,8 +18,9 @@ public:
 	Game(Window* const window, sf::Context* const context);
 	~Game();
 
+	void processKeyboard(GLfloat dt);
+	void processMouseMove(GLfloat dt);
 	void processMouseWheel(GLfloat delta);
-	void processInput(GLfloat dt);
 	void update(GLfloat dt);
 	void render();
 	void runChunkLoadingLoop();

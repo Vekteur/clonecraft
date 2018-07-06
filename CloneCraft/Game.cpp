@@ -17,6 +17,7 @@ Game::Game(Window* const window, sf::Context* const context)
 
 Game::~Game() {
 	stopChunkMapThread = true;
+	m_chunks.stop();
 	m_chunkMapThread.join();
 }
 
@@ -29,11 +30,7 @@ void Game::runChunkLoadingLoop() {
 	}
 }
 
-void Game::processMouseWheel(GLfloat delta) {
-	m_camera.processMouseScroll(delta);
-}
-
-void Game::processInput(GLfloat dt) {
+void Game::processKeyboard(GLfloat dt) {
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
 		m_camera.move(Camera::FORWARD, dt);
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
@@ -42,12 +39,18 @@ void Game::processInput(GLfloat dt) {
 		m_camera.move(Camera::LEFT, dt);
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 		m_camera.move(Camera::RIGHT, dt);
+}
 
-	ivec2 mousePosition{ sf::Mouse::getPosition().x, sf::Mouse::getPosition().y };
+void Game::processMouseMove(GLfloat dt) {
+	sf::Vector2i mousePosTemp{ sf::Mouse::getPosition(*p_window) };
+	ivec2 mousePosition{ mousePosTemp.x, mousePosTemp.y };
 	ivec2 windowCenter{ p_window->getCenter() };
 	ivec2 mouseOffset{ mousePosition - windowCenter };
 	m_camera.processMouse(mouseOffset);
-	sf::Mouse::setPosition(sf::Vector2i{ windowCenter.x, windowCenter.y });
+}
+
+void Game::processMouseWheel(GLfloat delta) {
+	m_camera.processMouseScroll(delta);
 }
 
 void Game::update(GLfloat dt) {

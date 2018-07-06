@@ -11,7 +11,7 @@
 class ChunkMap
 {
 public:
-	static const int VIEW_DISTANCE{ 4 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
+	static const int VIEW_DISTANCE{ 12 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
 
 	struct Comp_ivec2 {
 		size_t operator()(const ivec2& vec) const {
@@ -31,10 +31,12 @@ public:
 	void setCenter(ivec2 center);
 	ivec2 getCenter();
 
+	GLuint getBlock(ivec3 pos);
 	Chunk& getChunk(ivec2 pos);
 	Section& getSection(ivec3 pos);
 	void unloadFarChunks();
 	int size();
+	void stop();
 
 	void onChangeChunkState(Chunk& chunk, Chunk::State nextState);
 	int chunksAtLeastInState(Chunk::State state);
@@ -45,6 +47,7 @@ private:
 	ivec2 m_center;
 	ivec2 m_newCenter;
 	std::mutex m_deleteChunksMutex;
+	bool mustStop = false;
 
 	std::array<int, Chunk::STATE_SIZE> countChunks;
 

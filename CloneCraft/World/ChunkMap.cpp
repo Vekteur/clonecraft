@@ -24,6 +24,8 @@ void ChunkMap::load() {
 			for (ivec2 relPos = prev * d; relPos != next * d; relPos += next) {
 				ivec2 pos = relPos + m_center + curr * d;
 				loadBlocks(pos);
+				if (mustStop)
+					return;
 			}
 		}
 
@@ -39,6 +41,8 @@ void ChunkMap::load() {
 				for (ivec2 relPos = prev * c; relPos != next * c; relPos += next) {
 					ivec2 pos = relPos + m_center + curr * c;
 					loadFaces(pos);
+					if (mustStop)
+						return;
 				}
 			}
 		}
@@ -125,17 +129,29 @@ ivec2 ChunkMap::getCenter() {
 	return m_center;
 }
 
-Chunk& ChunkMap::getChunk(ivec2 pos) {
-	return *m_chunks[pos].get();
+GLuint ChunkMap::getBlock(ivec3 globalPos) {
+	auto chunkIt = m_chunks.find(Converter::globalToChunk(globalPos));
+	if (chunkIt != m_chunks.end()); {
+		return chunkIt->second->getSection(floorDiv(globalPos.y, Const::SECTION_HEIGHT))
+			.getBlock(Converter::globalToInnerSection(globalPos));
+	}
+	return 0;
 }
 
-Section& ChunkMap::getSection(ivec3 pos) {
-	ivec2 chunkPos{ pos.x, pos.z };
-	return getChunk(chunkPos).getSection(pos.y);
+Chunk& ChunkMap::getChunk(ivec2 chunkPos) { // Must be a valid chunk position
+	return *m_chunks[chunkPos].get();
+}
+
+Section& ChunkMap::getSection(ivec3 sectionPos) { // Must be a valid section position
+	return getChunk({ sectionPos.x, sectionPos.z }).getSection(sectionPos.y);
 }
 
 int ChunkMap::size() {
 	return m_chunks.size();
+}
+
+void ChunkMap::stop() {
+	mustStop = true;
 }
 
 int ChunkMap::chunksAtLeastInState(Chunk::State minState) {
