@@ -2,6 +2,9 @@
 
 #include "Converter.h"
 #include "Debug.h"
+#include "Logger.h"
+
+const float Game::TARGET_DISTANCE{ 100.f };
 
 Game::Game(Window* const window, sf::Context* const context)
 	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context{ context } {
@@ -63,6 +66,16 @@ void Game::update(GLfloat dt) {
 		m_chunks.setCenter(newCenter);
 
 	m_chunks.update();
+
+	LineBlockFinder lineBlockFinder{ m_camera.getPosition(), m_camera.getFront() };
+	targetBlock = std::nullopt;
+	while (lineBlockFinder.getDistance() <= TARGET_DISTANCE) {
+		ivec3 iterBlock = lineBlockFinder.next();
+		if (m_chunks.getBlock(iterBlock) != 0) {
+			targetBlock = iterBlock;
+			break;
+		}
+	}
 }
 
 void Game::render() {
@@ -75,4 +88,8 @@ Camera& Game::getCamera() {
 
 ChunkMap & Game::getChunkMap() {
 	return m_chunks;
+}
+
+std::optional<ivec3> Game::getTarget() {
+	return targetBlock;
 }

@@ -22,9 +22,14 @@ private:
 	sf::Font m_font;
 
 	void drawFPS(int fps);
-	void drawPosition(vec3 pos);
+	void drawGlobalPosition(vec3 pos);
+	void drawLocalPosition(vec3 pos);
+	void drawSectionPosition(ivec3 pos);
+	void drawTarget(std::optional<ivec3> pos);
 	void drawDirection(float pitch, float yaw);
-	void drawChunksInfos(int blockChunks, int faceChunks);
+	void drawBlockChunks(int blockChunks);
+	void drawFaceChunks(int faceChunks);
 	void drawBlockNumber(int blockNumber);
+
 	void drawAtLine(std::string message, int line);
 };

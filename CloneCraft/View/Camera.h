@@ -20,6 +20,7 @@ public:
 	mat4 getViewMatrix();
 	mat4 getProjectionMatrix();
 	vec3 getPosition();
+	vec3 getFront();
 	float getYaw();
 	float getPitch();
 
@@ -33,11 +34,11 @@ private:
 	// Default values
 	static const float SPEED, SENSITIVTY, SCROLLSPEED, ZOOM, YAW, PITCH;
 	static const float NEARPLANE, FARPLANE;
-	static const vec3 POSITION, FRONT, WORLDUP;
+	static const vec3 POSITION, WORLDUP;
 
 	vec3 m_position{ POSITION };
 	vec2 m_chunk;
-	vec3 m_front{ FRONT };
+	vec3 m_front;
 	vec3 m_up;
 	vec3 m_right;
 

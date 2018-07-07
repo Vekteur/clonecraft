@@ -17,7 +17,6 @@ const float Camera::NEARPLANE{ 0.1f };
 const float Camera::FARPLANE{ 1000.0f };
 
 const vec3 Camera::POSITION{ vec3{0.0f, 0.0f, 0.0f } };
-const vec3 Camera::FRONT{ vec3{ 0.0f, 0.0f, -1.0f } };
 const vec3 Camera::WORLDUP{ vec3{ 0.0f, 1.0f, 0.0f } };
 
 Camera::Camera(vec3 position, float yaw, float pitch)
@@ -37,6 +36,10 @@ mat4 Camera::getProjectionMatrix() {
 
 vec3 Camera::getPosition() {
 	return m_position;
+}
+
+vec3 Camera::getFront() {
+	return m_front;
 }
 
 float Camera::getYaw() {

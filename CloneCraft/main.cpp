@@ -11,6 +11,7 @@
 #include "WorldConstants.h"
 #include "WindowTextDrawer.h"
 #include "CaptureMouse.h"
+#include "Crosshair.h"
 
 extern "C" {
 	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
@@ -28,6 +29,7 @@ int main(int argc, char* argv[]) {
 	CaptureMouse captureMouse{ &window };
 
 	WindowTextDrawer textDrawer{ &window };
+	Crosshair crosshair{ &window };
 	
 	sf::Clock clock;
 	FPSCounter fpsCounter;
@@ -58,17 +60,18 @@ int main(int argc, char* argv[]) {
 				break;
 			}
 		}
-		
+
 		game.processKeyboard(deltaTime.asSeconds());
 		if (captureMouse.isEnabled())
 			game.processMouseMove(deltaTime.asSeconds());
 		game.update(deltaTime.asSeconds());
 		captureMouse.update();
-		
+
 		window.clear();
 		game.render();
 
 		window.pushGLStates();
+		crosshair.draw();
 		textDrawer.draw(fpsCounter.get(), game);
 		window.popGLStates();
 

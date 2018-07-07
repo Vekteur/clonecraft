@@ -119,14 +119,11 @@ bool Section::isInSection(ivec3 pos) {
 			0 <= pos.z && pos.z < Const::SECTION_SIDE;
 }
 
-bool Section::getNearBlock(ivec3 pos) {
+GLuint Section::getNearBlock(ivec3 pos) {
 	if (isInSection(pos)) {
 		return m_blocks.at(pos);
 	} else {
 		ivec3 globalPos{ pos + Converter::sectionToGlobal(m_position) };
-		if (globalPos.y < 0 || globalPos.y >= Const::CHUNK_HEIGHT)
-			return true;
-
 		return p_chunkMap->getBlock(globalPos);
 	}
 }

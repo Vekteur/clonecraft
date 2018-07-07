@@ -38,7 +38,7 @@ private:
 	GLuint indicesNb{ 0 };
 
 	bool isInSection(ivec3 block);
-	bool getNearBlock(ivec3 block);
+	GLuint getNearBlock(ivec3 block);
 	static std::array<GLfloat, 20> getFace(glm::ivec3 pos, const std::array<GLfloat, 12>& face);
 
 	static const std::array<GLuint, 6> rectIndices;

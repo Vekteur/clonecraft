@@ -10,13 +10,17 @@ public:
 	static ivec3 chunkToGlobal(ivec2 pos);
 	static ivec2 globalToChunk(ivec3 pos);
 	static ivec2 globalToInnerChunk(ivec3 pos);
+	static vec2 globalToInnerChunk(vec3 pos);
 	static ivec3 sectionToGlobal(ivec3 pos);
 	static ivec3 globalToSection(ivec3 pos);
 	static ivec3 globalToInnerSection(ivec3 pos);
+	static vec3 globalToInnerSection(vec3 pos);
 };
 
 int floorDiv(int base, int divider);
+int floorDiv(float base, float divider);
 int posMod(int base, int modulo);
+float posMod(float base, float modulo);
 
 template<typename T>
 const T& clamp(const T& x, const T& upper, const T& lower) {

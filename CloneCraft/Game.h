@@ -1,15 +1,17 @@
 #pragma once
 
+#include <memory>
+#include <thread>
+#include <chrono>
+#include <SFML/Window.hpp>
+#include <optional>
+
 #include "Camera.h"
 #include "ResManager.h"
 #include "Chunk.h"
 #include "ChunkMap.h"
 #include "Window.h"
-
-#include <memory>
-#include <thread>
-#include <chrono>
-#include <SFML/Window.hpp>
+#include "LineBlockFinder.h"
 
 class Window;
 
@@ -27,12 +29,16 @@ public:
 
 	Camera& getCamera();
 	ChunkMap& getChunkMap();
+	std::optional<ivec3> getTarget();
 
 private:
+	static const float TARGET_DISTANCE;
+
 	Window* const p_window{ nullptr };
 	sf::Context* const p_context{ nullptr };
 	Camera m_camera;
 	ChunkMap m_chunks;
+	std::optional<ivec3> targetBlock;
 
 	std::thread m_chunkMapThread;
 	bool stopChunkMapThread{ false };

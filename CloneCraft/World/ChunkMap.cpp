@@ -1,11 +1,15 @@
 #include "ChunkMap.h"
+
 #include "ResManager.h"
 #include "Debug.h"
 #include "Dir2D.h"
-
 #include "Array3D.h"
+#include "Logger.h"
+#include "MiscMath.h"
 
 #include <GLFW\glfw3.h>
+#include <vector>
+#include <algorithm>
 
 ChunkMap::ChunkMap(ivec2 center) : m_center{ center } {
 }
@@ -108,10 +112,19 @@ void ChunkMap::update() {
 void ChunkMap::render() {
 	m_deleteChunksMutex.lock();
 
-	for (auto& c : m_chunks)
-		if (c.second->getState() == Chunk::TO_RENDER) {
-			c.second->render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
+	std::vector< std::tuple<int, Chunk* > > chunks;
+	for (auto& chunk : m_chunks) {
+		if (chunk.second->getState() == Chunk::TO_RENDER) {
+			chunks.push_back({ math::manhattan(chunk.second->getPosition(), m_center), chunk.second.get() });
 		}
+	}
+	std::sort(chunks.begin(), chunks.end(), [](const std::tuple<int, Chunk* >& c1, const std::tuple<int, Chunk* >& c2) {
+		return std::get<0>(c1) < std::get<0>(c2);
+	});
+
+	for (auto& chunk : chunks) {
+		std::get<1>(chunk)->render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
+	}
 
 	m_deleteChunksMutex.unlock();
 }
@@ -131,7 +144,8 @@ ivec2 ChunkMap::getCenter() {
 
 GLuint ChunkMap::getBlock(ivec3 globalPos) {
 	auto chunkIt = m_chunks.find(Converter::globalToChunk(globalPos));
-	if (chunkIt != m_chunks.end()); {
+	if (chunkIt != m_chunks.end() && chunkIt->second->getState() > Chunk::TO_LOAD_BLOCKS && 
+			0 <= globalPos.y && globalPos.y < Const::CHUNK_HEIGHT) {
 		return chunkIt->second->getSection(floorDiv(globalPos.y, Const::SECTION_HEIGHT))
 			.getBlock(Converter::globalToInnerSection(globalPos));
 	}

@@ -24,6 +24,7 @@
     <ClCompile Include="Maths\Dir3D.cpp" />
     <ClCompile Include="Util\Logger.cpp" />
     <ClCompile Include="WindowTextDrawer.cpp" />
+    <ClCompile Include="Maths\LineBlockFinder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -52,5 +53,8 @@
     <ClInclude Include="FPSCounter.h" />
     <ClInclude Include="WindowTextDrawer.h" />
     <ClInclude Include="CaptureMouse.h" />
+    <ClInclude Include="Maths\MiscMath.h" />
+    <ClInclude Include="Crosshair.h" />
+    <ClInclude Include="Maths\LineBlockFinder.h" />
   </ItemGroup>
 </Project>
