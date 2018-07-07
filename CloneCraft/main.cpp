@@ -22,7 +22,6 @@ int main(int argc, char* argv[]) {
 	LOG.setOutputFile("Logs/global.log");
 
 	LOG(Level::INFO) << "Application launched" << std::endl;
-	
 	sf::Context context;
 	Window window;
 	Game game{ &window, &context };

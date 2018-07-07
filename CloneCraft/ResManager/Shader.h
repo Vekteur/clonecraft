@@ -20,6 +20,9 @@ public:
 	void    setVec2(const GLchar *name, const glm::vec2 &value);
 	void    setVec3(const GLchar *name, const glm::vec3 &value);
 	void    setVec4(const GLchar *name, const glm::vec4 &value);
+	void	setIVec2(const GLchar *name, const glm::ivec2 &value);
+	void    setIVec3(const GLchar *name, const glm::ivec3 &value);
+	void    setIVec4(const GLchar *name, const glm::ivec4 &value);
 	void    setMat4(const GLchar *name, const glm::mat4 &matrix);
 
 	GLuint	getId();

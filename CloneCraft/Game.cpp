@@ -76,6 +76,10 @@ void Game::update(GLfloat dt) {
 			break;
 		}
 	}
+	if (targetBlock.has_value())
+		ResManager::getShader("cube").use().setIVec3("target", targetBlock.value());
+	else
+		ResManager::getShader("cube").use().setIVec3("target", { 0, -1, 0 });
 }
 
 void Game::render() {

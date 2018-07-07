@@ -10,6 +10,11 @@
 template<typename T, int S>
 using arr = std::array<T, S>;
 
+struct Face {
+	vec3 pos;
+	vec2 tex;
+};
+
 Section::Section(ChunkMap* const chunkMap, Chunk* const chunk, ivec3 position)
 		: p_chunkMap{ chunkMap }, p_chunk{ chunk }, m_position{ position }, 
 		m_blocks{ ivec3{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE } } {
@@ -31,7 +36,7 @@ void Section::loadBlocks() {
 
 void Section::loadFaces() {
 
-	std::vector<GLfloat> faces;
+	std::vector<Face> faces;
 	for (int x = 0; x < Const::SECTION_SIDE; ++x)
 		for (int y = 0; y < Const::SECTION_HEIGHT; ++y)
 			for (int z = 0; z < Const::SECTION_SIDE; ++z) {
@@ -42,15 +47,17 @@ void Section::loadFaces() {
 				ivec3 globalPos{ Converter::sectionToGlobal(m_position) + pos };
 
 				for (int dir = 0; dir < Dir3D::SIZE; ++dir) {
-					if (getNearBlock(pos + Dir3D::find(static_cast<Dir3D::Dir>(dir))) == 0)
-						for (GLfloat c : getFace(globalPos, dirToFace[dir]))
-							faces.push_back(c);
+					if (getNearBlock(pos + Dir3D::find(static_cast<Dir3D::Dir>(dir))) == 0) {
+						for (int vtx = 0; vtx < 4; ++vtx) {
+							faces.push_back({ dirToFace[dir][vtx] + vec3(globalPos), textureCoords[vtx] });
+						}
+					}
 				}
 			}
 
 	std::vector<GLuint> indices;
-	for (int faceIndex = 0; faceIndex < (int)(faces.size() / 20); ++faceIndex) // Each face (4 segments)
-		for (GLuint rectIndex : rectIndices) // Add the indices with an offset of 4 * i
+	for (int faceIndex = 0; faceIndex < (int)faces.size() / 4; ++faceIndex) // Each face (4 vertices)
+		for (GLuint rectIndex : rectIndices) // Add the indices with an offset of 4 * faceIndex
 			indices.push_back(4 * faceIndex + rectIndex);
 
 	indicesNb = indices.size();
@@ -58,7 +65,7 @@ void Section::loadFaces() {
 		// The VBO stores the vertices
 		glGenBuffers(1, &VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * faces.size(), faces.data(), GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Face) * faces.size(), faces.data(), GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		// The EBO stores the indices
 		glGenBuffers(1, &EBO);
@@ -128,75 +135,61 @@ GLuint Section::getNearBlock(ivec3 pos) {
 	}
 }
 
-arr<GLfloat, 20> Section::getFace(glm::ivec3 pos, const arr<GLfloat, 12>& face) {
-	arr<GLfloat, 20> finalFace;
-	// Each vertex
-	for (int vtx = 0; vtx < 4; ++vtx) {
-		// Compute coordinates of the vertex
-		for (int coord = 0; coord < 3; ++coord)
-			finalFace[5 * vtx + coord] = face[3 * vtx + coord] + pos[coord];
-		// Compute texture coordinates of the vertex
-		for (int coord = 0; coord < 2; ++coord)
-			finalFace[5 * vtx + (coord + 3)] = textureCoords[2 * vtx + coord];
-	}
-	return finalFace;
-}
-
 const arr<GLuint, 6> Section::rectIndices{
 	0, 1, 2,
 	2, 3, 0
 };
 
-const arr<GLfloat, 8> Section::textureCoords{
-	0.0f, 0.0f,
-	0.0f, 1.0f,
-	1.0f, 1.0f,
-	1.0f, 0.0f
-};
+const arr<vec2, 4> Section::textureCoords{{
+	{ 0, 0 },
+	{ 0, 1 },
+	{ 1, 1 },
+	{ 1, 0 }
+} };
 
-const arr<arr<GLfloat, 12>, Dir3D::SIZE> Section::dirToFace = []() {
+const arr<arr<vec3, 4>, Dir3D::SIZE> Section::dirToFace = []() {
 
-	const arr<GLfloat, 12> faceX0{
-		0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 1.0f,
-		0.0f, 0.0f, 1.0f
-	};
+	const arr<vec3, 4> faceX0{ {
+		{ 0, 0, 0 },
+		{ 0, 1, 0 },
+		{ 0, 1, 1 },
+		{ 0, 0, 1 }
+	} };
 
-	const arr<GLfloat, 12> faceX1{
-		1.0f, 0.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 0.0f,
-		1.0f, 0.0f, 0.0f
-	};
+	const arr<vec3, 4> faceX1{ {
+		{ 1, 0, 1 },
+		{ 1, 1, 1 },
+		{ 1, 1, 0 },
+		{ 1, 0, 0 }
+	} };
 
-	const arr<GLfloat, 12> faceY0{
-		0.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 1.0f,
-		1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 0.0f
-	};
+	const arr<vec3, 4> faceY0{ {
+		{ 0, 0, 1 },
+		{ 1, 0, 1 },
+		{ 1, 0, 0 },
+		{ 0, 0, 0 }
+	} };
 
-	const arr<GLfloat, 12> faceY1{
-		1.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 1.0f,
-		0.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f
-	};
+	const arr<vec3, 4> faceY1{ {
+		{ 1, 1, 1 },
+		{ 0, 1, 1 },
+		{ 0, 1, 0 },
+		{ 1, 1, 0 }
+	} };
 
-	const arr<GLfloat, 12> faceZ0{
-		1.0f, 0.0f, 0.0f,
-		1.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 0.0f
-	};
+	const arr<vec3, 4> faceZ0{{
+		{ 1, 0, 0 },
+		{ 1, 1, 0 },
+		{ 0, 1, 0 },
+		{ 0, 0, 0 }
+	}};
 
-	const arr<GLfloat, 12> faceZ1{
-		0.0f, 0.0f, 1.0f,
-		0.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, 0.0f, 1.0f
-	};
+	const arr<vec3, 4> faceZ1{ {
+		{ 0, 0, 1 },
+		{ 0, 1, 1 },
+		{ 1, 1, 1 },
+		{ 1, 0, 1 }
+	} };
 
-	return arr<arr<GLfloat, 12>, Dir3D::SIZE>{ faceX1, faceY1, faceZ1, faceX0, faceY0, faceZ0 };
+	return arr<arr<vec3, 4>, Dir3D::SIZE>{ faceX1, faceY1, faceZ1, faceX0, faceY0, faceZ0 };
 }();

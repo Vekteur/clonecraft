@@ -32,7 +32,7 @@ public:
 
 private:
 	// Default values
-	static const float SPEED, SENSITIVTY, SCROLLSPEED, ZOOM, YAW, PITCH;
+	static const float SPEED, SENSIVITY, SCROLLSPEED, ZOOM, YAW, PITCH;
 	static const float NEARPLANE, FARPLANE;
 	static const vec3 POSITION, WORLDUP;
 
@@ -46,7 +46,7 @@ private:
 	float m_pitch{ PITCH };
 
 	float m_speed{ SPEED };
-	float m_sensitivity{ SENSITIVTY };
+	float m_sensitivity{ SENSIVITY };
 	float m_zoom{ ZOOM };
 	void updateFromEuler();
 };

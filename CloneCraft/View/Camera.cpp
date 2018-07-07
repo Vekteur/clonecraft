@@ -7,7 +7,7 @@
 #include "Converter.h"
 
 const float Camera::SPEED{ 30.0f };
-const float Camera::SENSITIVTY{ 0.25f };
+const float Camera::SENSIVITY{ 0.16f };
 const float Camera::SCROLLSPEED{ 5.0f };
 const float Camera::ZOOM{ 45.0f };
 const float Camera::YAW{ -90.0f };

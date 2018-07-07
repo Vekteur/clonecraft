@@ -39,9 +39,8 @@ private:
 
 	bool isInSection(ivec3 block);
 	GLuint getNearBlock(ivec3 block);
-	static std::array<GLfloat, 20> getFace(glm::ivec3 pos, const std::array<GLfloat, 12>& face);
 
 	static const std::array<GLuint, 6> rectIndices;
-	static const std::array<GLfloat, 8> textureCoords;
-	static const std::array<std::array<GLfloat, 12>, Dir3D::SIZE> dirToFace;
+	static const std::array<vec2, 4> textureCoords;
+	static const std::array<std::array<vec3, 4>, Dir3D::SIZE> dirToFace;
 };
