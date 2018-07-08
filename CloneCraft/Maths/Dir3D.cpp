@@ -21,4 +21,4 @@ ivec3 Dir3D::oppDir(Dir dir) {
 	return dirs[(dir + SIZE / 2) % SIZE];
 }
 
-const std::array<ivec3, Dir3D::SIZE> Dir3D::dirs{ { { 1, 0, 0 }, { 0, 1, 0 }, {0, 0, 1}, { -1, 0, 0 }, { 0, -1, 0 }, {0, 0, -1} } };
+const std::array<ivec3, Dir3D::SIZE> Dir3D::dirs{ { { 0, 1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 0, -1, 0 }, { -1, 0, 0 }, { 0, 0, -1 } } };

@@ -12,7 +12,8 @@ using arr = std::array<T, S>;
 
 struct Face {
 	vec3 pos;
-	vec2 tex;
+	GLuint texNorm;
+	ivec3 blockPos;
 };
 
 Section::Section(ChunkMap* const chunkMap, Chunk* const chunk, ivec3 position)
@@ -34,6 +35,11 @@ void Section::loadBlocks() {
 			}
 }
 
+int dirToBin(ivec3 dir) {
+	dir += 1;
+	return dir.x + (dir.y << 2) + (dir.z << 4);
+}
+
 void Section::loadFaces() {
 
 	std::vector<Face> faces;
@@ -49,7 +55,9 @@ void Section::loadFaces() {
 				for (int dir = 0; dir < Dir3D::SIZE; ++dir) {
 					if (getNearBlock(pos + Dir3D::find(static_cast<Dir3D::Dir>(dir))) == 0) {
 						for (int vtx = 0; vtx < 4; ++vtx) {
-							faces.push_back({ dirToFace[dir][vtx] + vec3(globalPos), textureCoords[vtx] });
+							GLuint texNorm = textureCoords[vtx].x + (textureCoords[vtx].y << 8)
+								+ (dirToBin(Dir3D::find(static_cast<Dir3D::Dir>(dir))) << 16);
+							faces.push_back({ dirToFace[dir][vtx] + vec3(globalPos), texNorm, globalPos });
 						}
 					}
 				}
@@ -87,9 +95,11 @@ void Section::loadVAOs() {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		// Attributes of the VAO
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Face), (GLvoid*)0);
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(Face), (GLvoid*)sizeof(vec3));
+		glEnableVertexAttribArray(2);
+		glVertexAttribIPointer(2, 3, GL_INT, sizeof(Face), (GLvoid*)(sizeof(vec3) + sizeof(GLuint)));
 		// Unbind all
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
@@ -140,7 +150,7 @@ const arr<GLuint, 6> Section::rectIndices{
 	2, 3, 0
 };
 
-const arr<vec2, 4> Section::textureCoords{{
+const arr<ivec2, 4> Section::textureCoords{{
 	{ 0, 0 },
 	{ 0, 1 },
 	{ 1, 1 },
@@ -191,5 +201,5 @@ const arr<arr<vec3, 4>, Dir3D::SIZE> Section::dirToFace = []() {
 		{ 1, 0, 1 }
 	} };
 
-	return arr<arr<vec3, 4>, Dir3D::SIZE>{ faceX1, faceY1, faceZ1, faceX0, faceY0, faceZ0 };
+	return arr<arr<vec3, 4>, Dir3D::SIZE>{ faceY1, faceX1, faceZ1, faceY0, faceX0, faceZ0 };
 }();

@@ -41,6 +41,6 @@ private:
 	GLuint getNearBlock(ivec3 block);
 
 	static const std::array<GLuint, 6> rectIndices;
-	static const std::array<vec2, 4> textureCoords;
+	static const std::array<ivec2, 4> textureCoords;
 	static const std::array<std::array<vec3, 4>, Dir3D::SIZE> dirToFace;
 };
