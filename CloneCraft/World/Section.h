@@ -14,6 +14,11 @@
 class ChunkMap;
 class Chunk;
 
+struct Face {
+	vec3 pos;
+	GLuint texNorm;
+};
+
 class Section
 {
 public:
@@ -36,8 +41,10 @@ private:
 	Array3D<GLuint> m_blocks;
 	GLuint VAO, VBO, EBO;
 	GLuint indicesNb{ 0 };
+	bool empty = true;
 
 	bool isInSection(ivec3 block);
+	std::vector<Face> findFaces();
 	GLuint getNearBlock(ivec3 block);
 
 	static const std::array<GLuint, 6> rectIndices;

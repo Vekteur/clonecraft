@@ -29,3 +29,5 @@ std::ostream& operator <<(std::ostream& out, const mat4& vec);
 std::ostream& operator <<(std::ostream& out, const ivec2& vec);
 std::ostream& operator <<(std::ostream& out, const ivec3& vec);
 std::ostream& operator <<(std::ostream& out, const ivec4& vec);
+
+extern const ivec3 OUT_OF_CHUNK;

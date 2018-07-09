@@ -36,3 +36,5 @@ std::ostream& operator <<(std::ostream& out, const ivec3& vec) {
 std::ostream& operator <<(std::ostream& out, const ivec4& vec) {
 	return operator << <ivec4, 4>(out, vec);
 }
+
+const ivec3 OUT_OF_CHUNK = ivec3(0, -1, 0);
