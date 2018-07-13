@@ -17,13 +17,13 @@ public:
 		}
 		crossHair.setTexture(crossHairTexture);
 		crossHair.scale({ scale, scale });
+	}
+	
+	void draw() {
 		sf::FloatRect rect = crossHair.getGlobalBounds();
 		ivec2 crossHairSize = { rect.width, rect.height };
 		vec2 finalPos = p_window->getCenter() - crossHairSize / 2;
 		crossHair.setPosition({ finalPos.x, finalPos.y });
-	}
-	
-	void draw() {
 		p_window->draw(crossHair);
 	}
 };

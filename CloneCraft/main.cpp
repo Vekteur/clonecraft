@@ -50,6 +50,7 @@ int main(int argc, char* argv[]) {
 				window.toClose();
 				break;
 			case sf::Event::Resized:
+				window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
 				glViewport(0, 0, event.size.width, event.size.height);
 				break;
 			case sf::Event::MouseWheelScrolled:
@@ -60,9 +61,10 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		game.processKeyboard(deltaTime.asSeconds());
-		if (captureMouse.isEnabled())
+		if (captureMouse.isEnabled()) {
+			game.processKeyboard(deltaTime.asSeconds());
 			game.processMouseMove(deltaTime.asSeconds());
+		}
 		game.update(deltaTime.asSeconds());
 		captureMouse.update();
 
@@ -71,7 +73,7 @@ int main(int argc, char* argv[]) {
 
 		window.pushGLStates();
 		crosshair.draw();
-		textDrawer.draw(fpsCounter.get(), game);
+		textDrawer.drawAll(fpsCounter.get(), game);
 		window.popGLStates();
 
 		window.display();

@@ -37,8 +37,8 @@ int dirToBin(ivec3 dir) {
 	return dir.x + (dir.y << 2) + (dir.z << 4);
 }
 
-std::vector<Face> Section::findFaces() {
-	std::vector<Face> faces;
+std::vector<Vertex> Section::findFaces() {
+	std::vector<Vertex> vertices;
 
 	const arr<ivec3, 3> axeOrder{ {
 		{ 1, 0, 2 }, // Y axe
@@ -79,12 +79,12 @@ std::vector<Face> Section::findFaces() {
 						int length = c - firstBlockPos; // Length of the face
 						const ivec3 firstBlockGlobalPos{ Converter::sectionToGlobal(m_position) + localPos + oppositeOfLastAxe * length };
 						for (int vtx = 0; vtx < 4; ++vtx) {
-							vec3 currFace = face[vtx];
-							currFace[indexOfLastAxe] *= length;
+							vec3 currVtx = face[vtx];
+							currVtx[indexOfLastAxe] *= length;
 							// Multiply coordinate x of the texture (depends on the vertices of the face)
 							GLuint texNorm = textureCoords[vtx].x * length + (textureCoords[vtx].y << 8)
 								+ (dirToBin(dirPos) << 16);
-							faces.push_back({ currFace + vec3(firstBlockGlobalPos), texNorm });
+							vertices.push_back({ currVtx + vec3(firstBlockGlobalPos), texNorm });
 						}
 					}
 				};
@@ -122,14 +122,14 @@ std::vector<Face> Section::findFaces() {
 			}
 		}
 	}
-	return faces;
+	return vertices;
 }
 
 void Section::loadFaces() {
 	if (empty)
 		return;
 
-	std::vector<Face> faces = findFaces();
+	std::vector<Vertex> faces = findFaces();
 
 	std::vector<GLuint> indices;
 	for (int faceIndex = 0; faceIndex < (int)faces.size() / 4; ++faceIndex) // Each face (4 vertices)
@@ -141,7 +141,7 @@ void Section::loadFaces() {
 		// The VBO stores the vertices
 		glGenBuffers(1, &VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Face) * faces.size(), faces.data(), GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * faces.size(), faces.data(), GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		// The EBO stores the indices
 		glGenBuffers(1, &EBO);
@@ -163,9 +163,9 @@ void Section::loadVAOs() {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		// Attributes of the VAO
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Face), (GLvoid*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
 		glEnableVertexAttribArray(1);
-		glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(Face), (GLvoid*)sizeof(vec3));
+		glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(Vertex), (GLvoid*)sizeof(vec3));
 		// Unbind all
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
@@ -193,6 +193,10 @@ void Section::render(Shader &shader, Texture2D &texture) const {
 	}
 }
 
+void Section::setBlock(ivec3 pos, GLuint block) {
+	m_blocks.at(pos) = block;
+}
+
 GLuint Section::getBlock(ivec3 pos) const {
 	return m_blocks.at(pos);
 }
@@ -200,15 +204,6 @@ GLuint Section::getBlock(ivec3 pos) const {
 bool Section::isInSection(ivec3 pos) {
 	return 0 <= pos.x && pos.x < Const::SECTION_SIDE && 0 <= pos.y && pos.y < Const::SECTION_HEIGHT && 
 			0 <= pos.z && pos.z < Const::SECTION_SIDE;
-}
-
-GLuint Section::getNearBlock(ivec3 pos) {
-	if (isInSection(pos)) {
-		return m_blocks.at(pos);
-	} else {
-		ivec3 globalPos{ pos + Converter::sectionToGlobal(m_position) };
-		return p_chunkMap->getBlock(globalPos);
-	}
 }
 
 const arr<GLuint, 6> Section::rectIndices{

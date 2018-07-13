@@ -109,15 +109,19 @@ void ChunkMap::update() {
 	m_deleteChunksMutex.unlock();
 }
 
-void ChunkMap::render() {
+void ChunkMap::render(const Frustum& frustum) {
 	m_deleteChunksMutex.lock();
 
 	std::vector< std::tuple<int, Chunk* > > chunks;
-	for (auto& chunk : m_chunks) {
-		if (chunk.second->getState() == Chunk::TO_RENDER) {
-			chunks.push_back({ math::manhattan(chunk.second->getPosition(), m_center), chunk.second.get() });
+	for (auto& posChunk : m_chunks) {
+		std::unique_ptr<Chunk>& chunk = posChunk.second;
+		Box chunkBox = { {chunk->getPosition().x * Const::CHUNK_SIDE, 0.f, chunk->getPosition().y * Const::CHUNK_SIDE }, 
+		{ Const::CHUNK_SIDE, Const::CHUNK_HEIGHT, Const::CHUNK_SIDE } };
+		if (chunk->getState() == Chunk::TO_RENDER && !frustum.isBoxOutside(chunkBox)) {
+			chunks.push_back({ math::manhattan(chunk->getPosition(), m_center), chunk.get() });
 		}
 	}
+	renderedChunks = chunks.size();
 	std::sort(chunks.begin(), chunks.end(), [](const std::tuple<int, Chunk* >& c1, const std::tuple<int, Chunk* >& c2) {
 		return std::get<0>(c1) < std::get<0>(c2);
 	});
@@ -140,6 +144,11 @@ bool ChunkMap::isInChunkMap(ivec2 pos) {
 
 ivec2 ChunkMap::getCenter() {
 	return m_center;
+}
+
+void ChunkMap::setBlock(ivec3 globalPos, GLuint block) {
+	m_chunks[Converter::globalToChunk(globalPos)]->getSection(floorDiv(globalPos.y, Const::SECTION_HEIGHT))
+		.setBlock(Converter::globalToInnerSection(globalPos), block);
 }
 
 GLuint ChunkMap::getBlock(ivec3 globalPos) {
@@ -178,5 +187,9 @@ int ChunkMap::chunksAtLeastInState(Chunk::State minState) {
 
 int ChunkMap::chunksInState(Chunk::State state) {
 	return countChunks[state];
+}
+
+int ChunkMap::getRenderedChunks() {
+	return renderedChunks;
 }
 

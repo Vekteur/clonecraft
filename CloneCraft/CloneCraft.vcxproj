@@ -23,12 +23,14 @@
     <ClInclude Include="CaptureMouse.h" />
     <ClInclude Include="FPSCounter.h" />
     <ClInclude Include="Crosshair.h" />
+    <ClInclude Include="View\Frustum.h" />
     <ClInclude Include="Maths\LineBlockFinder.h" />
     <ClInclude Include="Maths\Dir3D.h" />
     <ClInclude Include="Maths\Dir2D.h" />
     <ClInclude Include="Maths\MiscMath.h" />
     <ClInclude Include="Util\Debug.h" />
     <ClInclude Include="Generator\ChunkGenerator.h" />
+    <ClInclude Include="Util\enum.h" />
     <ClInclude Include="Util\json.hpp" />
     <ClInclude Include="Util\Logger.h" />
     <ClInclude Include="Util\stb_image.h" />
@@ -39,6 +41,7 @@
       <FileType>CppCode</FileType>
     </ClInclude>
     <ClCompile Include="Block\Block.cpp" />
+    <ClCompile Include="View\Frustum.cpp" />
     <ClCompile Include="Maths\LineBlockFinder.cpp" />
     <ClCompile Include="Maths\Dir3D.cpp" />
     <ClCompile Include="Maths\Dir2D.cpp" />

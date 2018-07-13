@@ -1,6 +1,7 @@
 #include "LineBlockFinder.h"
 
 #include <limits>
+#include <algorithm>
 
 #include "Converter.h"
 #include "Logger.h"
@@ -18,9 +19,9 @@ ivec3 LineBlockFinder::next() {
 		}
 	}
 
-	auto nextInter = nextIntersection();
-	pos = std::get<0>(nextInter);
-	distance += std::get<1>(nextInter);
+	float nextDistance;
+	std::tie(pos, nextDistance) = nextIntersection();
+	distance += nextDistance;
 
 	return nextBlock;
 }
@@ -30,23 +31,19 @@ float LineBlockFinder::getDistance() {
 }
 
 std::tuple<vec3, float> LineBlockFinder::nextIntersection() {
-	float minDist = std::numeric_limits<float>::infinity();
-	vec3 nearestInter;
+	float minRatio = std::numeric_limits<float>::infinity();
 	for (int currAxe = 0; currAxe < 3; ++currAxe) {
-		vec3 inter;
 		if (abs(dir[currAxe]) < epsilon)
 			continue;
-		inter[currAxe] = (dir[currAxe] > 0.f) ? floor(pos[currAxe] + 1) : ceil(pos[currAxe] - 1);
-		float ratio = abs((inter[currAxe] - pos[currAxe]) / dir[currAxe]);
-		for (int axe = 0; axe < 3; ++axe) {
-			if (axe != currAxe)
-				inter[axe] = pos[axe] + dir[axe] * ratio;
-		}
-		float dist = glm::distance(pos, inter);
-		if (dist < minDist) {
-			minDist = dist;
-			nearestInter = inter;
-		}
+		float inter = (dir[currAxe] > 0.f) ? floor(pos[currAxe] + 1) : ceil(pos[currAxe] - 1);
+		float ratio = abs((inter - pos[currAxe]) / dir[currAxe]);
+		minRatio = std::min(minRatio, ratio);
 	}
-	return { nearestInter, minDist };
+
+	vec3 inter;
+	for (int axe = 0; axe < 3; ++axe) {
+		inter[axe] = pos[axe] + dir[axe] * minRatio;
+	}
+	float dist = glm::distance(pos, inter);
+	return { inter, dist };
 }

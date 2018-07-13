@@ -2,6 +2,7 @@
 
 #include "Chunk.h"
 #include "WorldConstants.h"
+#include "Frustum.h"
 
 #include <unordered_map>
 #include <memory>
@@ -27,11 +28,12 @@ public:
 
 	void load();
 	void update();
-	void render();
+	void render(const Frustum& frustum);
 	void setCenter(ivec2 center);
 	ivec2 getCenter();
 
-	GLuint getBlock(ivec3 pos);
+	void setBlock(ivec3 globalPos, GLuint block);
+	GLuint getBlock(ivec3 globalPos);
 	Chunk& getChunk(ivec2 pos);
 	Section& getSection(ivec3 pos);
 	void unloadFarChunks();
@@ -41,6 +43,7 @@ public:
 	void onChangeChunkState(Chunk& chunk, Chunk::State nextState);
 	int chunksAtLeastInState(Chunk::State state);
 	int chunksInState(Chunk::State state);
+	int getRenderedChunks();
 
 private:
 	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2> m_chunks;
@@ -49,6 +52,7 @@ private:
 	std::mutex m_deleteChunksMutex;
 	bool mustStop = false;
 
+	int renderedChunks = 0;
 	std::array<int, Chunk::STATE_SIZE> countChunks;
 
 	void loadBlocks(ivec2 pos);

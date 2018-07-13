@@ -15,15 +15,15 @@ public:
 	// Compiles the shader from given source code
 	void    compile(const GLchar *vertexSource, const GLchar *fragmentSource, const GLchar *geometrySource = nullptr);
 
-	void    setFloat(const GLchar *name, GLfloat value);
-	void    setInt(const GLchar *name, GLint value);
-	void    setVec2(const GLchar *name, const glm::vec2 &value);
-	void    setVec3(const GLchar *name, const glm::vec3 &value);
-	void    setVec4(const GLchar *name, const glm::vec4 &value);
-	void	setIVec2(const GLchar *name, const glm::ivec2 &value);
-	void    setIVec3(const GLchar *name, const glm::ivec3 &value);
-	void    setIVec4(const GLchar *name, const glm::ivec4 &value);
-	void    setMat4(const GLchar *name, const glm::mat4 &matrix);
+	void    set(const GLchar *name, GLfloat value);
+	void    set(const GLchar *name, GLint value);
+	void    set(const GLchar *name, const glm::vec2 &value);
+	void    set(const GLchar *name, const glm::vec3 &value);
+	void    set(const GLchar *name, const glm::vec4 &value);
+	void	set(const GLchar *name, const glm::ivec2 &value);
+	void    set(const GLchar *name, const glm::ivec3 &value);
+	void    set(const GLchar *name, const glm::ivec4 &value);
+	void    set(const GLchar *name, const glm::mat4 &matrix);
 
 	GLuint	getId();
 private:

@@ -4,17 +4,15 @@
 #include "Debug.h"
 #include "Logger.h"
 
-const float Game::TARGET_DISTANCE{ 100.f };
+const float Game::TARGET_DISTANCE{ 300.f };
 
 Game::Game(Window* const window, sf::Context* const context)
 	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context{ context } {
 	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
 	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
 
-	ResManager::getShader("cube").use().setInt("distance", ChunkMap::SIDE);
+	ResManager::getShader("cube").use().set("distance", ChunkMap::SIDE);
 
-	if (glGetError())
-		std::cin.get();
 	m_chunkMapThread = std::thread{ &Game::runChunkLoadingLoop, this };
 }
 
@@ -42,6 +40,10 @@ void Game::processKeyboard(GLfloat dt) {
 		m_camera.move(Camera::LEFT, dt);
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 		m_camera.move(Camera::RIGHT, dt);
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+		m_camera.move(Camera::UP, dt);
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
+		m_camera.move(Camera::DOWN, dt);
 }
 
 void Game::processMouseMove(GLfloat dt) {
@@ -57,9 +59,11 @@ void Game::processMouseWheel(GLfloat delta) {
 }
 
 void Game::update(GLfloat dt) {
-	ResManager::getShader("cube").use().setMat4("view", m_camera.getViewMatrix());
-	ResManager::getShader("cube").use().setMat4("projection", m_camera.getProjectionMatrix());
-	ResManager::getShader("cube").use().setVec3("skyColor", { 70.f / 255, 190.f / 255, 240.f / 255 });
+	sf::Vector2f screenDim = p_window->getView().getSize();
+	m_camera.update({ screenDim.x, screenDim.y });
+	ResManager::getShader("cube").use().set("view", m_camera.getViewMatrix());
+	ResManager::getShader("cube").use().set("projection", m_camera.getProjMatrix());
+	ResManager::getShader("cube").use().set("skyColor", vec3{ 70.f / 255, 190.f / 255, 240.f / 255 });
 
 	ivec2 newCenter = Converter::globalToChunk(m_camera.getPosition());
 	if (m_chunks.getCenter() != newCenter)
@@ -76,10 +80,15 @@ void Game::update(GLfloat dt) {
 			break;
 		}
 	}
+	/*if (targetBlock.has_value()) {
+		m_chunks.setBlock(targetBlock.value(), 0);
+		m_chunks.getChunk(Converter::globalToChunk(targetBlock.value())).setState(Chunk::TO_LOAD_FACES);
+	}*/
+
 }
 
 void Game::render() {
-	m_chunks.render();
+	m_chunks.render(m_camera.getFrustum());
 }
 
 Camera& Game::getCamera() {

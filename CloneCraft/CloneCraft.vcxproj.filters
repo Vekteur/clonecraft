@@ -25,6 +25,7 @@
     <ClCompile Include="Util\Logger.cpp" />
     <ClCompile Include="WindowTextDrawer.cpp" />
     <ClCompile Include="Maths\LineBlockFinder.cpp" />
+    <ClCompile Include="View\Frustum.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -56,5 +57,7 @@
     <ClInclude Include="Maths\MiscMath.h" />
     <ClInclude Include="Crosshair.h" />
     <ClInclude Include="Maths\LineBlockFinder.h" />
+    <ClInclude Include="Util\enum.h" />
+    <ClInclude Include="View\Frustum.h" />
   </ItemGroup>
 </Project>

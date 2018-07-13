@@ -14,7 +14,7 @@
 class ChunkMap;
 class Chunk;
 
-struct Face {
+struct Vertex {
 	vec3 pos;
 	GLuint texNorm;
 };
@@ -31,6 +31,7 @@ public:
 	void unloadVAOs();
 	void render(Shader &shader, Texture2D &texture) const;
 
+	void setBlock(ivec3 pos, GLuint block);
 	GLuint getBlock(ivec3 pos) const;
 
 private:
@@ -44,8 +45,7 @@ private:
 	bool empty = true;
 
 	bool isInSection(ivec3 block);
-	std::vector<Face> findFaces();
-	GLuint getNearBlock(ivec3 block);
+	std::vector<Vertex> findFaces();
 
 	static const std::array<GLuint, 6> rectIndices;
 	static const std::array<ivec2, 4> textureCoords;

@@ -2,6 +2,7 @@
 
 #include <glad\glad.h>
 #include "GlmCommon.h"
+#include "Frustum.h"
 
 class Camera
 {
@@ -17,8 +18,13 @@ public:
 
 	Camera(vec3 position = vec3{ 0.0f, 0.0f, 0.0f }, float yaw = YAW, float pitch = PITCH);
 
+	void update(ivec2 screenDim);
+
 	mat4 getViewMatrix();
-	mat4 getProjectionMatrix();
+	mat4 getProjMatrix();
+	mat4 getProjViewMatrix();
+	Frustum getFrustum();
+
 	vec3 getPosition();
 	vec3 getFront();
 	float getYaw();
@@ -37,7 +43,6 @@ private:
 	static const vec3 POSITION, WORLDUP;
 
 	vec3 m_position{ POSITION };
-	vec2 m_chunk;
 	vec3 m_front;
 	vec3 m_up;
 	vec3 m_right;
@@ -48,5 +53,11 @@ private:
 	float m_speed{ SPEED };
 	float m_sensitivity{ SENSIVITY };
 	float m_zoom{ ZOOM };
+
+	mat4 m_viewMatrix;
+	mat4 m_projMatrix;
+	mat4 m_projViewMatrix;
+	Frustum m_frustum;
+
 	void updateFromEuler();
 };

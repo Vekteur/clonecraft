@@ -5,33 +5,49 @@
 
 #include "Window.h"
 #include "Converter.h"
+#include "Logger.h"
 
-const float Camera::SPEED{ 30.0f };
+const float Camera::SPEED{ 30.f };
 const float Camera::SENSIVITY{ 0.16f };
-const float Camera::SCROLLSPEED{ 5.0f };
-const float Camera::ZOOM{ 45.0f };
-const float Camera::YAW{ -90.0f };
-const float Camera::PITCH{ 0.0f };
+const float Camera::SCROLLSPEED{ 3.f / 2 };
+const float Camera::ZOOM{ 45.f };
+const float Camera::YAW{ -90.f };
+const float Camera::PITCH{ 0.f };
 
 const float Camera::NEARPLANE{ 0.1f };
-const float Camera::FARPLANE{ 1000.0f };
+const float Camera::FARPLANE{ 1000.f };
 
-const vec3 Camera::POSITION{ vec3{0.0f, 0.0f, 0.0f } };
-const vec3 Camera::WORLDUP{ vec3{ 0.0f, 1.0f, 0.0f } };
+const vec3 Camera::POSITION{ vec3{0.f, 0.f, 0.f } };
+const vec3 Camera::WORLDUP{ vec3{ 0.f, 1.f, 0.f } };
 
 Camera::Camera(vec3 position, float yaw, float pitch)
-	:m_position{ position }, m_yaw{ yaw }, m_pitch{ pitch }, m_chunk{ Converter::globalToChunk(position) } {
+	:m_position{ position }, m_yaw{ yaw }, m_pitch{ pitch } {
 	// Init up and right vectors from front vector
 	updateFromEuler();
 }
 
-mat4 Camera::getViewMatrix() {
-	return glm::lookAt(m_position, m_position + m_front, WORLDUP);
+void Camera::update(ivec2 screenDim) {
+	m_viewMatrix = glm::lookAt(m_position, m_position + m_front, WORLDUP);
+	m_projMatrix = glm::perspective(glm::radians(m_zoom),
+		static_cast<float>(screenDim.x) / static_cast<float>(screenDim.y), NEARPLANE, FARPLANE);
+	m_projViewMatrix = m_projMatrix * m_viewMatrix;
+	m_frustum = Frustum(m_projViewMatrix);
 }
 
-mat4 Camera::getProjectionMatrix() {
-	return glm::perspective(glm::radians(m_zoom),
-		static_cast<float>(Window::SCREEN_WIDTH) / static_cast<float>(Window::SCREEN_HEIGHT), NEARPLANE, FARPLANE);
+mat4 Camera::getViewMatrix() {
+	return m_viewMatrix;
+}
+
+mat4 Camera::getProjMatrix() {
+	return m_projMatrix;
+}
+
+mat4 Camera::getProjViewMatrix() {
+	return m_projViewMatrix;
+}
+
+Frustum Camera::getFrustum() {
+	return m_frustum;
 }
 
 vec3 Camera::getPosition() {
@@ -50,20 +66,25 @@ float Camera::getPitch() {
 	return m_pitch;
 }
 
+vec3 toHorizontal(vec3 vec) { // There must be a horizontal movement
+	return normalize(vec3{ vec.x, 0.f, vec.z });
+}
+
 void Camera::move(Direction direction, float deltaTime) {
 	float velocity = m_speed * deltaTime;
+
 	if (direction == FORWARD)
-		m_position += m_front * velocity;
+		m_position += toHorizontal(m_front) * velocity;
 	if (direction == BACKWARD)
-		m_position -= m_front * velocity;
+		m_position -= toHorizontal(m_front) * velocity;
 	if (direction == RIGHT)
-		m_position += m_right * velocity;
+		m_position += toHorizontal(m_right) * velocity;
 	if (direction == LEFT)
-		m_position -= m_right * velocity;
+		m_position -= toHorizontal(m_right) * velocity;
 	if (direction == UP)
-		m_position += m_up * velocity;
+		m_position += WORLDUP * velocity;
 	if (direction == DOWN)
-		m_position -= m_up * velocity;
+		m_position -= WORLDUP * velocity;
 }
 
 void Camera::move(vec3 offset) {
@@ -75,26 +96,19 @@ void Camera::setPosition(vec3 position) {
 }
 
 void Camera::processMouse(vec2 offset) {
-	offset.x *= m_sensitivity;
-	offset.y *= m_sensitivity;
+	offset.x *= m_sensitivity * (m_zoom / ZOOM);
+	offset.y *= m_sensitivity * (m_zoom / ZOOM);
 
 	m_yaw = fmod(m_yaw + offset.x + 360, 360);
 	m_pitch -= offset.y;
-
-	if (m_pitch > 89.0f)
-		m_pitch = 89.0f;
-	if (m_pitch < -89.0f)
-		m_pitch = -89.0f;
+	m_pitch = clamp(m_pitch, -89.9f, 89.9f);
 
 	this->updateFromEuler();
 }
 
 void Camera::processMouseScroll(float yOffset) {
-	m_zoom -= yOffset * SCROLLSPEED;
-	if (m_zoom < 1.0f)
-		m_zoom = 1.0f;
-	else if (m_zoom > 45.0f)
-		m_zoom = 45.0f;
+	m_zoom *= pow(1.f / SCROLLSPEED, yOffset);
+	m_zoom = clamp(m_zoom, 1.f, ZOOM);
 }
 
 void Camera::updateFromEuler() {

@@ -41,39 +41,39 @@ void Shader::compile(const GLchar* vertexSource, const GLchar* fragmentSource, c
 		glDeleteShader(sGeometry);
 }
 
-void Shader::setFloat(const GLchar *name, GLfloat value) {
+void Shader::set(const GLchar *name, GLfloat value) {
 	glUniform1f(glGetUniformLocation(this->m_id, name), value);
 }
 
-void Shader::setInt(const GLchar *name, GLint value) {
+void Shader::set(const GLchar *name, GLint value) {
 	glUniform1i(glGetUniformLocation(this->m_id, name), value);
 }
 
-void Shader::setVec2(const GLchar *name, const glm::vec2 &value) {
+void Shader::set(const GLchar *name, const glm::vec2 &value) {
 	glUniform2f(glGetUniformLocation(this->m_id, name), value.x, value.y);
 }
 
-void Shader::setVec3(const GLchar *name, const glm::vec3 &value) {
+void Shader::set(const GLchar *name, const glm::vec3 &value) {
 	glUniform3f(glGetUniformLocation(this->m_id, name), value.x, value.y, value.z);
 }
 
-void Shader::setVec4(const GLchar *name, const glm::vec4 &value) {
+void Shader::set(const GLchar *name, const glm::vec4 &value) {
 	glUniform4f(glGetUniformLocation(this->m_id, name), value.x, value.y, value.z, value.w);
 }
 
-void Shader::setIVec2(const GLchar * name, const glm::ivec2 & value) {
+void Shader::set(const GLchar * name, const glm::ivec2 & value) {
 	glUniform2i(glGetUniformLocation(this->m_id, name), value.x, value.y);
 }
 
-void Shader::setIVec3(const GLchar * name, const glm::ivec3 & value) {
+void Shader::set(const GLchar * name, const glm::ivec3 & value) {
 	glUniform3i(glGetUniformLocation(this->m_id, name), value.x, value.y, value.z);
 }
 
-void Shader::setIVec4(const GLchar * name, const glm::ivec4 & value) {
+void Shader::set(const GLchar * name, const glm::ivec4 & value) {
 	glUniform4i(glGetUniformLocation(this->m_id, name), value.x, value.y, value.z, value.w);
 }
 
-void Shader::setMat4(const GLchar *name, const glm::mat4 &matrix) {
+void Shader::set(const GLchar *name, const glm::mat4 &matrix) {
 	glUniformMatrix4fv(glGetUniformLocation(this->m_id, name), 1, GL_FALSE, glm::value_ptr(matrix));
 }
 

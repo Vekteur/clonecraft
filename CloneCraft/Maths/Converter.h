@@ -23,6 +23,6 @@ int posMod(int base, int modulo);
 float posMod(float base, float modulo);
 
 template<typename T>
-const T& clamp(const T& x, const T& upper, const T& lower) {
-	return min(upper, max(x, lower));
+const T& clamp(const T& x, const T& lower, const T& upper) {
+	return std::max(lower, std::min(x, upper));
 }

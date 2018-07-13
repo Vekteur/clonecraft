@@ -10,7 +10,8 @@ WindowTextDrawer::WindowTextDrawer(Window * window) : p_window{ window } {
 	}
 }
 
-void WindowTextDrawer::draw(int fps, Game& game) {
+void WindowTextDrawer::drawAll(int fps, Game& game) {
+	line = 0;
 	drawFPS(fps);
 	vec3 pos = game.getCamera().getPosition();
 	drawGlobalPosition(pos);
@@ -18,6 +19,7 @@ void WindowTextDrawer::draw(int fps, Game& game) {
 	drawSectionPosition(Converter::globalToSection(pos));
 	drawTarget(game.getTarget());
 	drawDirection(game.getCamera().getYaw(), game.getCamera().getPitch());
+	drawRenderedChunks(game.getChunkMap().getRenderedChunks());
 	drawBlockChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES));
 	drawFaceChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_VAOS));
 	drawBlockNumber(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES) *
@@ -27,28 +29,28 @@ void WindowTextDrawer::draw(int fps, Game& game) {
 void WindowTextDrawer::drawFPS(int fps) {
 	std::ostringstream oss;
 	oss << "FPS : " << std::setw(4) << fps;
-	drawAtLine(oss.str(), 0);
+	draw(oss.str());
 }
 
 void WindowTextDrawer::drawGlobalPosition(vec3 pos) {
 	std::ostringstream oss;
 	oss << "Global :  " << std::setprecision(2) << std::fixed << std::setw(10) << std::right << pos.x << ' ' <<
 		std::fixed << std::setw(10) << std::right << pos.y << ' ' << std::fixed << std::setw(10) << std::right << pos.z;
-	drawAtLine(oss.str(), 1);
+	draw(oss.str());
 }
 
 void WindowTextDrawer::drawLocalPosition(vec3 pos) {
 	std::ostringstream oss;
 	oss << "Local :   " << std::setprecision(4) << std::fixed << std::setw(8) << pos.x << ' ' <<
 		std::fixed << std::setw(8) << pos.y << ' ' << std::fixed << std::setw(8) << pos.z;
-	drawAtLine(oss.str(), 2);
+	draw(oss.str());
 }
 
 void WindowTextDrawer::drawSectionPosition(ivec3 pos) {
 	std::ostringstream oss;
 	oss << "Section : " << std::setw(12) << pos.x << ' ' <<
 		std::setw(12) << pos.y << ' ' << std::setw(12) << pos.z;
-	drawAtLine(oss.str(), 3);
+	draw(oss.str());
 }
 
 void WindowTextDrawer::drawTarget(std::optional<ivec3> opt_pos) {
@@ -61,35 +63,41 @@ void WindowTextDrawer::drawTarget(std::optional<ivec3> opt_pos) {
 	} else {
 		oss << std::setw(12) << "None";
 	}
-	drawAtLine(oss.str(), 4);
+	draw(oss.str());
 }
 
 void WindowTextDrawer::drawDirection(float pitch, float yaw) {
 	std::ostringstream oss;
 	oss << "Pitch / Yaw : " << std::setprecision(3) << std::fixed << std::setw(9) << pitch << ' ' <<
 		std::fixed << std::setw(9) << yaw;
-	drawAtLine(oss.str(), 5);
+	draw(oss.str());
+}
+
+void WindowTextDrawer::drawRenderedChunks(int renderedChunks) {
+	std::ostringstream oss;
+	oss << "Rendered Chunks : " << std::setw(6) << renderedChunks;
+	draw(oss.str());
 }
 
 void WindowTextDrawer::drawBlockChunks(int blockChunks) {
 	std::ostringstream oss;
 	oss << "Block Chunks : " << std::setw(6) << blockChunks;
-	drawAtLine(oss.str(), 6);
+	draw(oss.str());
 }
 
 void WindowTextDrawer::drawFaceChunks(int faceChunks) {
 	std::ostringstream oss;
 	oss << "Face Chunks :  " << std::setw(6) << faceChunks;
-	drawAtLine(oss.str(), 7);
+	draw(oss.str());
 }
 
 void WindowTextDrawer::drawBlockNumber(int blockNumber) {
 	std::ostringstream oss;
 	oss << "Blocks : " << std::setw(12) << blockNumber;
-	drawAtLine(oss.str(), 8);
+	draw(oss.str());
 }
 
-void WindowTextDrawer::drawAtLine(std::string message, int line) {
+void WindowTextDrawer::draw(std::string message) {
 	sf::Text text;
 	text.setFont(m_font);
 	text.setString(message);
@@ -97,4 +105,5 @@ void WindowTextDrawer::drawAtLine(std::string message, int line) {
 	text.setPosition({ paddingLeft * p_window->getSize().x, 
 		p_window->getSize().y * (paddingTop + line * textSpacing) });
 	p_window->draw(text);
+	++line;
 }
