@@ -12,7 +12,7 @@ private:
 	sf::Sprite crossHair;
 public:
 	Crosshair(Window* p_window) : p_window{ p_window } {
-		if (!crossHairTexture.loadFromFile("Resources/Textures/Crosshair.png")) {
+		if (!crossHairTexture.loadFromFile("Resources/Textures/HUD/Crosshair.png")) {
 			LOG(Level::ERROR) << "Failed to load crosshair texture" << std::endl;
 		}
 		crossHair.setTexture(crossHairTexture);

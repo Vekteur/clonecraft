@@ -1,32 +1,11 @@
 #pragma once
 
-#include "json.hpp"
-using json = nlohmann::json;
+#include "ID.h"
 
-class Block {
-public:
+struct Block
+{
+	ID id;
+	char data;
 
-	enum Direction {
-		UP,
-		DOWN,
-		NORTH,
-		SOUTH,
-		EAST,
-		WEST,
-		SIZE
-	};
-
-	Block(const json& j);
-	~Block();
-
-	bool isOpaque();
-	bool isObstacle();
-	int getResistance();
-	int getTexture(Direction dir);
-
-private:
-	int m_textures[SIZE];
-	bool m_opaque;
-	bool m_obstacle;
-	int m_resistance;
+	Block(ID id = ID::AIR, char data = 0) : id{ id }, data{ data } {}
 };

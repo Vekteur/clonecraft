@@ -7,14 +7,13 @@
 
 #include "Texture.h"
 #include "Shader.h"
+#include "BlockDatas.h"
+#include "TextureArray.h"
 
 class ResManager
 {
 public:
 	ResManager() = delete;
-
-	static std::map<std::string, Shader>    shaders;
-	static std::map<std::string, Texture2D> textures;
 
 	static Shader		loadShader(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile, std::string name);
 	static Shader		getShader(std::string name);
@@ -23,7 +22,13 @@ public:
 	static void			clear();
 	static std::string	readFile(std::string fileName);
 
+	static BlockDatas blockDatas;
+	static TextureArray blockTextureArray;
+
 private:
 	static Shader		loadShaderFromFile(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile = nullptr);
 	static Texture2D	loadTextureFromFile(const GLchar *file, GLboolean alpha);
+
+	static std::map<std::string, Shader>    shaders;
+	static std::map<std::string, Texture2D> textures;
 };

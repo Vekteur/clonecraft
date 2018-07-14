@@ -2,6 +2,37 @@
 
 #include "Logger.h"
 
+ vec3 Plane::norm() const {
+	 return { x, y, z };
+}
+
+ bool Plane::contains(vec3 point) const {
+	 return glm::dot(norm(), point) >= -w;
+ }
+
+ void Plane::normalize() {
+	 *this /= glm::length(norm());
+ }
+
+ inline vec3 Box::firstPointCrossed(vec3 norm) {
+	 vec3 point = pos;
+	 for (int i = 0; i < 3; ++i) {
+		 if (norm[i] < 0.f)
+			 point[i] += size[i];
+	 }
+	 return point;
+ }
+
+ inline vec3 Box::lastPointCrossed(vec3 norm) {
+	 vec3 point = pos;
+	 for (int i = 0; i < 3; ++i) {
+		 if (norm[i] > 0.f)
+			 point[i] += size[i];
+	 }
+	 return point;
+ }
+
+
 /*
 The equations of the frustum planes are determined from the projection and view matrices
 Algorithm based on this article : 

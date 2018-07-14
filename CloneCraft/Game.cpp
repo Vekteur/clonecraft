@@ -3,17 +3,31 @@
 #include "Converter.h"
 #include "Debug.h"
 #include "Logger.h"
+#include "BlockDatas.h"
+
+#include <vector>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 const float Game::TARGET_DISTANCE{ 300.f };
 
 Game::Game(Window* const window, sf::Context* const context)
 	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context{ context } {
 	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
-	ResManager::loadTexture("Resources/Textures/stone.png", GL_FALSE, "stone");
+	ResManager::loadTexture("Resources/Textures/Blocks/stone.png", GL_FALSE, "stone");
 
 	ResManager::getShader("cube").use().set("distance", ChunkMap::SIDE);
 
 	m_chunkMapThread = std::thread{ &Game::runChunkLoadingLoop, this };
+
+	std::string blockTexturesPath = "Resources/Textures/Blocks";
+	std::vector<fs::path> paths;
+	for (const fs::directory_entry& entry : fs::directory_iterator(blockTexturesPath)) {
+		paths.push_back(entry.path());
+	}
+	ResManager::blockTextureArray = TextureArray{ paths, ivec2{ 8, 8 }, GL_RGB };
+	ResManager::blockDatas = BlockDatas{ std::vector<TextureArray>{ ResManager::blockTextureArray } };
 }
 
 Game::~Game() {
@@ -75,7 +89,7 @@ void Game::update(GLfloat dt) {
 	targetBlock = std::nullopt;
 	while (lineBlockFinder.getDistance() <= TARGET_DISTANCE) {
 		ivec3 iterBlock = lineBlockFinder.next();
-		if (m_chunks.getBlock(iterBlock) != 0) {
+		if (m_chunks.getBlock(iterBlock).id != +ID::AIR) {
 			targetBlock = iterBlock;
 			break;
 		}

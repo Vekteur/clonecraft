@@ -19,13 +19,15 @@
     <ClCompile Include="Util\glad.c" />
     <ClCompile Include="Util\Debug.cpp" />
     <ClCompile Include="Util\stb_image.cpp" />
-    <ClCompile Include="Block\Block.cpp" />
     <ClCompile Include="Maths\Dir2D.cpp" />
     <ClCompile Include="Maths\Dir3D.cpp" />
     <ClCompile Include="Util\Logger.cpp" />
     <ClCompile Include="WindowTextDrawer.cpp" />
     <ClCompile Include="Maths\LineBlockFinder.cpp" />
     <ClCompile Include="View\Frustum.cpp" />
+    <ClCompile Include="Block\BlockData.cpp" />
+    <ClCompile Include="Block\BlockDatas.cpp" />
+    <ClCompile Include="Block\TextureArray.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -46,7 +48,6 @@
     <ClInclude Include="Util\Debug.h" />
     <ClInclude Include="World\WorldConstants.h" />
     <ClInclude Include="Util\stb_image.h" />
-    <ClInclude Include="Block\Block.h" />
     <ClInclude Include="Maths\Dir2D.h" />
     <ClInclude Include="Maths\Dir3D.h" />
     <ClInclude Include="Util\json.hpp" />
@@ -59,5 +60,10 @@
     <ClInclude Include="Maths\LineBlockFinder.h" />
     <ClInclude Include="Util\enum.h" />
     <ClInclude Include="View\Frustum.h" />
+    <ClInclude Include="Block\ID.h" />
+    <ClInclude Include="Block\BlockData.h" />
+    <ClInclude Include="Block\Block.h" />
+    <ClInclude Include="Block\BlockDatas.h" />
+    <ClInclude Include="Block\TextureArray.h" />
   </ItemGroup>
 </Project>

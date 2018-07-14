@@ -10,6 +10,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Dir3D.h"
+#include "Block.h"
 
 class ChunkMap;
 class Chunk;
@@ -31,15 +32,15 @@ public:
 	void unloadVAOs();
 	void render(Shader &shader, Texture2D &texture) const;
 
-	void setBlock(ivec3 pos, GLuint block);
-	GLuint getBlock(ivec3 pos) const;
+	void setBlock(ivec3 pos, Block block);
+	Block getBlock(ivec3 pos) const;
 
 private:
 	ChunkMap* const p_chunkMap{ nullptr };
 	Chunk* const p_chunk{ nullptr };
 	const ivec3 m_position;
 
-	Array3D<GLuint> m_blocks;
+	Array3D<Block> m_blocks;
 	GLuint VAO, VBO, EBO;
 	GLuint indicesNb{ 0 };
 	bool empty = true;

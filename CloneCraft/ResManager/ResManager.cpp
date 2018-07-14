@@ -10,6 +10,9 @@
 std::map<std::string, Texture2D>    ResManager::textures;
 std::map<std::string, Shader>       ResManager::shaders;
 
+BlockDatas ResManager::blockDatas;
+TextureArray ResManager::blockTextureArray;
+
 Shader ResManager::loadShader(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile, std::string name) {
 	shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
 	return shaders[name];

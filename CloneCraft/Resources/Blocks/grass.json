@@ -1,0 +1,10 @@
+{
+	"opaque" : true,
+	"obstacle" : true,
+	"category" : "default",
+	"textures" : {
+		"up" : "grass_top",
+		"down" : "dirt",
+		"side" : "grass_side"
+	}
+}

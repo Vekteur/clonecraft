@@ -3,6 +3,7 @@
 #include "OctavePerlin.h"
 #include "WorldConstants.h"
 #include "Converter.h"
+#include "Block.h"
 
 class ChunkGenerator
 {
@@ -10,7 +11,7 @@ public:
 	ChunkGenerator(ivec2 pos);
 	~ChunkGenerator();
 
-	int getBlock(ivec3 globalPos);
+	Block getBlock(ivec3 globalPos);
 
 private:
 	ivec2 m_position;

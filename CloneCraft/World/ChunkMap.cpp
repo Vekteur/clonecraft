@@ -146,19 +146,19 @@ ivec2 ChunkMap::getCenter() {
 	return m_center;
 }
 
-void ChunkMap::setBlock(ivec3 globalPos, GLuint block) {
+void ChunkMap::setBlock(ivec3 globalPos, Block block) {
 	m_chunks[Converter::globalToChunk(globalPos)]->getSection(floorDiv(globalPos.y, Const::SECTION_HEIGHT))
 		.setBlock(Converter::globalToInnerSection(globalPos), block);
 }
 
-GLuint ChunkMap::getBlock(ivec3 globalPos) {
+Block ChunkMap::getBlock(ivec3 globalPos) {
 	auto chunkIt = m_chunks.find(Converter::globalToChunk(globalPos));
 	if (chunkIt != m_chunks.end() && chunkIt->second->getState() > Chunk::TO_LOAD_BLOCKS && 
 			0 <= globalPos.y && globalPos.y < Const::CHUNK_HEIGHT) {
 		return chunkIt->second->getSection(floorDiv(globalPos.y, Const::SECTION_HEIGHT))
 			.getBlock(Converter::globalToInnerSection(globalPos));
 	}
-	return 0;
+	return { ID::AIR };
 }
 
 Chunk& ChunkMap::getChunk(ivec2 chunkPos) { // Must be a valid chunk position

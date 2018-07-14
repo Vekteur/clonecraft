@@ -19,10 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Block\BlockDatas.h" />
     <ClInclude Include="Block\Block.h" />
+    <ClInclude Include="Block\BlockData.h" />
+    <ClInclude Include="Block\ID.h" />
     <ClInclude Include="CaptureMouse.h" />
     <ClInclude Include="FPSCounter.h" />
     <ClInclude Include="Crosshair.h" />
+    <ClInclude Include="Block\TextureArray.h" />
     <ClInclude Include="View\Frustum.h" />
     <ClInclude Include="Maths\LineBlockFinder.h" />
     <ClInclude Include="Maths\Dir3D.h" />
@@ -40,7 +44,9 @@
     <ClInclude Include="Maths\GlmCommon.h">
       <FileType>CppCode</FileType>
     </ClInclude>
-    <ClCompile Include="Block\Block.cpp" />
+    <ClCompile Include="Block\BlockDatas.cpp" />
+    <ClCompile Include="Block\BlockData.cpp" />
+    <ClCompile Include="Block\TextureArray.cpp" />
     <ClCompile Include="View\Frustum.cpp" />
     <ClCompile Include="Maths\LineBlockFinder.cpp" />
     <ClCompile Include="Maths\Dir3D.cpp" />

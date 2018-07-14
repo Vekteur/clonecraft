@@ -25,8 +25,8 @@ void Section::loadBlocks() {
 		for (int z = 0; z < Const::SECTION_SIDE; ++z)
 			for (int y = 0; y < Const::SECTION_HEIGHT; ++y) {
 				ivec3 pos{ x, y, z };
-				int block = p_chunk->getChunkGenerator().getBlock(pos + Converter::sectionToGlobal(m_position));
-				if (block != 0)
+				Block block = p_chunk->getChunkGenerator().getBlock(pos + Converter::sectionToGlobal(m_position));
+				if (block.id != static_cast<ID>(ID::AIR))
 					empty = false;
 				m_blocks.at(pos) = block;
 			}
@@ -71,11 +71,11 @@ std::vector<Vertex> Section::findFaces() {
 		ivec3 abstPos;
 		for (abstPos.x = 0; abstPos.x < maxsAxe.x; ++abstPos) {
 			for (abstPos.y = 0; abstPos.y < maxsAxe.y; ++abstPos.y) {
-				int lastBlock = 0; // Last block we have iterated on
+				Block lastBlock{ ID::AIR }; // Last block we have iterated on
 				int firstBlockPos = -1; // Index of the last axe containing the first block of the iteration
 
 				auto addFace = [&](int c, ivec3 localPos) {
-					if (lastBlock != 0) {
+					if (lastBlock.id != +ID::AIR) {
 						int length = c - firstBlockPos; // Length of the face
 						const ivec3 firstBlockGlobalPos{ Converter::sectionToGlobal(m_position) + localPos + oppositeOfLastAxe * length };
 						for (int vtx = 0; vtx < 4; ++vtx) {
@@ -90,27 +90,27 @@ std::vector<Vertex> Section::findFaces() {
 				};
 
 				for (abstPos.z = 0; abstPos.z < maxsAxe.z; ++abstPos.z) {
-					int currBlock = 0; // Current block of which we can see the face
+					Block currBlock{ ID::AIR }; // Current block of which we can see the face
 					// Position in the section with correct x, y and z coordinates
 					const ivec3 localPos{ abstPos[order.x], abstPos[order.y], abstPos[order.z] };
-					const int block = getBlock(localPos);
-					if (block != 0) { // If the block is air, its face will be air anyway
+					const Block block = getBlock(localPos);
+					if (block.id != +ID::AIR) { // If the block is air, its face will be air anyway
 						const ivec3 globalPos{ Converter::sectionToGlobal(m_position) + localPos };
 						const ivec3 localFacePos{ localPos + dirPos };
 						const ivec3 globalFacePos = { globalPos + dirPos };
-						int blockFace; // Face of the block in the direction of the face
+						Block blockFace{ ID::AIR }; // Face of the block in the direction of the face
 						if (globalFacePos.y < 0 || globalFacePos.y >= Const::CHUNK_HEIGHT) {
-							blockFace = 0;
+							blockFace = Block{ ID::AIR };
 						} else {
 							// The block can only be in the current section or the neighbour section
 							blockFace = isInSection(localFacePos) ? this->getBlock(localFacePos)
 								: neighbour->getBlock(Converter::globalToInnerSection(localFacePos));
 						}
-						if (blockFace == 0) { // The face is visible only if the block in the direction of the face is air
+						if (blockFace.id == +ID::AIR) { // The face is visible only if the block in the direction of the face is air
 							currBlock = block;
 						}
 					}
-					if (currBlock != lastBlock) { // We can't extend the last face if the current face is different
+					if (currBlock.id != lastBlock.id) { // We can't extend the last face if the current face is different
 						addFace(abstPos.z, localPos);
 						firstBlockPos = abstPos.z;
 						lastBlock = currBlock;
@@ -193,11 +193,11 @@ void Section::render(Shader &shader, Texture2D &texture) const {
 	}
 }
 
-void Section::setBlock(ivec3 pos, GLuint block) {
+void Section::setBlock(ivec3 pos, Block block) {
 	m_blocks.at(pos) = block;
 }
 
-GLuint Section::getBlock(ivec3 pos) const {
+Block Section::getBlock(ivec3 pos) const {
 	return m_blocks.at(pos);
 }
 

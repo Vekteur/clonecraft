@@ -32,8 +32,8 @@ public:
 	void setCenter(ivec2 center);
 	ivec2 getCenter();
 
-	void setBlock(ivec3 globalPos, GLuint block);
-	GLuint getBlock(ivec3 globalPos);
+	void setBlock(ivec3 globalPos, Block block);
+	Block getBlock(ivec3 globalPos);
 	Chunk& getChunk(ivec2 pos);
 	Section& getSection(ivec3 pos);
 	void unloadFarChunks();

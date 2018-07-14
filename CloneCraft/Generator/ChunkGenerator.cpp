@@ -11,11 +11,11 @@ ChunkGenerator::ChunkGenerator(ivec2 pos) : m_position{ pos } {
 ChunkGenerator::~ChunkGenerator() {
 }
 
-int ChunkGenerator::getBlock(ivec3 globalPos) {
+Block ChunkGenerator::getBlock(ivec3 globalPos) {
 	int height = Const::SEA_LEVEL +
 		floor(m_noise[posMod(globalPos.x, Const::SECTION_SIDE)][posMod(globalPos.z, Const::SECTION_SIDE)] * 16);
 	if (globalPos.y <= height)
-		return 1;
+		return Block{ ID::STONE };
 
-	return 0;
+	return Block{ ID::AIR };
 }

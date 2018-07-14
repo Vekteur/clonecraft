@@ -5,36 +5,15 @@
 #include <GlmCommon.h>
 
 struct Plane : vec4 {
-	vec3 norm() const {
-		return { x, y, z };
-	}
-	bool contains(vec3 point) const {
-		return glm::dot(norm(), point) >= -w;
-	}
-	void normalize() {
-		*this /= glm::length(norm());
-	}
+	vec3 norm() const;
+	bool contains(vec3 point) const;
+	void normalize();
 };
 
 struct Box {
 	vec3 pos, size;
-	vec3 firstPointCrossed(vec3 norm) {
-		vec3 point = pos;
-		for (int i = 0; i < 3; ++i) {
-			if (norm[i] < 0.f)
-				point[i] += size[i];
-		}
-		return point;
-	}
-
-	vec3 lastPointCrossed(vec3 norm) {
-		vec3 point = pos;
-		for (int i = 0; i < 3; ++i) {
-			if (norm[i] > 0.f)
-				point[i] += size[i];
-		}
-		return point;
-	}
+	vec3 firstPointCrossed(vec3 norm);
+	vec3 lastPointCrossed(vec3 norm);
 };
 
 class Frustum {
