@@ -18,6 +18,7 @@ class Chunk;
 struct Vertex {
 	vec3 pos;
 	GLuint texNorm;
+	GLuint texID;
 };
 
 class Section
@@ -30,7 +31,7 @@ public:
 	void loadFaces();
 	void loadVAOs();
 	void unloadVAOs();
-	void render(Shader &shader, Texture2D &texture) const;
+	void render(Shader &shader) const;
 
 	void setBlock(ivec3 pos, Block block);
 	Block getBlock(ivec3 pos) const;

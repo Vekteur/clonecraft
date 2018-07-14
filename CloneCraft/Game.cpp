@@ -24,9 +24,11 @@ Game::Game(Window* const window, sf::Context* const context)
 	std::string blockTexturesPath = "Resources/Textures/Blocks";
 	std::vector<fs::path> paths;
 	for (const fs::directory_entry& entry : fs::directory_iterator(blockTexturesPath)) {
-		paths.push_back(entry.path());
+		if (entry.path().extension().string() == ".png") {
+			paths.push_back(entry.path());
+		}
 	}
-	ResManager::blockTextureArray = TextureArray{ paths, ivec2{ 8, 8 }, GL_RGB };
+	ResManager::blockTextureArray = TextureArray{ paths, ivec2{ 16, 16 }, GL_RGBA };
 	ResManager::blockDatas = BlockDatas{ std::vector<TextureArray>{ ResManager::blockTextureArray } };
 }
 

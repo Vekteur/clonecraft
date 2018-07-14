@@ -55,9 +55,9 @@ ivec2 Chunk::getPosition() const {
 	return m_position;
 }
 
-void Chunk::render(Shader & shader, Texture2D & texture) const {
+void Chunk::render(Shader & shader) const {
 	for (auto& section : m_sections) {
-		section->render(shader, texture);
+		section->render(shader);
 	}
 }
 

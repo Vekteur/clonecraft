@@ -1,8 +1,5 @@
 {
 	"opaque" : false,
 	"obstacle" : false,
-	"category" : "air",
-	"textures" : {
-		"all" : null
-	}
+	"category" : "air"
 }

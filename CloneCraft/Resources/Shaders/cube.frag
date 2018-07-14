@@ -1,12 +1,12 @@
 #version 330 core
 
-in vec2 frag_tex;
+in vec3 fragTex;
 in vec3 normal;
 in float visibility;
 
 out vec4 color;
 
-uniform sampler2D texture1;
+uniform sampler2DArray arrayTexture;
 uniform vec3 skyColor;
 
 void main()
@@ -17,6 +17,6 @@ void main()
 	float diffuse = max(dot(normal, sunDir), 0.f);
 	color = vec4(vec3(ambient + diffuse), 1.f);
 
-	color *= texture(texture1, frag_tex);
+	color *= texture(arrayTexture, fragTex);
     color = mix(vec4(skyColor, 1.0f), color, visibility);
 }

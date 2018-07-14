@@ -19,6 +19,6 @@ private:
 	GLuint textureArray;
 	std::unordered_map<std::string, int> textureMap;
 
-	void loadTexture(const std::string& name, int layerNumber, int imageFormat) const;
+	void loadTexture(const std::string& name, int layerNumber, ivec2 size, int imageFormat) const;
 };
 

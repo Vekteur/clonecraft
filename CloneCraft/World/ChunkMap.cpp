@@ -127,7 +127,7 @@ void ChunkMap::render(const Frustum& frustum) {
 	});
 
 	for (auto& chunk : chunks) {
-		std::get<1>(chunk)->render(ResManager::getShader("cube"), ResManager::getTexture("stone"));
+		std::get<1>(chunk)->render(ResManager::getShader("cube"));
 	}
 
 	m_deleteChunksMutex.unlock();

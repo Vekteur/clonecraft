@@ -30,7 +30,7 @@ public:
 	State getState() const;
 	void setState(State state);
 	ivec2 getPosition() const;
-	void render(Shader &shader, Texture2D &texture) const;
+	void render(Shader &shader) const;
 	ChunkGenerator& getChunkGenerator();
 
 	Section& getSection(int height);

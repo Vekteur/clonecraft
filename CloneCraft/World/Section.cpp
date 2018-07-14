@@ -4,6 +4,8 @@
 #include "Converter.h"
 #include "ChunkMap.h"
 #include "Debug.h"
+#include "ResManager.h"
+#include "Logger.h"
 
 #include <iostream>
 
@@ -77,6 +79,7 @@ std::vector<Vertex> Section::findFaces() {
 				auto addFace = [&](int c, ivec3 localPos) {
 					if (lastBlock.id != +ID::AIR) {
 						int length = c - firstBlockPos; // Length of the face
+						GLuint texID = ResManager::blockDatas.get(lastBlock.id).getTexture(static_cast<Dir3D::Dir>(dir));
 						const ivec3 firstBlockGlobalPos{ Converter::sectionToGlobal(m_position) + localPos + oppositeOfLastAxe * length };
 						for (int vtx = 0; vtx < 4; ++vtx) {
 							vec3 currVtx = face[vtx];
@@ -84,7 +87,7 @@ std::vector<Vertex> Section::findFaces() {
 							// Multiply coordinate x of the texture (depends on the vertices of the face)
 							GLuint texNorm = textureCoords[vtx].x * length + (textureCoords[vtx].y << 8)
 								+ (dirToBin(dirPos) << 16);
-							vertices.push_back({ currVtx + vec3(firstBlockGlobalPos), texNorm });
+							vertices.push_back({ currVtx + vec3(firstBlockGlobalPos), texNorm, texID });
 						}
 					}
 				};
@@ -166,6 +169,8 @@ void Section::loadVAOs() {
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
 		glEnableVertexAttribArray(1);
 		glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(Vertex), (GLvoid*)sizeof(vec3));
+		glEnableVertexAttribArray(2);
+		glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(Vertex), (GLvoid*)(sizeof(vec3) + sizeof(GLuint)));
 		// Unbind all
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
@@ -180,12 +185,12 @@ void Section::unloadVAOs() {
 	}
 }
 
-void Section::render(Shader &shader, Texture2D &texture) const {
+void Section::render(Shader &shader) const {
 	if (indicesNb != 0) {
 		// Activate shader and texture to draw the object
-		shader.use();
 		glActiveTexture(GL_TEXTURE0);
-		texture.bind();
+		ResManager::blockTextureArray.bind();
+		shader.use();
 
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, indicesNb, GL_UNSIGNED_INT, 0);

@@ -26,9 +26,9 @@ public:
 	int getTexture(Dir3D::Dir dir);
 
 private:
-	std::array<int, Dir3D::SIZE> m_textures;
 	bool m_opaque = false;
 	bool m_obstacle = false;
 	int m_resistance = 0;
 	Category m_category = DEFAULT;
+	std::array<int, Dir3D::SIZE> m_textures;
 };
