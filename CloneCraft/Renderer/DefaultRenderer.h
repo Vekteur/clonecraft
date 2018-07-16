@@ -8,12 +8,13 @@
 
 class DefaultRenderer {
 public:
-	DefaultRenderer(TextureArray* p_texArray);
+	DefaultRenderer();
 
 	void render(const DefaultMesh& mesh);
+	TextureArray& getTextureArray();
 
 private:
 	Shader m_shader;
-	TextureArray* p_texArray;
+	TextureArray texArray;
 };
 

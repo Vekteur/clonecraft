@@ -46,7 +46,7 @@ private:
 	std::optional<ivec3> targetBlock;
 
 	TextureArray blockTextureArray;
-	std::unique_ptr<DefaultRenderer> defaultRenderer;
+	DefaultRenderer defaultRenderer;
 
 	std::thread m_chunkMapThread;
 	bool stopChunkMapThread{ false };

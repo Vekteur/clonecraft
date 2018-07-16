@@ -9,11 +9,14 @@
 class Shader
 {
 public:
+	Shader();
+	~Shader();
 	// Sets the current shader as active
 	Shader  &use();
 	// Compiles the shader from given source code
 
 	void    compile(const GLchar *vertexSource, const GLchar *fragmentSource, const GLchar *geometrySource = nullptr);
+	void loadFromFile(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile = nullptr);
 
 	void    set(const GLchar *name, GLfloat value);
 	void    set(const GLchar *name, GLint value);
@@ -28,6 +31,6 @@ public:
 	GLuint	getId();
 private:
 	// Checks if compilation or linking failed and if so, print the error logs
-	GLuint	m_id;
+	GLuint	m_id = 0;
 	void    checkCompileErrors(GLuint object, std::string type);
 };

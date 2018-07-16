@@ -8,7 +8,7 @@
 class BlockDatas {
 public:
 	BlockDatas() = default;
-	BlockDatas(const std::vector<TextureArray>& texArrays);
+	BlockDatas(const std::vector<TextureArray*>& texArrays);
 
 	const BlockData& get(ID id) const;
 	BlockData& get(ID id);

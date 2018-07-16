@@ -1,6 +1,13 @@
-#include <iostream>
 
 #include "texture.h"
+
+#include "stb_image.h"
+
+#include <iostream>
+
+Texture2D::~Texture2D() {
+	glDeleteTextures(1, &m_id);
+}
 
 Texture2D::Texture2D(GLuint internalFormat, GLuint imageFormat, GLuint wrapS, GLuint wrapT, GLuint filterMin, GLuint filterMax)
 	:m_internalFormat(internalFormat), m_imageFormat(imageFormat), m_wrapS(wrapS), m_wrapT(wrapT), m_filterMin(filterMin), m_filterMax(filterMax) {
@@ -22,6 +29,28 @@ void Texture2D::generate(GLuint width, GLuint height, unsigned char* data) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_filterMax);
 	// Unbind texture
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Texture2D::loadFromFile(const GLchar *file, GLboolean alpha) {
+	// Create Texture object
+	Texture2D texture;
+	if (alpha) {
+		texture.setInternalFormat(GL_RGBA);
+		texture.setImageFormat(GL_RGBA);
+	}
+	// Load image
+	int width, height, nbChannels;
+	unsigned char* image = stbi_load(file, &width, &height, &nbChannels, STBI_rgb);
+
+	// Generate texture
+	if (image) {
+		texture.generate(width, height, image);
+	} else {
+		std::cout << "Failed to load texture" << std::endl;
+	}
+
+	// Free image
+	stbi_image_free(image);
 }
 
 void Texture2D::bind() const {

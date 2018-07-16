@@ -5,7 +5,7 @@
 
 namespace fs = std::filesystem;
 
-BlockDatas::BlockDatas(const std::vector<TextureArray>& texArrays) {
+BlockDatas::BlockDatas(const std::vector<TextureArray*>& texArrays) {
 	std::string blocksPath = "Resources/Blocks";
 	for (const fs::directory_entry& entry : fs::directory_iterator(blocksPath)) {
 		std::ifstream ifs(entry.path());

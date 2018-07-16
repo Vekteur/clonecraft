@@ -1,6 +1,18 @@
 #include "Shader.h"
 
+#include "Logger.h"
+#include "ResManager.h"
+
 #include <iostream>
+
+Shader::Shader() {
+	LOG(Level::TRACE) << "Shader " << m_id << " created" << std::endl;
+}
+
+Shader::~Shader() {
+	glDeleteProgram(m_id);
+	LOG(Level::TRACE) << "Shader " << m_id << " deleted" << std::endl;
+}
 
 Shader &Shader::use() {
 	glUseProgram(this->m_id);
@@ -9,7 +21,7 @@ Shader &Shader::use() {
 
 void Shader::compile(const GLchar* vertexSource, const GLchar* fragmentSource, const GLchar* geometrySource) {
 	m_id = glCreateProgram();
-
+	LOG(Level::TRACE) << "Shader " << m_id << " generated" << std::endl;
 	GLuint sVertex, sFragment, sGeometry;
 	// Vertex Shader
 	sVertex = glCreateShader(GL_VERTEX_SHADER);
@@ -39,6 +51,23 @@ void Shader::compile(const GLchar* vertexSource, const GLchar* fragmentSource, c
 	glDeleteShader(sFragment);
 	if (geometrySource != nullptr)
 		glDeleteShader(sGeometry);
+}
+
+void Shader::loadFromFile(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile) {
+	// Retrieve the vertex/fragment source code from filePath
+	std::string vertexCode;
+	std::string fragmentCode;
+	std::string geometryCode;
+	try {
+		vertexCode = ResManager::readFile(vShaderFile);
+		fragmentCode = ResManager::readFile(fShaderFile);
+		if (gShaderFile != nullptr)
+			geometryCode = ResManager::readFile(gShaderFile);
+	} catch (std::exception e) {
+		std::cout << "Error : failed to read shader files" << std::endl;
+	}
+	// Create shader object from source code
+	compile(vertexCode.c_str(), fragmentCode.c_str(), gShaderFile != nullptr ? geometryCode.c_str() : nullptr);
 }
 
 void Shader::set(const GLchar *name, GLfloat value) {

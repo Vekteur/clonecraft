@@ -5,16 +5,16 @@
 
 BlockData::BlockData() {}
 
-int findID(std::string name, const std::vector<TextureArray>& texArrays) {
-	for (const TextureArray& texArray : texArrays) {
-		if (texArray.containsTexture(name)) {
-			return texArray.getTextureID(name);
+int findID(std::string name, const std::vector<TextureArray*>& texArrays) {
+	for (TextureArray* texArray : texArrays) {
+		if (texArray->containsTexture(name)) {
+			return texArray->getTextureID(name);
 		}
 	}
 	throw "Bad texture name : " + name;
 }
 
-BlockData::BlockData(const json& j, const std::vector<TextureArray>& texArrays) {
+BlockData::BlockData(const json& j, const std::vector<TextureArray*>& texArrays) {
 	m_opaque = j.value("opaque", false);
 	m_obstacle = j.value("obstacle", false);
 	m_resistance = j.value("resistance", 0);

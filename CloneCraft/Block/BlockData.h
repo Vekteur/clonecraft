@@ -17,7 +17,7 @@ public:
 	};
 
 	BlockData();
-	BlockData(const json& j, const std::vector<TextureArray>& texArrays);
+	BlockData(const json& j, const std::vector<TextureArray*>& texArrays);
 
 	bool isOpaque() const;
 	bool isObstacle() const;
