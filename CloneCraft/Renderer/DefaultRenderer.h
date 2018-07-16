@@ -10,7 +10,7 @@ class DefaultRenderer {
 public:
 	DefaultRenderer();
 
-	void render(const DefaultMesh& mesh);
+	void render(const DefaultMesh& mesh) const;
 	TextureArray& getTextureArray();
 
 private:

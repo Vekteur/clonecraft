@@ -130,21 +130,24 @@ void Game::render() {
 
 	reflectCamera();
 
+	ResManager::getShader("cube").use().set("clipPlane", vec4(0, 1, 0, -Const::SEA_LEVEL));
 	reflectionTexture.setActive(true);
 	clearRenderTarget();
-	m_chunks.render(m_camera.getFrustum(), defaultRenderer, waterRenderer);
+	m_chunks.render(m_camera.getFrustum(), defaultRenderer);
 	reflectionTexture.display();
 
 	reflectCamera();
 
+	ResManager::getShader("cube").use().set("clipPlane", vec4(0, -1, 0, Const::SEA_LEVEL));
 	refractionTexture.setActive(true);
 	clearRenderTarget();
-	m_chunks.render(m_camera.getFrustum(), defaultRenderer, waterRenderer);
+	m_chunks.render(m_camera.getFrustum(), defaultRenderer);
 	refractionTexture.display();
 
+	ResManager::getShader("cube").use().set("clipPlane", vec4(0, -1, 0, 10000));
 	p_window->setActive(true);
 	clearRenderTarget();
-	m_chunks.render(m_camera.getFrustum(), defaultRenderer, waterRenderer);
+	m_chunks.render(m_camera.getFrustum(), defaultRenderer, &waterRenderer);
 	p_window->pushGLStates();
 	sf::Sprite reflectionSprite(reflectionTexture.getTexture());
 	sf::Sprite refractionSprite(refractionTexture.getTexture());

@@ -22,7 +22,7 @@ DefaultRenderer::DefaultRenderer()
 	texArray = TextureArray{ paths, ivec2{ 16, 16 }, GL_RGBA };
 }
 
-void DefaultRenderer::render(const DefaultMesh& mesh) {
+void DefaultRenderer::render(const DefaultMesh& mesh) const {
 	if (mesh.indicesNb != 0) {
 		glActiveTexture(GL_TEXTURE0);
 		texArray.bind();

@@ -10,12 +10,15 @@ out float visibility;
 uniform mat4 view;
 uniform mat4 projection;
 uniform int distance;
+uniform vec4 clipPlane;
 
 const float density = 2.15f;
 const float gradient = 15.0f;
 
 void main()
 {
+	gl_ClipDistance[0] = dot(vec4(pos, 1.f), clipPlane);
+
 	vec4 posRelativeToCam = view * vec4(pos, 1.0f);
 	
 	float vDistance = length(posRelativeToCam.xz);

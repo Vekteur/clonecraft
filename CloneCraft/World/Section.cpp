@@ -174,9 +174,10 @@ void Section::unloadVAOs() {
 	waterMesh.unloadVAOs();
 }
 
-void Section::render(DefaultRenderer &defaultRenderer, WaterRenderer& waterRenderer) const {
+void Section::render(const DefaultRenderer &defaultRenderer, const WaterRenderer* waterRenderer) const {
 	defaultRenderer.render(defaultMesh);
-	waterRenderer.render(waterMesh);
+	if (waterRenderer != nullptr)
+		waterRenderer->render(waterMesh);
 }
 
 void Section::setBlock(ivec3 pos, Block block) {

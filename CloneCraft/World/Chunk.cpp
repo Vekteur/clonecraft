@@ -56,7 +56,7 @@ ivec2 Chunk::getPosition() const {
 	return m_position;
 }
 
-void Chunk::render(DefaultRenderer& defaultRenderer, WaterRenderer& waterRenderer) const {
+void Chunk::render(const DefaultRenderer& defaultRenderer, const WaterRenderer* waterRenderer) const {
 	for (auto& section : m_sections) {
 		section->render(defaultRenderer, waterRenderer);
 	}

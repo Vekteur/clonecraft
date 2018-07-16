@@ -109,7 +109,7 @@ void ChunkMap::update() {
 	m_deleteChunksMutex.unlock();
 }
 
-void ChunkMap::render(const Frustum& frustum, DefaultRenderer &defaultRenderer, WaterRenderer& waterRenderer) {
+void ChunkMap::render(const Frustum& frustum, const DefaultRenderer &defaultRenderer, const WaterRenderer* waterRenderer) {
 	m_deleteChunksMutex.lock();
 
 	std::vector< std::tuple<int, Chunk* > > chunks;

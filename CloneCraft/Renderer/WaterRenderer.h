@@ -9,7 +9,7 @@ class WaterRenderer {
 public:
 	WaterRenderer();
 
-	void render(const WaterMesh& mesh);
+	void render(const WaterMesh& mesh) const;
 
 private:
 	Shader m_shader;

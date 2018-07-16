@@ -5,6 +5,7 @@
 
 #include <array>
 #include <vector>
+#include <optional>
 
 #include "Array3D.h"
 #include "Texture.h"
@@ -26,7 +27,7 @@ public:
 	void loadFaces();
 	void loadVAOs();
 	void unloadVAOs();
-	void render(DefaultRenderer &shader, WaterRenderer& waterRenderer) const;
+	void render(const DefaultRenderer &shader, const WaterRenderer* waterRenderer) const;
 
 	void setBlock(ivec3 pos, Block block);
 	Block getBlock(ivec3 pos) const;

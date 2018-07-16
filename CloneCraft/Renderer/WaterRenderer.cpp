@@ -12,7 +12,7 @@ WaterRenderer::WaterRenderer() {
 	ResManager::setShader(m_shader, "water");
 }
 
-void WaterRenderer::render(const WaterMesh& mesh) {
+void WaterRenderer::render(const WaterMesh& mesh) const {
 	if (mesh.indicesNb != 0) {
 		m_shader.use();
 
