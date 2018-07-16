@@ -3,6 +3,7 @@
 #include "Section.h"
 #include "ChunkGenerator.h"
 #include "WorldConstants.h"
+
 #include <memory>
 
 class Chunk
@@ -30,7 +31,7 @@ public:
 	State getState() const;
 	void setState(State state);
 	ivec2 getPosition() const;
-	void render(DefaultRenderer &defaultRenderer) const;
+	void render(DefaultRenderer& defaultRenderer, WaterRenderer& waterRenderer) const;
 	ChunkGenerator& getChunkGenerator();
 
 	Section& getSection(int height);

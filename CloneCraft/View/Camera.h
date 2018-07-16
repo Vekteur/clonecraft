@@ -29,6 +29,7 @@ public:
 	vec3 getFront();
 	float getYaw();
 	float getPitch();
+	void invertPitch();
 
 	void move(Direction direction, float deltaTime);
 	void move(vec3 offset);

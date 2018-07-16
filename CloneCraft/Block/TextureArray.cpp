@@ -39,6 +39,10 @@ void TextureArray::bind() const {
 	glBindTexture(GL_TEXTURE_2D_ARRAY, textureArray);
 }
 
+void TextureArray::unbind() const {
+	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+}
+
 bool TextureArray::containsTexture(const std::string & name) const {
 	return textureMap.find(name) != textureMap.end();
 }

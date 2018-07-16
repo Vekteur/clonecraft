@@ -1,4 +1,5 @@
 #include "Chunk.h"
+
 #include "GlmCommon.h"
 #include "ChunkMap.h"
 
@@ -55,9 +56,9 @@ ivec2 Chunk::getPosition() const {
 	return m_position;
 }
 
-void Chunk::render(DefaultRenderer &defaultRenderer) const {
+void Chunk::render(DefaultRenderer& defaultRenderer, WaterRenderer& waterRenderer) const {
 	for (auto& section : m_sections) {
-		section->render(defaultRenderer);
+		section->render(defaultRenderer, waterRenderer);
 	}
 }
 

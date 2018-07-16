@@ -21,6 +21,7 @@ public:
 	bool shouldClose();
 	void clear();
 	ivec2 getCenter();
+	vec3 getClearColor();
 
 private:
 	bool m_toClose{ false };

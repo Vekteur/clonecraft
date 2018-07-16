@@ -12,7 +12,7 @@ public:
 	Shader();
 	~Shader();
 	// Sets the current shader as active
-	Shader  &use();
+	Shader& use();
 	// Compiles the shader from given source code
 
 	void    compile(const GLchar *vertexSource, const GLchar *fragmentSource, const GLchar *geometrySource = nullptr);

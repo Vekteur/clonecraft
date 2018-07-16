@@ -23,10 +23,10 @@
     <ClInclude Include="Block\Block.h" />
     <ClInclude Include="Block\BlockData.h" />
     <ClInclude Include="Block\ID.h" />
-    <ClInclude Include="CaptureMouse.h" />
+    <ClInclude Include="View\CaptureMouse.h" />
     <ClInclude Include="Renderer\DefaultRenderer.h" />
     <ClInclude Include="FPSCounter.h" />
-    <ClInclude Include="Crosshair.h" />
+    <ClInclude Include="View\Crosshair.h" />
     <ClInclude Include="Block\TextureArray.h" />
     <ClInclude Include="View\Frustum.h" />
     <ClInclude Include="Maths\LineBlockFinder.h" />
@@ -39,7 +39,8 @@
     <ClInclude Include="Util\json.hpp" />
     <ClInclude Include="Util\Logger.h" />
     <ClInclude Include="Util\stb_image.h" />
-    <ClInclude Include="WindowTextDrawer.h" />
+    <ClInclude Include="Renderer\WaterRenderer.h" />
+    <ClInclude Include="View\WindowTextDrawer.h" />
     <ClInclude Include="World\ChunkMap.h" />
     <ClInclude Include="Maths\Converter.h" />
     <ClInclude Include="Maths\GlmCommon.h">
@@ -58,7 +59,8 @@
     <ClCompile Include="Util\glad.c" />
     <ClCompile Include="Util\Logger.cpp" />
     <ClCompile Include="Util\stb_image.cpp" />
-    <ClCompile Include="WindowTextDrawer.cpp" />
+    <ClCompile Include="Renderer\WaterRenderer.cpp" />
+    <ClCompile Include="View\WindowTextDrawer.cpp" />
     <ClCompile Include="World\ChunkMap.cpp" />
     <ClCompile Include="Maths\Converter.cpp" />
     <ClCompile Include="Maths\GlmCommon.cpp" />

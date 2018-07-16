@@ -5,23 +5,19 @@
 
 #include <iostream>
 
-Shader::Shader() {
-	LOG(Level::TRACE) << "Shader " << m_id << " created" << std::endl;
-}
+Shader::Shader() { }
 
 Shader::~Shader() {
 	glDeleteProgram(m_id);
-	LOG(Level::TRACE) << "Shader " << m_id << " deleted" << std::endl;
 }
 
-Shader &Shader::use() {
-	glUseProgram(this->m_id);
+Shader& Shader::use() {
+	glUseProgram(m_id);
 	return *this;
 }
 
 void Shader::compile(const GLchar* vertexSource, const GLchar* fragmentSource, const GLchar* geometrySource) {
 	m_id = glCreateProgram();
-	LOG(Level::TRACE) << "Shader " << m_id << " generated" << std::endl;
 	GLuint sVertex, sFragment, sGeometry;
 	// Vertex Shader
 	sVertex = glCreateShader(GL_VERTEX_SHADER);

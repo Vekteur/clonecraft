@@ -12,6 +12,7 @@
 #include "Block.h"
 #include "Mesh.h"
 #include "DefaultRenderer.h"
+#include "WaterRenderer.h"
 
 class ChunkMap;
 class Chunk;
@@ -25,7 +26,7 @@ public:
 	void loadFaces();
 	void loadVAOs();
 	void unloadVAOs();
-	void render(DefaultRenderer &shader) const;
+	void render(DefaultRenderer &shader, WaterRenderer& waterRenderer) const;
 
 	void setBlock(ivec3 pos, Block block);
 	Block getBlock(ivec3 pos) const;
@@ -37,8 +38,9 @@ private:
 
 	Array3D<Block> m_blocks;
 	DefaultMesh defaultMesh;
+	WaterMesh waterMesh;
 	bool empty = true;
 
 	bool isInSection(ivec3 block);
-	std::vector<DefaultMesh::Vertex> findFaces();
+	std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex>>  findFaces();
 };

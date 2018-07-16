@@ -22,13 +22,14 @@
     <ClCompile Include="Maths\Dir2D.cpp" />
     <ClCompile Include="Maths\Dir3D.cpp" />
     <ClCompile Include="Util\Logger.cpp" />
-    <ClCompile Include="WindowTextDrawer.cpp" />
     <ClCompile Include="Maths\LineBlockFinder.cpp" />
     <ClCompile Include="View\Frustum.cpp" />
     <ClCompile Include="Block\BlockData.cpp" />
     <ClCompile Include="Block\BlockDatas.cpp" />
     <ClCompile Include="Block\TextureArray.cpp" />
     <ClCompile Include="Renderer\DefaultRenderer.cpp" />
+    <ClCompile Include="Renderer\WaterRenderer.cpp" />
+    <ClCompile Include="View\WindowTextDrawer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -54,10 +55,7 @@
     <ClInclude Include="Util\json.hpp" />
     <ClInclude Include="Util\Logger.h" />
     <ClInclude Include="FPSCounter.h" />
-    <ClInclude Include="WindowTextDrawer.h" />
-    <ClInclude Include="CaptureMouse.h" />
     <ClInclude Include="Maths\MiscMath.h" />
-    <ClInclude Include="Crosshair.h" />
     <ClInclude Include="Maths\LineBlockFinder.h" />
     <ClInclude Include="Util\enum.h" />
     <ClInclude Include="View\Frustum.h" />
@@ -69,5 +67,9 @@
     <ClInclude Include="Renderer\DefaultRenderer.h" />
     <ClInclude Include="World\Mesh.h" />
     <ClInclude Include="World\CubeData.h" />
+    <ClInclude Include="Renderer\WaterRenderer.h" />
+    <ClInclude Include="View\WindowTextDrawer.h" />
+    <ClInclude Include="View\CaptureMouse.h" />
+    <ClInclude Include="View\Crosshair.h" />
   </ItemGroup>
 </Project>

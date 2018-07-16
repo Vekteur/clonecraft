@@ -68,7 +68,6 @@ int main(int argc, char* argv[]) {
 		game.update(deltaTime.asSeconds());
 		captureMouse.update();
 
-		window.clear();
 		game.render();
 
 		window.pushGLStates();

@@ -45,6 +45,10 @@ ivec2 Window::getCenter() {
 	return { this->getSize().x / 2, this->getSize().y / 2 };
 }
 
+vec3 Window::getClearColor() {
+	return clearColor;
+}
+
 void Window::initDebug() {
 	GLint flags;
 	glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
@@ -64,5 +68,6 @@ void Window::initSettings() {
 	glFrontFace(GL_CW);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_CLIP_DISTANCE0);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }

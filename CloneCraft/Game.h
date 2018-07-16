@@ -15,8 +15,7 @@
 #include "Window.h"
 #include "LineBlockFinder.h"
 #include "DefaultRenderer.h"
-
-
+#include "WaterRenderer.h"
 
 class Window;
 
@@ -37,16 +36,21 @@ public:
 	std::optional<ivec3> getTarget();
 
 private:
+	void reflectCamera();
+	void clearRenderTarget();
+
 	static const float TARGET_DISTANCE;
 
 	Window* const p_window{ nullptr };
 	sf::Context* const p_context{ nullptr };
+	sf::RenderTexture reflectionTexture;
+	sf::RenderTexture refractionTexture;
 	Camera m_camera;
 	ChunkMap m_chunks;
 	std::optional<ivec3> targetBlock;
 
-	TextureArray blockTextureArray;
 	DefaultRenderer defaultRenderer;
+	WaterRenderer waterRenderer;
 
 	std::thread m_chunkMapThread;
 	bool stopChunkMapThread{ false };

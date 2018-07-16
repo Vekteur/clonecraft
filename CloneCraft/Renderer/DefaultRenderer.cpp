@@ -11,7 +11,6 @@ DefaultRenderer::DefaultRenderer()
 {
 	m_shader.loadFromFile("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag");
 	ResManager::setShader(m_shader, "cube");
-	m_shader = ResManager::getShader("cube");
 
 	std::string blockTexturesPath = "Resources/Textures/Blocks";
 	std::vector<fs::path> paths;
@@ -29,9 +28,9 @@ void DefaultRenderer::render(const DefaultMesh& mesh) {
 		texArray.bind();
 		m_shader.use();
 
-		glBindVertexArray(mesh.VAO);
-		glDrawElements(GL_TRIANGLES, mesh.indicesNb, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
+		mesh.draw();
+
+		texArray.unbind();
 	}
 }
 

@@ -66,6 +66,11 @@ float Camera::getPitch() {
 	return m_pitch;
 }
 
+void Camera::invertPitch() {
+	m_pitch = -m_pitch;
+	updateFromEuler();
+}
+
 vec3 toHorizontal(vec3 vec) { // There must be a horizontal movement
 	return normalize(vec3{ vec.x, 0.f, vec.z });
 }

@@ -21,8 +21,8 @@ BlockData::BlockData(const json& j, const std::vector<TextureArray*>& texArrays)
 	std::string category = j.value("category", "");
 	if (category == "default")
 		m_category = DEFAULT;
-	else if (category == "liquid")
-		m_category = LIQUID;
+	else if (category == "water")
+		m_category = WATER;
 	else if (category == "air")
 		m_category = AIR;
 		
