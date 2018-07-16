@@ -20,7 +20,7 @@ Block ChunkGenerator::getBlock(ivec3 globalPos) {
 		return { ID::DIRT };
 	if (globalPos.y == height)
 		return { ID::GRASS };
-	if (globalPos.y <= Const::SEA_LEVEL)
+	if (globalPos.y < Const::SEA_LEVEL)
 		return { ID::WATER };
 
 	return { ID::AIR };

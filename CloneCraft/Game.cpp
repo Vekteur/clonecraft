@@ -14,6 +14,8 @@ Game::Game(Window* const window, sf::Context* const context)
 	
 	ResManager::getShader("cube").use().set("distance", ChunkMap::SIDE);
 	ResManager::getShader("water").use().set("distance", ChunkMap::SIDE);
+	ResManager::getShader("water").use().set("reflectionTexture", 0);
+	ResManager::getShader("water").use().set("refractionTexture", 1);
 
 	m_chunkMapThread = std::thread{ &Game::runChunkLoadingLoop, this };
 
@@ -25,10 +27,10 @@ Game::Game(Window* const window, sf::Context* const context)
 	settings.depthBits = 24;
 	settings.stencilBits = 8;
 
-	if (!reflectionTexture.create(p_window->getSize().x / 2, p_window->getSize().y / 2, settings)) {
+	if (!reflectionTexture.create(p_window->getSize().x, p_window->getSize().y, settings)) {
 		LOG(Level::ERROR) << "Could not create reflection texture" << std::endl;
 	}
-	if (!refractionTexture.create(p_window->getSize().x / 2, p_window->getSize().y / 2, settings)) {
+	if (!refractionTexture.create(p_window->getSize().x, p_window->getSize().y, settings)) {
 		LOG(Level::ERROR) << "Could not create refraction texture" << std::endl;
 	}
 }
@@ -145,16 +147,22 @@ void Game::render() {
 	refractionTexture.display();
 
 	ResManager::getShader("cube").use().set("clipPlane", vec4(0, -1, 0, 10000));
+	glActiveTexture(GL_TEXTURE0);
+	sf::Texture::bind(&reflectionTexture.getTexture());
+	glActiveTexture(GL_TEXTURE1);
+	sf::Texture::bind(&refractionTexture.getTexture());
+	
+	ResManager::getShader("water").use().set("reflectionTexture", 0);
 	p_window->setActive(true);
 	clearRenderTarget();
 	m_chunks.render(m_camera.getFrustum(), defaultRenderer, &waterRenderer);
-	p_window->pushGLStates();
+	/*p_window->pushGLStates();
 	sf::Sprite reflectionSprite(reflectionTexture.getTexture());
 	sf::Sprite refractionSprite(refractionTexture.getTexture());
 	refractionSprite.setPosition(p_window->getSize().x / 2, 0);
 	p_window->draw(reflectionSprite);
 	p_window->draw(refractionSprite);
-	p_window->popGLStates();
+	p_window->popGLStates();*/
 }
 
 Camera& Game::getCamera() {

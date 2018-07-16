@@ -1,7 +1,8 @@
 #version 330 core
 layout (location = 0) in vec3 pos;
-layout (location = 1) in uint texNorm;
-layout (location = 2) in uint texID;
+layout (location = 1) in vec2 tex;
+layout (location = 2) in vec3 norm;
+layout (location = 3) in uint texID;
 
 out vec3 fragTex;
 out vec3 normal;
@@ -24,13 +25,9 @@ void main()
 	float vDistance = length(posRelativeToCam.xz);
 	visibility = exp(-pow((vDistance * density / distance), gradient));
 	visibility = clamp(visibility, 0.0f, 1.0f);
-		
-	vec2 texCoord = vec2(texNorm & 0xFFu, (texNorm >> 8) & 0xFFu);
-	fragTex = vec3(texCoord, texID);
 	
-	int normBin = int(texNorm >> 16);
-	vec3 inormal = vec3(normBin & 3, (normBin >> 2) & 3, (normBin >> 4) & 3);
-	normal = vec3(inormal - 1);
+	fragTex = vec3(tex, texID);
+	normal = norm;
 	
 	gl_Position = projection * posRelativeToCam;
 }

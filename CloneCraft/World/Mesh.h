@@ -52,13 +52,15 @@ struct Mesh
 namespace {
 	struct DefaultVertex {
 		vec3 pos;
-		GLuint texNorm;
+		vec2 tex;
+		vec3 norm;
 		GLuint texID;
 	};
 
 	struct WaterVertex {
 		vec3 pos;
-		GLuint texNorm;
+		vec2 tex;
+		vec3 norm;
 	};
 }
 
@@ -76,9 +78,11 @@ struct DefaultMesh : Mesh<DefaultVertex>
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
 			glEnableVertexAttribArray(1);
-			glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(Vertex), (GLvoid*)sizeof(vec3));
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(vec3)));
 			glEnableVertexAttribArray(2);
-			glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(Vertex), (GLvoid*)(sizeof(vec3) + sizeof(GLuint)));
+			glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(vec3) + sizeof(vec2)));
+			glEnableVertexAttribArray(3);
+			glVertexAttribIPointer(3, 1, GL_UNSIGNED_INT, sizeof(Vertex), (GLvoid*)(sizeof(vec3) + sizeof(vec2) + sizeof(vec3)));
 			// Unbind all
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindVertexArray(0);
@@ -101,7 +105,9 @@ struct WaterMesh : Mesh<WaterVertex> {
 			glEnableVertexAttribArray(0);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
 			glEnableVertexAttribArray(1);
-			glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(Vertex), (GLvoid*)sizeof(vec3));
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(vec3)));
+			glEnableVertexAttribArray(2);
+			glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(vec3) + sizeof(vec2)));
 			// Unbind all
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindVertexArray(0);

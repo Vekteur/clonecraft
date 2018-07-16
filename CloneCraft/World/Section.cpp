@@ -88,18 +88,16 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 								vec3 currVtx = face[vtx];
 								currVtx[indexOfLastAxe] *= length;
 								// Multiply coordinate x of the texture (depends on the vertices of the face)
-								GLuint texNorm = CubeData::faceCoords[vtx].x * length + (CubeData::faceCoords[vtx].y << 8)
-									+ (dirToBin(dirPos) << 16);
-								defaultVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), texNorm, texID });
+								vec2 tex = { CubeData::faceCoords[vtx].x * length, CubeData::faceCoords[vtx].y };
+								defaultVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, dirPos, texID });
 							}
 						} else if (category == BlockData::WATER) {
 							for (int vtx = 0; vtx < 4; ++vtx) {
 								vec3 currVtx = face[vtx];
 								currVtx[indexOfLastAxe] *= length;
 								// Multiply coordinate x of the texture (depends on the vertices of the face)
-								GLuint texNorm = CubeData::faceCoords[vtx].x * length + (CubeData::faceCoords[vtx].y << 8)
-									+ (dirToBin(dirPos) << 16);
-								waterVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), texNorm });
+								vec2 tex = { CubeData::faceCoords[vtx].x * length, CubeData::faceCoords[vtx].y };
+								waterVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, dirPos });
 							}
 						}
 					}
