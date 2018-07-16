@@ -109,7 +109,7 @@ void ChunkMap::update() {
 	m_deleteChunksMutex.unlock();
 }
 
-void ChunkMap::render(const Frustum& frustum) {
+void ChunkMap::render(const Frustum& frustum, DefaultRenderer &defaultRenderer) {
 	m_deleteChunksMutex.lock();
 
 	std::vector< std::tuple<int, Chunk* > > chunks;
@@ -127,7 +127,7 @@ void ChunkMap::render(const Frustum& frustum) {
 	});
 
 	for (auto& chunk : chunks) {
-		std::get<1>(chunk)->render(ResManager::getShader("cube"));
+		std::get<1>(chunk)->render(defaultRenderer);
 	}
 
 	m_deleteChunksMutex.unlock();

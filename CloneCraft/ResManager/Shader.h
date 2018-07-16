@@ -9,10 +9,10 @@
 class Shader
 {
 public:
-	Shader() { }
 	// Sets the current shader as active
 	Shader  &use();
 	// Compiles the shader from given source code
+
 	void    compile(const GLchar *vertexSource, const GLchar *fragmentSource, const GLchar *geometrySource = nullptr);
 
 	void    set(const GLchar *name, GLfloat value);

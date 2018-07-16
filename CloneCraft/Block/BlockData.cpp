@@ -63,22 +63,22 @@ BlockData::BlockData(const json& j, const std::vector<TextureArray>& texArrays) 
 	}
 }
 
-bool BlockData::isOpaque() {
+bool BlockData::isOpaque() const {
 	return m_opaque;
 }
 
-bool BlockData::isObstacle() {
+bool BlockData::isObstacle() const {
 	return m_obstacle;
 }
 
-int BlockData::getResistance() {
+int BlockData::getResistance() const {
 	return m_resistance;
 }
 
-BlockData::Category BlockData::getCategory() {
+BlockData::Category BlockData::getCategory() const {
 	return m_category;
 }
 
-int BlockData::getTexture(Dir3D::Dir dir) {
+int BlockData::getTexture(Dir3D::Dir dir) const {
 	return m_textures[dir];
 }

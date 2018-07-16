@@ -17,6 +17,10 @@ BlockDatas::BlockDatas(const std::vector<TextureArray>& texArrays) {
 	}
 }
 
-BlockData BlockDatas::get(ID id) {
+const BlockData& BlockDatas::get(ID id) const {
+	return blockDatas[id];
+}
+
+BlockData & BlockDatas::get(ID id) {
 	return blockDatas[id];
 }

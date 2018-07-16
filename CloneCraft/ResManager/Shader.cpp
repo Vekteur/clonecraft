@@ -13,20 +13,20 @@ void Shader::compile(const GLchar* vertexSource, const GLchar* fragmentSource, c
 	GLuint sVertex, sFragment, sGeometry;
 	// Vertex Shader
 	sVertex = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(sVertex, 1, &vertexSource, NULL);
+	glShaderSource(sVertex, 1, &vertexSource, nullptr);
 	glCompileShader(sVertex);
 	checkCompileErrors(sVertex, "VERTEX");
 	glAttachShader(m_id, sVertex);
 	// Fragment Shader
 	sFragment = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(sFragment, 1, &fragmentSource, NULL);
+	glShaderSource(sFragment, 1, &fragmentSource, nullptr);
 	glCompileShader(sFragment);
 	checkCompileErrors(sFragment, "FRAGMENT");
 	glAttachShader(m_id, sFragment);
 	// If geometry shader source code is given, also compile geometry shader
 	if (geometrySource != nullptr) {
 		sGeometry = glCreateShader(GL_GEOMETRY_SHADER);
-		glShaderSource(sGeometry, 1, &geometrySource, NULL);
+		glShaderSource(sGeometry, 1, &geometrySource, nullptr);
 		glCompileShader(sGeometry);
 		checkCompileErrors(sGeometry, "GEOMETRY");
 		glAttachShader(m_id, sGeometry);

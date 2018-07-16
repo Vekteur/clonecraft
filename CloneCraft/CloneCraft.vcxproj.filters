@@ -28,6 +28,7 @@
     <ClCompile Include="Block\BlockData.cpp" />
     <ClCompile Include="Block\BlockDatas.cpp" />
     <ClCompile Include="Block\TextureArray.cpp" />
+    <ClCompile Include="Renderer\DefaultRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -65,5 +66,8 @@
     <ClInclude Include="Block\Block.h" />
     <ClInclude Include="Block\BlockDatas.h" />
     <ClInclude Include="Block\TextureArray.h" />
+    <ClInclude Include="Renderer\DefaultRenderer.h" />
+    <ClInclude Include="World\Mesh.h" />
+    <ClInclude Include="World\CubeData.h" />
   </ItemGroup>
 </Project>

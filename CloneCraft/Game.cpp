@@ -14,8 +14,7 @@ const float Game::TARGET_DISTANCE{ 300.f };
 
 Game::Game(Window* const window, sf::Context* const context)
 	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context{ context } {
-	ResManager::loadShader("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag", nullptr, "cube");
-	ResManager::loadTexture("Resources/Textures/Blocks/stone.png", GL_FALSE, "stone");
+	ResManager::setShader(ResManager::loadShaderFromFile("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag"), "cube");
 
 	ResManager::getShader("cube").use().set("distance", ChunkMap::SIDE);
 
@@ -28,8 +27,10 @@ Game::Game(Window* const window, sf::Context* const context)
 			paths.push_back(entry.path());
 		}
 	}
-	ResManager::blockTextureArray = TextureArray{ paths, ivec2{ 16, 16 }, GL_RGBA };
-	ResManager::blockDatas = BlockDatas{ std::vector<TextureArray>{ ResManager::blockTextureArray } };
+	blockTextureArray = TextureArray{ paths, ivec2{ 16, 16 }, GL_RGBA };
+	ResManager::initBlockDatas(std::vector<TextureArray>{ blockTextureArray });
+
+	defaultRenderer = std::make_unique<DefaultRenderer>(&blockTextureArray);
 }
 
 Game::~Game() {
@@ -104,7 +105,7 @@ void Game::update(GLfloat dt) {
 }
 
 void Game::render() {
-	m_chunks.render(m_camera.getFrustum());
+	m_chunks.render(m_camera.getFrustum(), *defaultRenderer);
 }
 
 Camera& Game::getCamera() {

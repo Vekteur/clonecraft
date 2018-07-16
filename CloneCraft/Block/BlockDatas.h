@@ -10,7 +10,8 @@ public:
 	BlockDatas() = default;
 	BlockDatas(const std::vector<TextureArray>& texArrays);
 
-	BlockData get(ID id);
+	const BlockData& get(ID id) const;
+	BlockData& get(ID id);
 
 private:
 	std::array<BlockData, ID::SIZE> blockDatas;

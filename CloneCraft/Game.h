@@ -5,6 +5,8 @@
 #include <chrono>
 #include <SFML/Window.hpp>
 #include <optional>
+#include <memory>
+#include <utility>
 
 #include "Camera.h"
 #include "ResManager.h"
@@ -12,6 +14,9 @@
 #include "ChunkMap.h"
 #include "Window.h"
 #include "LineBlockFinder.h"
+#include "DefaultRenderer.h"
+
+
 
 class Window;
 
@@ -39,6 +44,9 @@ private:
 	Camera m_camera;
 	ChunkMap m_chunks;
 	std::optional<ivec3> targetBlock;
+
+	TextureArray blockTextureArray;
+	std::unique_ptr<DefaultRenderer> defaultRenderer;
 
 	std::thread m_chunkMapThread;
 	bool stopChunkMapThread{ false };

@@ -7,36 +7,37 @@
 #include "stb_image.h"
 
 // Instantiate static variables
-std::map<std::string, Texture2D>    ResManager::textures;
-std::map<std::string, Shader>       ResManager::shaders;
+std::map<std::string, Texture2D>    ResManager::m_textures;
+std::map<std::string, Shader>       ResManager::m_shaders;
 
-BlockDatas ResManager::blockDatas;
-TextureArray ResManager::blockTextureArray;
+BlockDatas ResManager::m_blockDatas;
 
-Shader ResManager::loadShader(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile, std::string name) {
-	shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
-	return shaders[name];
+const BlockDatas& ResManager::blockDatas() {
+	return m_blockDatas;
+}
+
+void ResManager::setShader(Shader shader, std::string name) {
+	m_shaders[name] = shader;
 }
 
 Shader ResManager::getShader(std::string name) {
-	return shaders[name];
+	return m_shaders[name];
 }
 
-Texture2D ResManager::loadTexture(const GLchar *file, GLboolean alpha, std::string name) {
-	textures[name] = loadTextureFromFile(file, alpha);
-	return textures[name];
+void ResManager::setTexture(Texture2D texture, std::string name) {
+	m_textures[name] = texture;
 }
 
 Texture2D ResManager::getTexture(std::string name) {
-	return textures[name];
+	return m_textures[name];
 }
 
 void ResManager::clear() {
 	// Properly delete all shaders
-	for (auto iter : shaders)
+	for (auto iter : m_shaders)
 		glDeleteProgram(iter.second.getId());
 	// Properly delete all textures
-	for (auto iter : textures) {
+	for (auto iter : m_textures) {
 		GLuint id{ iter.second.getId() };
 		glDeleteTextures(1, &id);
 	}
@@ -90,4 +91,8 @@ Texture2D ResManager::loadTextureFromFile(const GLchar *file, GLboolean alpha) {
 	// Free image
 	stbi_image_free(image);
 	return texture;
+}
+
+void ResManager::initBlockDatas(const std::vector<TextureArray>& texArrays) {
+	m_blockDatas = BlockDatas(texArrays);
 }

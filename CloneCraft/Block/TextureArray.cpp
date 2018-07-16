@@ -2,6 +2,7 @@
 
 #include "stb_image.h"
 #include "Logger.h"
+#include "ResManager.h"
 
 namespace fs = std::filesystem;
 

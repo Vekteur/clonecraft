@@ -28,7 +28,7 @@ public:
 
 	void load();
 	void update();
-	void render(const Frustum& frustum);
+	void render(const Frustum& frustum, DefaultRenderer &defaultRenderer);
 	void setCenter(ivec2 center);
 	ivec2 getCenter();
 

@@ -12,14 +12,16 @@ ChunkGenerator::~ChunkGenerator() {
 }
 
 Block ChunkGenerator::getBlock(ivec3 globalPos) {
-	int height = Const::SEA_LEVEL +
+	int height = Const::SEA_LEVEL + 2 +
 		floor(m_noise[posMod(globalPos.x, Const::SECTION_SIDE)][posMod(globalPos.z, Const::SECTION_SIDE)] * 16);
 	if (globalPos.y < height - 4)
-		return Block{ ID::STONE };
-	else if (globalPos.y < height)
-		return Block{ ID::DIRT };
-	else if (globalPos.y == height)
-		return Block{ ID::GRASS };
+		return { ID::STONE };
+	if (globalPos.y < height)
+		return { ID::DIRT };
+	if (globalPos.y == height)
+		return { ID::GRASS };
+	if (globalPos.y <= Const::SEA_LEVEL)
+		return { ID::WATER };
 
-	return Block{ ID::AIR };
+	return { ID::AIR };
 }

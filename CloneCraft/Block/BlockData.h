@@ -19,11 +19,11 @@ public:
 	BlockData();
 	BlockData(const json& j, const std::vector<TextureArray>& texArrays);
 
-	bool isOpaque();
-	bool isObstacle();
-	int getResistance();
-	Category getCategory();
-	int getTexture(Dir3D::Dir dir);
+	bool isOpaque() const;
+	bool isObstacle() const;
+	int getResistance() const;
+	Category getCategory() const;
+	int getTexture(Dir3D::Dir dir) const;
 
 private:
 	bool m_opaque = false;

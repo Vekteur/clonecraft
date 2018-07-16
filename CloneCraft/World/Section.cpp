@@ -6,6 +6,7 @@
 #include "Debug.h"
 #include "ResManager.h"
 #include "Logger.h"
+#include "CubeData.h"
 
 #include <iostream>
 
@@ -15,11 +16,6 @@ using arr = std::array<T, S>;
 Section::Section(ChunkMap* const chunkMap, Chunk* const chunk, ivec3 position)
 		: p_chunkMap{ chunkMap }, p_chunk{ chunk }, m_position{ position }, 
 		m_blocks{ ivec3{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE } } {
-}
-
-Section::~Section() {
-	glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &EBO);
 }
 
 void Section::loadBlocks() {
@@ -39,8 +35,8 @@ int dirToBin(ivec3 dir) {
 	return dir.x + (dir.y << 2) + (dir.z << 4);
 }
 
-std::vector<Vertex> Section::findFaces() {
-	std::vector<Vertex> vertices;
+std::vector<DefaultMesh::Vertex> Section::findFaces() {
+	std::vector<DefaultMesh::Vertex> vertices;
 
 	const arr<ivec3, 3> axeOrder{ {
 		{ 1, 0, 2 }, // Y axe
@@ -54,7 +50,7 @@ std::vector<Vertex> Section::findFaces() {
 		const ivec3 neighbourPos = m_position + dirPos; // Position of the neighbour section
 		const Section* neighbour = (neighbourPos.y < 0 || neighbourPos.y >= Const::CHUNK_NB_SECTIONS) 
 			? nullptr : &(p_chunkMap->getSection(neighbourPos)); // Neighbour section (nullptr if does not exist)
-		const arr<vec3, 4> face = dirToFace[dir]; // Face associated with the current direction
+		const arr<vec3, 4> face = CubeData::dirToFace[dir]; // Face associated with the current direction
 		const ivec3 order = axeOrder[axe]; // For the current axe, order[i] = j means that the axe i is associated with the value j
 
 		const ivec3 MAXS{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE };
@@ -79,13 +75,13 @@ std::vector<Vertex> Section::findFaces() {
 				auto addFace = [&](int c, ivec3 localPos) {
 					if (lastBlock.id != +ID::AIR) {
 						int length = c - firstBlockPos; // Length of the face
-						GLuint texID = ResManager::blockDatas.get(lastBlock.id).getTexture(static_cast<Dir3D::Dir>(dir));
+						GLuint texID = ResManager::blockDatas().get(lastBlock.id).getTexture(static_cast<Dir3D::Dir>(dir));
 						const ivec3 firstBlockGlobalPos{ Converter::sectionToGlobal(m_position) + localPos + oppositeOfLastAxe * length };
 						for (int vtx = 0; vtx < 4; ++vtx) {
 							vec3 currVtx = face[vtx];
 							currVtx[indexOfLastAxe] *= length;
 							// Multiply coordinate x of the texture (depends on the vertices of the face)
-							GLuint texNorm = textureCoords[vtx].x * length + (textureCoords[vtx].y << 8)
+							GLuint texNorm = CubeData::faceCoords[vtx].x * length + (CubeData::faceCoords[vtx].y << 8)
 								+ (dirToBin(dirPos) << 16);
 							vertices.push_back({ currVtx + vec3(firstBlockGlobalPos), texNorm, texID });
 						}
@@ -132,70 +128,28 @@ void Section::loadFaces() {
 	if (empty)
 		return;
 
-	std::vector<Vertex> faces = findFaces();
+	std::vector<DefaultMesh::Vertex> faces = findFaces();
 
 	std::vector<GLuint> indices;
 	for (int faceIndex = 0; faceIndex < (int)faces.size() / 4; ++faceIndex) // Each face (4 vertices)
-		for (GLuint rectIndex : rectIndices) // Add the indices with an offset of 4 * faceIndex
+		for (GLuint rectIndex : CubeData::faceElementIndices) // Add the indices with an offset of 4 * faceIndex
 			indices.push_back(4 * faceIndex + rectIndex);
 
-	indicesNb = indices.size();
-	if (indicesNb != 0) {
-		// The VBO stores the vertices
-		glGenBuffers(1, &VBO);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * faces.size(), faces.data(), GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		// The EBO stores the indices
-		glGenBuffers(1, &EBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indices.size(), indices.data(), GL_DYNAMIC_DRAW);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-		Debug::glCheckError();
-	}
+	defaultMesh.loadBuffers(faces, indices);
+	
+	Debug::glCheckError();
 }
 
 void Section::loadVAOs() {
-	if (indicesNb != 0) {
-		// Create and bind the VAO
-		glGenVertexArrays(1, &VAO);
-		glBindVertexArray(VAO);
-		// Bind the buffers
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		// Attributes of the VAO
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-		glEnableVertexAttribArray(1);
-		glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(Vertex), (GLvoid*)sizeof(vec3));
-		glEnableVertexAttribArray(2);
-		glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, sizeof(Vertex), (GLvoid*)(sizeof(vec3) + sizeof(GLuint)));
-		// Unbind all
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindVertexArray(0);
-		// Unbind the EBO after unbinding the VAO else the EBO will be removed from the VAO
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	}
+	defaultMesh.loadVAOs();
 }
 
 void Section::unloadVAOs() {
-	if (indicesNb != 0) {
-		glDeleteVertexArrays(1, &VAO);
-	}
+	defaultMesh.unloadVAOs();
 }
 
-void Section::render(Shader &shader) const {
-	if (indicesNb != 0) {
-		// Activate shader and texture to draw the object
-		glActiveTexture(GL_TEXTURE0);
-		ResManager::blockTextureArray.bind();
-		shader.use();
-
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, indicesNb, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
-	}
+void Section::render(DefaultRenderer &defaultRenderer) const {
+	defaultRenderer.render(defaultMesh);
 }
 
 void Section::setBlock(ivec3 pos, Block block) {
@@ -210,62 +164,3 @@ bool Section::isInSection(ivec3 pos) {
 	return 0 <= pos.x && pos.x < Const::SECTION_SIDE && 0 <= pos.y && pos.y < Const::SECTION_HEIGHT && 
 			0 <= pos.z && pos.z < Const::SECTION_SIDE;
 }
-
-const arr<GLuint, 6> Section::rectIndices{
-	0, 1, 2,
-	2, 3, 0
-};
-
-const arr<ivec2, 4> Section::textureCoords{{
-	{ 0, 0 },
-	{ 0, 1 },
-	{ 1, 1 },
-	{ 1, 0 }
-} };
-
-const arr<arr<vec3, 4>, Dir3D::SIZE> Section::dirToFace = []() {
-
-	const arr<vec3, 4> faceX0{ {
-		{ 0, 0, 0 },
-		{ 0, 1, 0 },
-		{ 0, 1, 1 },
-		{ 0, 0, 1 }
-	} };
-
-	const arr<vec3, 4> faceX1{ {
-		{ 1, 0, 1 },
-		{ 1, 1, 1 },
-		{ 1, 1, 0 },
-		{ 1, 0, 0 }
-	} };
-
-	const arr<vec3, 4> faceY0{ {
-		{ 0, 0, 1 },
-		{ 1, 0, 1 },
-		{ 1, 0, 0 },
-		{ 0, 0, 0 }
-	} };
-
-	const arr<vec3, 4> faceY1{ {
-		{ 1, 1, 1 },
-		{ 0, 1, 1 },
-		{ 0, 1, 0 },
-		{ 1, 1, 0 }
-	} };
-
-	const arr<vec3, 4> faceZ0{{
-		{ 1, 0, 0 },
-		{ 1, 1, 0 },
-		{ 0, 1, 0 },
-		{ 0, 0, 0 }
-	}};
-
-	const arr<vec3, 4> faceZ1{ {
-		{ 0, 0, 1 },
-		{ 0, 1, 1 },
-		{ 1, 1, 1 },
-		{ 1, 0, 1 }
-	} };
-
-	return arr<arr<vec3, 4>, Dir3D::SIZE>{ faceY1, faceX1, faceZ1, faceY0, faceX0, faceZ0 };
-}();
