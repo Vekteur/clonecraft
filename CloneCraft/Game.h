@@ -31,23 +31,24 @@ public:
 	void render();
 	void runChunkLoadingLoop();
 
+	void onChangedSize(ivec2 size);
+
 	Camera& getCamera();
 	ChunkMap& getChunkMap();
 	std::optional<ivec3> getTarget();
 
 private:
-	void reflectCamera();
 	void clearRenderTarget();
 
 	static const float TARGET_DISTANCE;
 
 	Window* const p_window{ nullptr };
 	sf::Context* const p_context{ nullptr };
-	sf::RenderTexture reflectionTexture;
-	sf::RenderTexture refractionTexture;
 	Camera m_camera;
 	ChunkMap m_chunks;
 	std::optional<ivec3> targetBlock;
+
+	float moveOffset = 0;
 
 	DefaultRenderer defaultRenderer;
 	WaterRenderer waterRenderer;

@@ -73,7 +73,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ResManager\ResManager.cpp" />
     <ClCompile Include="ResManager\Shader.cpp" />
-    <ClCompile Include="ResManager\Texture.cpp" />
+    <ClCompile Include="ResManager\Texture2D.cpp" />
     <ClCompile Include="View\Window.cpp" />
     <ClInclude Include="World\CubeData.h" />
     <ClInclude Include="World\Mesh.h" />
@@ -89,7 +89,7 @@
     <ClInclude Include="View\Camera.h" />
     <ClInclude Include="ResManager\ResManager.h" />
     <ClInclude Include="ResManager\Shader.h" />
-    <ClInclude Include="ResManager\Texture.h" />
+    <ClInclude Include="ResManager\Texture2D.h" />
     <ClInclude Include="View\Window.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

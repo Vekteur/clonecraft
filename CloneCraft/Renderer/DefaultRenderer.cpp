@@ -3,6 +3,8 @@
 #include "ResManager.h"
 #include "Logger.h"
 
+#include "ChunkMap.h"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -10,7 +12,7 @@ namespace fs = std::filesystem;
 DefaultRenderer::DefaultRenderer()
 {
 	m_shader.loadFromFile("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag");
-	ResManager::setShader(m_shader, "cube");
+	getShader().use().set("distance", ChunkMap::SIDE);
 
 	std::string blockTexturesPath = "Resources/Textures/Blocks";
 	std::vector<fs::path> paths;
@@ -36,4 +38,8 @@ void DefaultRenderer::render(const DefaultMesh& mesh) const {
 
 TextureArray & DefaultRenderer::getTextureArray() {
 	return texArray;
+}
+
+const Shader & DefaultRenderer::getShader() const {
+	return m_shader;
 }

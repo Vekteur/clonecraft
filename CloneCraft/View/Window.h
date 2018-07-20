@@ -20,6 +20,7 @@ public:
 	void toClose();
 	bool shouldClose();
 	void clear();
+	ivec2 size() const;
 	ivec2 getCenter();
 	vec3 getClearColor();
 

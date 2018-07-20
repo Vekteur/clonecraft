@@ -12,6 +12,7 @@ public:
 
 	void render(const DefaultMesh& mesh) const;
 	TextureArray& getTextureArray();
+	const Shader& getShader() const;
 
 private:
 	Shader m_shader;

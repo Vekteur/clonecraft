@@ -10,29 +10,12 @@
 const float Game::TARGET_DISTANCE{ 300.f };
 
 Game::Game(Window* const window, sf::Context* const context)
-	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context{ context } {
-	
-	ResManager::getShader("cube").use().set("distance", ChunkMap::SIDE);
-	ResManager::getShader("water").use().set("distance", ChunkMap::SIDE);
-	ResManager::getShader("water").use().set("reflectionTexture", 0);
-	ResManager::getShader("water").use().set("refractionTexture", 1);
+	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context{ context }, 
+	waterRenderer{ { p_window->size() } } {
 
 	m_chunkMapThread = std::thread{ &Game::runChunkLoadingLoop, this };
 
 	ResManager::initBlockDatas(std::vector<TextureArray*>{ &defaultRenderer.getTextureArray() });
-
-	sf::ContextSettings settings;
-	settings.majorVersion = 4;
-	settings.minorVersion = 3;
-	settings.depthBits = 24;
-	settings.stencilBits = 8;
-
-	if (!reflectionTexture.create(p_window->getSize().x, p_window->getSize().y, settings)) {
-		LOG(Level::ERROR) << "Could not create reflection texture" << std::endl;
-	}
-	if (!refractionTexture.create(p_window->getSize().x, p_window->getSize().y, settings)) {
-		LOG(Level::ERROR) << "Could not create refraction texture" << std::endl;
-	}
 }
 
 Game::~Game() {
@@ -48,6 +31,12 @@ void Game::runChunkLoadingLoop() {
 		m_chunks.load();
 		m_chunks.unloadFarChunks();
 	}
+}
+
+void Game::onChangedSize(ivec2 size) {
+	glViewport(0, 0, size.x, size.y);
+	p_window->setView(sf::View(sf::FloatRect(0, 0, size.x, size.y)));
+	waterRenderer.onChangedSize(p_window->size());
 }
 
 void Game::processKeyboard(GLfloat dt) {
@@ -78,14 +67,14 @@ void Game::processMouseWheel(GLfloat delta) {
 }
 
 void Game::update(GLfloat dt) {
-	sf::Vector2f screenDim = p_window->getView().getSize();
-	m_camera.update({ screenDim.x, screenDim.y });
-	ResManager::getShader("cube").use().set("view", m_camera.getViewMatrix());
-	ResManager::getShader("cube").use().set("projection", m_camera.getProjMatrix());
-	ResManager::getShader("cube").use().set("skyColor", p_window->getClearColor());
-	ResManager::getShader("water").use().set("view", m_camera.getViewMatrix());
-	ResManager::getShader("water").use().set("projection", m_camera.getProjMatrix());
-	ResManager::getShader("water").use().set("skyColor", p_window->getClearColor());
+	m_camera.update({ p_window->size() });
+	defaultRenderer.getShader().use().set("view", m_camera.getViewMatrix());
+	defaultRenderer.getShader().use().set("projection", m_camera.getProjMatrix());
+	defaultRenderer.getShader().use().set("skyColor", p_window->getClearColor());
+	waterRenderer.getShader().use().set("view", m_camera.getViewMatrix());
+	waterRenderer.getShader().use().set("projection", m_camera.getProjMatrix());
+	waterRenderer.getShader().use().set("skyColor", p_window->getClearColor());
+	waterRenderer.getShader().use().set("cameraPosition", m_camera.getPosition());
 
 	ivec2 newCenter = Converter::globalToChunk(m_camera.getPosition());
 	if (m_chunks.getCenter() != newCenter)
@@ -102,24 +91,13 @@ void Game::update(GLfloat dt) {
 			break;
 		}
 	}
+	moveOffset = fmod(moveOffset + 0.02f * dt, 1.f);
+	waterRenderer.getShader().use().set("moveOffset", moveOffset);
+
 	/*if (targetBlock.has_value()) {
 		m_chunks.setBlock(targetBlock.value(), 0);
 		m_chunks.getChunk(Converter::globalToChunk(targetBlock.value())).setState(Chunk::TO_LOAD_FACES);
 	}*/
-
-}
-
-void Game::reflectCamera() {
-	vec3 pos = m_camera.getPosition();
-	m_camera.setPosition({ pos.x, 2 * Const::SEA_LEVEL - pos.y , pos.z });
-	m_camera.invertPitch();
-	sf::Vector2f screenDim = p_window->getView().getSize();
-	m_camera.update({ screenDim.x, screenDim.y });
-
-	ResManager::getShader("cube").use().set("view", m_camera.getViewMatrix());
-	ResManager::getShader("cube").use().set("projection", m_camera.getProjMatrix());
-	ResManager::getShader("water").use().set("view", m_camera.getViewMatrix());
-	ResManager::getShader("water").use().set("projection", m_camera.getProjMatrix());
 }
 
 void Game::clearRenderTarget() {
@@ -130,39 +108,15 @@ void Game::clearRenderTarget() {
 
 void Game::render() {
 
-	reflectCamera();
+	waterRenderer.prepare([&]() {
+		m_chunks.render(m_camera.getFrustum(), &defaultRenderer);
+	}, [&]() { 
+		clearRenderTarget(); 
+	}, defaultRenderer, m_camera, p_window->size());
 
-	ResManager::getShader("cube").use().set("clipPlane", vec4(0, 1, 0, -Const::SEA_LEVEL));
-	reflectionTexture.setActive(true);
-	clearRenderTarget();
-	m_chunks.render(m_camera.getFrustum(), defaultRenderer);
-	reflectionTexture.display();
-
-	reflectCamera();
-
-	ResManager::getShader("cube").use().set("clipPlane", vec4(0, -1, 0, Const::SEA_LEVEL));
-	refractionTexture.setActive(true);
-	clearRenderTarget();
-	m_chunks.render(m_camera.getFrustum(), defaultRenderer);
-	refractionTexture.display();
-
-	ResManager::getShader("cube").use().set("clipPlane", vec4(0, -1, 0, 10000));
-	glActiveTexture(GL_TEXTURE0);
-	sf::Texture::bind(&reflectionTexture.getTexture());
-	glActiveTexture(GL_TEXTURE1);
-	sf::Texture::bind(&refractionTexture.getTexture());
-	
-	ResManager::getShader("water").use().set("reflectionTexture", 0);
 	p_window->setActive(true);
 	clearRenderTarget();
-	m_chunks.render(m_camera.getFrustum(), defaultRenderer, &waterRenderer);
-	/*p_window->pushGLStates();
-	sf::Sprite reflectionSprite(reflectionTexture.getTexture());
-	sf::Sprite refractionSprite(refractionTexture.getTexture());
-	refractionSprite.setPosition(p_window->getSize().x / 2, 0);
-	p_window->draw(reflectionSprite);
-	p_window->draw(refractionSprite);
-	p_window->popGLStates();*/
+	m_chunks.render(m_camera.getFrustum(), &defaultRenderer, &waterRenderer);
 }
 
 Camera& Game::getCamera() {

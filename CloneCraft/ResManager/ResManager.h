@@ -5,7 +5,7 @@
 
 #include <glad\glad.h>
 
-#include "Texture.h"
+#include "Texture2D.h"
 #include "Shader.h"
 #include "BlockDatas.h"
 #include "TextureArray.h"

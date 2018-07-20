@@ -8,7 +8,6 @@
 #include <optional>
 
 #include "Array3D.h"
-#include "Texture.h"
 #include "Dir3D.h"
 #include "Block.h"
 #include "Mesh.h"
@@ -27,7 +26,8 @@ public:
 	void loadFaces();
 	void loadVAOs();
 	void unloadVAOs();
-	void render(const DefaultRenderer &shader, const WaterRenderer* waterRenderer) const;
+	void render(const DefaultRenderer& shader) const;
+	void render(const WaterRenderer& waterRenderer) const;
 
 	void setBlock(ivec3 pos, Block block);
 	Block getBlock(ivec3 pos) const;

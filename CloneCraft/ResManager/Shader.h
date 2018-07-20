@@ -10,7 +10,10 @@ class Shader
 {
 public:
 	Shader();
+	Shader& operator=(const Shader&) = delete;
+	Shader(const Shader&) = delete;
 	~Shader();
+	///TODO
 	// Sets the current shader as active
 	const Shader& use() const;
 	// Compiles the shader from given source code

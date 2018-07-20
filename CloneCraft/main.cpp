@@ -50,8 +50,7 @@ int main(int argc, char* argv[]) {
 				window.toClose();
 				break;
 			case sf::Event::Resized:
-				window.setView(sf::View(sf::FloatRect(0, 0, event.size.width, event.size.height)));
-				glViewport(0, 0, event.size.width, event.size.height);
+				game.onChangedSize({ event.size.width, event.size.height });
 				break;
 			case sf::Event::MouseWheelScrolled:
 				if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {

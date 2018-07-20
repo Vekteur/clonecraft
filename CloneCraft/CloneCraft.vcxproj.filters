@@ -5,7 +5,6 @@
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="ResManager\ResManager.cpp" />
     <ClCompile Include="ResManager\Shader.cpp" />
-    <ClCompile Include="ResManager\Texture.cpp" />
     <ClCompile Include="World\Chunk.cpp" />
     <ClCompile Include="View\Window.cpp" />
     <ClCompile Include="View\Camera.cpp" />
@@ -30,13 +29,13 @@
     <ClCompile Include="Renderer\DefaultRenderer.cpp" />
     <ClCompile Include="Renderer\WaterRenderer.cpp" />
     <ClCompile Include="View\WindowTextDrawer.cpp" />
+    <ClCompile Include="ResManager\Texture2D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
     <ClInclude Include="Util\Array3D.h" />
     <ClInclude Include="ResManager\ResManager.h" />
     <ClInclude Include="ResManager\Shader.h" />
-    <ClInclude Include="ResManager\Texture.h" />
     <ClInclude Include="World\Chunk.h" />
     <ClInclude Include="View\Window.h" />
     <ClInclude Include="View\Camera.h" />
@@ -71,5 +70,6 @@
     <ClInclude Include="View\WindowTextDrawer.h" />
     <ClInclude Include="View\CaptureMouse.h" />
     <ClInclude Include="View\Crosshair.h" />
+    <ClInclude Include="ResManager\Texture2D.h" />
   </ItemGroup>
 </Project>

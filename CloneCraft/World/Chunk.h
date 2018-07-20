@@ -31,7 +31,8 @@ public:
 	State getState() const;
 	void setState(State state);
 	ivec2 getPosition() const;
-	void render(const DefaultRenderer& defaultRenderer, const WaterRenderer* waterRenderer) const;
+	void render(const DefaultRenderer& defaultRenderer) const;
+	void render(const WaterRenderer& waterRenderer) const;
 	ChunkGenerator& getChunkGenerator();
 
 	Section& getSection(int height);

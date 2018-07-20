@@ -6,6 +6,8 @@ class Texture2D
 {
 public:
 	~Texture2D();
+	Texture2D& operator=(const Texture2D&) = delete;
+	Texture2D(const Texture2D&) = delete;
 
 	Texture2D(GLuint internalFormat = GL_RGB, GLuint imageFormat = GL_RGB, 
 		GLuint wrapS = GL_REPEAT, GLuint wrapT = GL_REPEAT, 

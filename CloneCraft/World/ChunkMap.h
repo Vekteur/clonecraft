@@ -12,7 +12,7 @@
 class ChunkMap
 {
 public:
-	static const int VIEW_DISTANCE{ 12 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
+	static const int VIEW_DISTANCE{ 10 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
 
 	struct Comp_ivec2 {
 		size_t operator()(const ivec2& vec) const {
@@ -28,7 +28,7 @@ public:
 
 	void load();
 	void update();
-	void render(const Frustum& frustum, const DefaultRenderer &defaultRenderer, 
+	void render(const Frustum& frustum, const DefaultRenderer* defaultRenderer = nullptr,
 		const WaterRenderer* waterRenderer = nullptr);
 	void setCenter(ivec2 center);
 	ivec2 getCenter();

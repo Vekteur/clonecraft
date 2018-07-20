@@ -8,12 +8,12 @@ public:
 	PerlinNoise();
 	~PerlinNoise();
 
-	double getNoise(vec2 pos);
+	float getNoise(vec2 pos);
 
 private:
-	static double lerp(double amount, double left, double right);
-	static double fade(double t);
-	static double grad(int hash, double x, double y);
+	static double lerp(float amount, float left, float right);
+	static double fade(float t);
+	static double grad(int hash, float x, float y);
 
 	static std::array<int, 512> perm;
 };

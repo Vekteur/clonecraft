@@ -7,6 +7,7 @@ BETTER_ENUM(ID, char,
 	STONE,
 	DIRT,
 	GRASS,
+	SAND,
 	WATER,
 	SIZE
 );

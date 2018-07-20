@@ -7,7 +7,7 @@ PerlinNoise::~PerlinNoise() {
 }
 
 // p has coordinates in [0, 1[
-double PerlinNoise::getNoise(vec2 p) {
+float PerlinNoise::getNoise(vec2 p) {
 	// Unit square that contains the coordinates p, modulo 255
 	ivec2 pi{ (int)floor(p.x) & 255 , (int)floor(p.y) & 255 };
 
@@ -21,33 +21,33 @@ double PerlinNoise::getNoise(vec2 p) {
 	dvec2 pf{ p.x - floor(p.x), p.y - floor(p.y) };
 
 	// Calculate the dot product of pf and a random vector in the corner of the square
-	double d1 = grad(g1, pf.x, pf.y);
-	double d2 = grad(g2, pf.x - 1, pf.y);
-	double d3 = grad(g3, pf.x, pf.y - 1);
-	double d4 = grad(g4, pf.x - 1, pf.y - 1);
+	float d1 = grad(g1, pf.x, pf.y);
+	float d2 = grad(g2, pf.x - 1, pf.y);
+	float d3 = grad(g3, pf.x, pf.y - 1);
+	float d4 = grad(g4, pf.x - 1, pf.y - 1);
 
 	pf = { fade(pf.x), fade(pf.y) };
 
 	// Do bilinear interpolation
-	double x1Inter = lerp(pf.x, d1, d2);
-	double x2Inter = lerp(pf.x, d3, d4);
-	double yInter = lerp(pf.y, x1Inter, x2Inter);
+	float x1Inter = lerp(pf.x, d1, d2);
+	float x2Inter = lerp(pf.x, d3, d4);
+	float yInter = lerp(pf.y, x1Inter, x2Inter);
 
 	return yInter;
 }
 
 // Linear interpolation
-double PerlinNoise::lerp(double amount, double left, double right) {
+double PerlinNoise::lerp(float amount, float left, float right) {
 	return left + amount * (right - left);
 }
 
 // Fade function
-double PerlinNoise::fade(double t) {
+double PerlinNoise::fade(float t) {
 	return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
 // Get dot product of
-double PerlinNoise::grad(int hash, double x, double y) {
+double PerlinNoise::grad(int hash, float x, float y) {
 	switch (hash & 3) {
 	case 0: return x + y;
 	case 1: return -x + y;

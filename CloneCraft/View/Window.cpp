@@ -41,6 +41,10 @@ void Window::clear() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+ivec2 Window::size() const {
+	return { this->getSize().x, this->getSize().y };
+}
+
 ivec2 Window::getCenter() {
 	return { this->getSize().x / 2, this->getSize().y / 2 };
 }
@@ -66,8 +70,9 @@ void Window::initSettings() {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CW);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_CLIP_DISTANCE0);
+	glDisable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendEquation(GL_FUNC_ADD);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
