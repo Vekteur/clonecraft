@@ -3,6 +3,7 @@
 #include "ResManager.h"
 #include "Debug.h"
 #include "Dir2D.h"
+#include "Dir3D.h"
 #include "Array3D.h"
 #include "Logger.h"
 #include "MiscMath.h"
@@ -10,12 +11,11 @@
 #include <GLFW\glfw3.h>
 #include <vector>
 #include <algorithm>
+#include <unordered_set>
 
-ChunkMap::ChunkMap(ivec2 center) : m_center{ center } {
-}
+ChunkMap::ChunkMap(ivec2 center) : m_center{ center } { }
 
-ChunkMap::~ChunkMap() {
-}
+ChunkMap::~ChunkMap() { }
 
 void ChunkMap::load() {
 	loadBlocks(ivec2{ m_center.x, m_center.y }); // load the blocks of the center chunk
@@ -66,10 +66,23 @@ void ChunkMap::unloadFarChunks() {
 		if (it->second->getState() == Chunk::TO_REMOVE) {
 			it = m_chunks.erase(it);
 			continue;
-		} else if (!isInChunkMap(it->second->getPosition())) {
+		} else if (!isInLoadDistance(it->second->getPosition())) {
 			it->second->setState(Chunk::TO_UNLOAD_VAOS);
 		}
 		++it;
+	}
+	m_deleteChunksMutex.unlock();
+}
+
+void ChunkMap::update() {
+	m_deleteChunksMutex.lock();
+	for (auto& c : m_chunks) {
+		Chunk::State state = c.second->getState();
+		if (state == Chunk::TO_LOAD_VAOS) {
+			c.second->loadVAOs();
+		} else if (state == Chunk::TO_UNLOAD_VAOS) {
+			c.second->unloadVAOs();
+		}
 	}
 	m_deleteChunksMutex.unlock();
 }
@@ -86,27 +99,14 @@ void ChunkMap::loadBlocks(ivec2 pos) {
 		m_chunks.emplace(pos, std::make_unique<Chunk>(this, pos));
 	}
 	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_BLOCKS) {
-		m_chunks[pos]->loadBlocks(); // Load the blocks
+		m_chunks[pos]->loadBlocks();
 	}
 }
 
 void ChunkMap::loadFaces(ivec2 pos) {
 	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_FACES) {
-		m_chunks[pos]->loadFaces(); // Load the faces
+		m_chunks[pos]->loadFaces();
 	}
-}
-
-void ChunkMap::update() {
-	m_deleteChunksMutex.lock();
-	for (auto& c : m_chunks) {
-		Chunk::State state = c.second->getState();
-		if (state == Chunk::TO_LOAD_VAOS) {
-			c.second->loadVAOs();
-		} else if (state == Chunk::TO_UNLOAD_VAOS) {
-			c.second->unloadVAOs();
-		}
-	}
-	m_deleteChunksMutex.unlock();
 }
 
 void ChunkMap::render(const Frustum& frustum, const DefaultRenderer* defaultRenderer, const WaterRenderer* waterRenderer) {
@@ -140,17 +140,45 @@ void ChunkMap::render(const Frustum& frustum, const DefaultRenderer* defaultRend
 	m_deleteChunksMutex.unlock();
 }
 
+ivec2 ChunkMap::getCenter() {
+	return m_center;
+}
+
+void ChunkMap::reloadSection(ivec3 pos) {
+	getSection(pos).loadFaces();
+}
+
+void ChunkMap::reloadBlocks(const std::vector<ivec3>& blocks) {
+	struct Comp_ivec3 {
+		size_t operator()(const ivec3& vec) const {
+			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1) ^ (std::hash<int>()(vec.z) << 2);
+		}
+		bool operator()(const ivec3& a, const ivec3& b) const {
+			return a.x == b.x && a.y == b.y && a.z == b.z;
+		}
+	};
+
+	std::unordered_set<ivec3, Comp_ivec3> sectionsToUpdate;
+	for (ivec3 block : blocks) {
+		for (Dir3D::Dir dir : Dir3D::all()) {
+			ivec3 section = Converter::globalToSection(block + Dir3D::find(dir));
+			if (0 <= section.y && section.y < Const::CHUNK_NB_SECTIONS)
+				sectionsToUpdate.insert(section);
+		}
+	}
+
+	for (ivec3 section : sectionsToUpdate) {
+		reloadSection(section);
+	}
+}
+
 void ChunkMap::setCenter(ivec2 center) {
 	m_newCenter = center;
 }
 
-bool ChunkMap::isInChunkMap(ivec2 pos) {
+bool ChunkMap::isInLoadDistance(ivec2 pos) {
 	return m_center.x - LOAD_DISTANCE <= pos.x && pos.x <= m_center.x + LOAD_DISTANCE &&
 		m_center.y - LOAD_DISTANCE <= pos.y && pos.y <= m_center.y + LOAD_DISTANCE;
-}
-
-ivec2 ChunkMap::getCenter() {
-	return m_center;
 }
 
 void ChunkMap::setBlock(ivec3 globalPos, Block block) {

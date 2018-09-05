@@ -7,29 +7,31 @@
 
 #include <vector>
 
-const float Game::TARGET_DISTANCE{ 300.f };
+const float Game::TARGET_DISTANCE{ 100.f };
 
-Game::Game(Window* const window, sf::Context* const context)
-	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context{ context }, 
+Game::Game(Window* const window, sf::Context* const context1, sf::Context* const context2)
+	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context1{ context1 }, p_context2{ context2 },
 	waterRenderer{ { p_window->size() } } {
 
-	m_chunkMapThread = std::thread{ &Game::runChunkLoadingLoop, this };
-
 	ResManager::initBlockDatas(std::vector<TextureArray*>{ &defaultRenderer.getTextureArray() });
+
+	m_generatingThread = std::thread{ &Game::runChunkLoadingLoop, this, p_context1 };
 }
 
 Game::~Game() {
 	stopChunkMapThread = true;
-	m_chunks.stop();
-	m_chunkMapThread.join();
+	m_chunkMap.stop();
+	m_generatingThread.join();
+	if (m_updatingThread.joinable())
+		m_updatingThread.join();
 }
 
-void Game::runChunkLoadingLoop() {
+void Game::runChunkLoadingLoop(sf::Context* const p_context) {
 	p_context->setActive(true);
 
 	while (!stopChunkMapThread) {
-		m_chunks.load();
-		m_chunks.unloadFarChunks();
+		m_chunkMap.load();
+		m_chunkMap.unloadFarChunks();
 	}
 }
 
@@ -77,16 +79,16 @@ void Game::update(GLfloat dt) {
 	waterRenderer.getShader().use().set("cameraPosition", m_camera.getPosition());
 
 	ivec2 newCenter = Converter::globalToChunk(m_camera.getPosition());
-	if (m_chunks.getCenter() != newCenter)
-		m_chunks.setCenter(newCenter);
+	if (m_chunkMap.getCenter() != newCenter)
+		m_chunkMap.setCenter(newCenter);
 
-	m_chunks.update();
+	m_chunkMap.update();
 
 	LineBlockFinder lineBlockFinder{ m_camera.getPosition(), m_camera.getFront() };
 	targetBlock = std::nullopt;
 	while (lineBlockFinder.getDistance() <= TARGET_DISTANCE) {
 		ivec3 iterBlock = lineBlockFinder.next();
-		if (m_chunks.getBlock(iterBlock).id != +ID::AIR) {
+		if (m_chunkMap.getBlock(iterBlock).id != +ID::AIR) {
 			targetBlock = iterBlock;
 			break;
 		}
@@ -94,10 +96,22 @@ void Game::update(GLfloat dt) {
 	moveOffset = fmod(moveOffset + 0.02f * dt, 1.f);
 	waterRenderer.getShader().use().set("moveOffset", moveOffset);
 
-	/*if (targetBlock.has_value()) {
-		m_chunks.setBlock(targetBlock.value(), 0);
-		m_chunks.getChunk(Converter::globalToChunk(targetBlock.value())).setState(Chunk::TO_LOAD_FACES);
-	}*/
+	updateAccumulator += sf::seconds(dt);
+
+	if (updateAccumulator >= sf::seconds(0.5f) && targetBlock.has_value() && updated) {
+		updated = false;
+		if (m_updatingThread.joinable())
+			m_updatingThread.join();
+		m_updatingThread = std::thread{ [this, targetBlock = targetBlock.value()]() {
+			p_context2->setActive(true);
+			m_chunkMap.setBlock(targetBlock, +ID::AIR);
+			m_chunkMap.reloadBlocks({ targetBlock });
+			m_chunkMap.getChunk(Converter::globalToChunk(targetBlock)).setState(Chunk::TO_LOAD_VAOS);
+			p_context2->setActive(false);
+			updated = true;
+		} };
+		updateAccumulator = sf::seconds(0.f);
+	}
 }
 
 void Game::clearRenderTarget() {
@@ -107,16 +121,15 @@ void Game::clearRenderTarget() {
 }
 
 void Game::render() {
-
 	waterRenderer.prepare([&]() {
-		m_chunks.render(m_camera.getFrustum(), &defaultRenderer);
+		m_chunkMap.render(m_camera.getFrustum(), &defaultRenderer);
 	}, [&]() { 
 		clearRenderTarget(); 
 	}, defaultRenderer, m_camera, p_window->size());
 
 	p_window->setActive(true);
 	clearRenderTarget();
-	m_chunks.render(m_camera.getFrustum(), &defaultRenderer, &waterRenderer);
+	m_chunkMap.render(m_camera.getFrustum(), &defaultRenderer, &waterRenderer);
 }
 
 Camera& Game::getCamera() {
@@ -124,7 +137,7 @@ Camera& Game::getCamera() {
 }
 
 ChunkMap & Game::getChunkMap() {
-	return m_chunks;
+	return m_chunkMap;
 }
 
 std::optional<ivec3> Game::getTarget() {

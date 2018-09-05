@@ -6,12 +6,9 @@
 
 #include <memory>
 
-class Chunk
-{
+class Chunk {
 public:
-
-	enum State
-	{
+	enum State {
 		TO_LOAD_BLOCKS,
 		TO_LOAD_FACES,
 		TO_LOAD_VAOS,

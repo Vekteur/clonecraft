@@ -22,9 +22,10 @@ int main(int argc, char* argv[]) {
 	LOG.setOutputFile("Logs/global.log");
 
 	LOG(Level::INFO) << "Application launched" << std::endl;
-	sf::Context context;
+	sf::Context context1;
+	sf::Context context2;
 	Window window;
-	Game game{ &window, &context };
+	Game game{ &window, &context1, &context2 };
 	CaptureMouse captureMouse{ &window };
 
 	WindowTextDrawer textDrawer{ &window };

@@ -4,18 +4,51 @@
 #include "GlmCommon.h"
 
 #include <vector>
+#include <atomic>
 
 template<typename T>
 struct Mesh
 {
+public:
 	using Vertex = T;
 
 	GLuint VBO, EBO, VAO;
 	GLuint indicesNb = 0;
+	bool loadedVBO = false, loadedVAO = false;
+
+	friend void swap(Mesh& first, Mesh& second) noexcept {
+		using std::swap;
+		swap(first.VAO, second.VAO);
+		swap(first.VBO, second.VBO);
+		swap(first.EBO, second.EBO);
+		swap(first.indicesNb, second.indicesNb);
+		swap(first.loadedVBO, second.loadedVBO);
+		swap(first.loadedVAO, second.loadedVAO);
+	}
+
+	void clear() {
+		if (indicesNb != 0 && loadedVBO) {
+			glDeleteBuffers(1, &VBO);
+			glDeleteBuffers(1, &EBO);
+		}
+		indicesNb = 0;
+		loadedVBO = loadedVAO = false;
+	}
+
+	Mesh() { }
 
 	~Mesh() {
-		glDeleteBuffers(1, &VBO);
-		glDeleteBuffers(1, &EBO);
+		clear();
+	}
+
+	Mesh(Mesh&& other) noexcept : Mesh{} {
+		swap(*this, other);
+	}
+
+	Mesh& operator=(Mesh other) noexcept {
+		clear();
+		swap(*this, other);
+		return *this;
 	}
 
 	void unloadVAOs() {
@@ -38,6 +71,7 @@ struct Mesh
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indices.size(), indices.data(), GL_DYNAMIC_DRAW);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		}
+		loadedVBO = true;
 	}
 
 	void draw() const {
@@ -49,20 +83,18 @@ struct Mesh
 	}
 };
 
-namespace {
-	struct DefaultVertex {
-		vec3 pos;
-		vec2 tex;
-		vec3 norm;
-		GLuint texID;
-	};
+struct DefaultVertex {
+	vec3 pos;
+	vec2 tex;
+	vec3 norm;
+	GLuint texID;
+};
 
-	struct WaterVertex {
-		vec3 pos;
-		vec2 tex;
-		vec3 norm;
-	};
-}
+struct WaterVertex {
+	vec3 pos;
+	vec2 tex;
+	vec3 norm;
+};
 
 struct DefaultMesh : Mesh<DefaultVertex>
 {
@@ -89,6 +121,7 @@ struct DefaultMesh : Mesh<DefaultVertex>
 			// Unbind the EBO after unbinding the VAO else the EBO will be removed from the VAO
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		}
+		loadedVAO = true;
 	}
 };
 
@@ -114,5 +147,6 @@ struct WaterMesh : Mesh<WaterVertex> {
 			// Unbind the EBO after unbinding the VAO else the EBO will be removed from the VAO
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		}
+		loadedVAO = true;
 	}
 };

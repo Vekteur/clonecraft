@@ -17,8 +17,7 @@
 class ChunkMap;
 class Chunk;
 
-class Section
-{
+class Section {
 public:
 	Section(ChunkMap* const chunkMap, Chunk* const chunk, ivec3 position = ivec3{ 0, 0, 0 });
 
@@ -38,8 +37,10 @@ private:
 	const ivec3 m_position;
 
 	Array3D<Block> m_blocks;
-	DefaultMesh defaultMesh;
-	WaterMesh waterMesh;
+	DefaultMesh activeDefaultMesh;
+	DefaultMesh nextDefaultMesh;
+	WaterMesh activeWaterMesh;
+	WaterMesh nextWaterMesh;
 	bool empty = true;
 
 	bool isInSection(ivec3 block);

@@ -6,6 +6,7 @@
 #include <SFML/Window.hpp>
 #include <optional>
 #include <memory>
+#include <atomic>
 #include <utility>
 
 #include "Camera.h"
@@ -21,7 +22,7 @@ class Window;
 
 class Game {
 public:
-	Game(Window* const window, sf::Context* const context);
+	Game(Window* const window, sf::Context* const context1, sf::Context* const context2);
 	~Game();
 
 	void processKeyboard(GLfloat dt);
@@ -29,7 +30,7 @@ public:
 	void processMouseWheel(GLfloat delta);
 	void update(GLfloat dt);
 	void render();
-	void runChunkLoadingLoop();
+	void runChunkLoadingLoop(sf::Context* const p_context);
 
 	void onChangedSize(ivec2 size);
 
@@ -43,16 +44,20 @@ private:
 	static const float TARGET_DISTANCE;
 
 	Window* const p_window{ nullptr };
-	sf::Context* const p_context{ nullptr };
+	sf::Context* const p_context1{ nullptr };
+	sf::Context* const p_context2{ nullptr };
 	Camera m_camera;
-	ChunkMap m_chunks;
+	ChunkMap m_chunkMap;
 	std::optional<ivec3> targetBlock;
 
 	float moveOffset = 0;
+	sf::Time updateAccumulator = sf::seconds(0.f);
+	std::atomic<bool> updated{ true };
 
 	DefaultRenderer defaultRenderer;
 	WaterRenderer waterRenderer;
 
-	std::thread m_chunkMapThread;
+	std::thread m_generatingThread;
+	std::thread m_updatingThread;
 	bool stopChunkMapThread{ false };
 };

@@ -17,9 +17,9 @@ template<typename T>
 using vec = std::vector<T>;
 
 Section::Section(ChunkMap* const chunkMap, Chunk* const chunk, ivec3 position)
-		: p_chunkMap{ chunkMap }, p_chunk{ chunk }, m_position{ position }, 
-		m_blocks{ ivec3{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE } } {
-}
+	: p_chunkMap{ chunkMap }, p_chunk{ chunk }, m_position{ position },
+	m_blocks{ ivec3{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE } }
+{ }
 
 void Section::loadBlocks() {
 	for (int x = 0; x < Const::SECTION_SIDE; ++x)
@@ -156,28 +156,31 @@ void Section::loadFaces() {
 	vec<DefaultMesh::Vertex> defaultVertices;
 	vec<WaterMesh::Vertex> waterVertices;
 	tie(defaultVertices, waterVertices) = findFaces();
-	defaultMesh.loadBuffers(defaultVertices, getIndices((int)defaultVertices.size() / 4));
-	waterMesh.loadBuffers(waterVertices, getIndices((int)waterVertices.size() / 4));
-	
+	nextDefaultMesh.loadBuffers(defaultVertices, getIndices((int)defaultVertices.size() / 4));
+	nextWaterMesh.loadBuffers(waterVertices, getIndices((int)waterVertices.size() / 4));
+
 	Debug::glCheckError();
 }
 
 void Section::loadVAOs() {
-	defaultMesh.loadVAOs();
-	waterMesh.loadVAOs();
+	nextDefaultMesh.loadVAOs();
+	nextWaterMesh.loadVAOs();
+	
+	activeDefaultMesh = std::move(nextDefaultMesh);
+	activeWaterMesh = std::move(nextWaterMesh);
 }
 
 void Section::unloadVAOs() {
-	defaultMesh.unloadVAOs();
-	waterMesh.unloadVAOs();
+	activeDefaultMesh.unloadVAOs();
+	activeWaterMesh.unloadVAOs();
 }
 
 void Section::render(const DefaultRenderer &defaultRenderer) const {
-	defaultRenderer.render(defaultMesh);
+	defaultRenderer.render(activeDefaultMesh);
 }
 
 void Section::render(const WaterRenderer& waterRenderer) const {
-	waterRenderer.render(waterMesh);
+	waterRenderer.render(activeWaterMesh);
 }
 
 void Section::setBlock(ivec3 pos, Block block) {

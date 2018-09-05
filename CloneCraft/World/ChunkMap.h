@@ -4,24 +4,15 @@
 #include "WorldConstants.h"
 #include "Frustum.h"
 
+#include <vector>
 #include <unordered_map>
 #include <memory>
 #include <utility>
 #include <mutex>
 
-class ChunkMap
-{
+class ChunkMap {
 public:
 	static const int VIEW_DISTANCE{ 10 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
-
-	struct Comp_ivec2 {
-		size_t operator()(const ivec2& vec) const {
-			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1);
-		}
-		bool operator()(const ivec2& a, const ivec2& b) const {
-			return a.x == b.x && a.y == b.y;
-		}
-	};
 
 	ChunkMap(ivec2 center = ivec2{ 0, 0 });
 	~ChunkMap();
@@ -32,6 +23,8 @@ public:
 		const WaterRenderer* waterRenderer = nullptr);
 	void setCenter(ivec2 center);
 	ivec2 getCenter();
+	void reloadSection(ivec3 pos);
+	void reloadBlocks(const std::vector<ivec3>& blocks);
 
 	void setBlock(ivec3 globalPos, Block block);
 	Block getBlock(ivec3 globalPos);
@@ -47,6 +40,15 @@ public:
 	int getRenderedChunks();
 
 private:
+	struct Comp_ivec2 {
+		size_t operator()(const ivec2& vec) const {
+			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1);
+		}
+		bool operator()(const ivec2& a, const ivec2& b) const {
+			return a.x == b.x && a.y == b.y;
+		}
+	};
+
 	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2> m_chunks;
 	ivec2 m_center;
 	ivec2 m_newCenter;
@@ -56,8 +58,8 @@ private:
 	int renderedChunks = 0;
 	std::array<int, Chunk::STATE_SIZE> countChunks;
 
+	bool isInLoadDistance(ivec2 pos);
 	void loadBlocks(ivec2 pos);
 	void loadFaces(ivec2 pos);
-	bool isInChunkMap(ivec2 pos);
 };
 
