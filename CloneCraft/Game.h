@@ -47,6 +47,9 @@ private:
 	void reloadBlocks(const std::vector<ivec3>& blocks);
 	void clearRenderTarget();
 
+	std::vector<ivec3> explosionBlocks(ivec3 center, int radius);
+	void explode();
+
 	static const float TARGET_DISTANCE;
 
 	Window* const p_window{ nullptr };

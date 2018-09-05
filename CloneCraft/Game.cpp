@@ -1,5 +1,7 @@
 #include "Game.h"
 
+#include <random>
+
 #include "Converter.h"
 #include "Debug.h"
 #include "Logger.h"
@@ -39,21 +41,6 @@ void Game::onChangedSize(ivec2 size) {
 	m_waterRenderer.onChangedSize(p_window->size());
 }
 
-void Game::processKeyboard(GLfloat dt, Commands& commands) {
-	if (commands.isActive(Command::FORWARD))
-		m_camera.move(Camera::FORWARD, dt);
-	if (commands.isActive(Command::BACKWARD))
-		m_camera.move(Camera::BACKWARD, dt);
-	if (commands.isActive(Command::LEFT))
-		m_camera.move(Camera::LEFT, dt);
-	if (commands.isActive(Command::RIGHT))
-		m_camera.move(Camera::RIGHT, dt);
-	if (commands.isActive(Command::UP))
-		m_camera.move(Camera::UP, dt);
-	if (commands.isActive(Command::DOWN))
-		m_camera.move(Camera::DOWN, dt);
-}
-
 bool Game::canReloadBlocks() {
 	return updatingThreadFinished;
 }
@@ -69,6 +56,50 @@ void Game::reloadBlocks(const std::vector<ivec3>& blocks) {
 			p_context2->setActive(false);
 			updatingThreadFinished = true;
 		} };
+	}
+}
+
+void Game::processKeyboard(GLfloat dt, Commands& commands) {
+	if (commands.isActive(Command::FORWARD))
+		m_camera.move(Camera::FORWARD, dt);
+	if (commands.isActive(Command::BACKWARD))
+		m_camera.move(Camera::BACKWARD, dt);
+	if (commands.isActive(Command::LEFT))
+		m_camera.move(Camera::LEFT, dt);
+	if (commands.isActive(Command::RIGHT))
+		m_camera.move(Camera::RIGHT, dt);
+	if (commands.isActive(Command::UP))
+		m_camera.move(Camera::UP, dt);
+	if (commands.isActive(Command::DOWN))
+		m_camera.move(Camera::DOWN, dt);
+	if (commands.isActive(Command::EXPLODE))
+		explode();
+}
+
+std::vector<ivec3> Game::explosionBlocks(ivec3 center, int radius) {
+	std::random_device rd;
+	std::mt19937 rng(rd());
+	std::uniform_int_distribution<int> dist(0, radius);
+	std::vector<ivec3> blocks;
+	for (int x = -radius; x <= radius; ++x) {
+		for (int y = -radius; y <= radius; ++y) {
+			for (int z = -radius; z <= radius; ++z) {
+				float randomRadius = float(radius) - float(dist(rng)) / 4.f;
+				if (x * x + y * y + z * z <= randomRadius * randomRadius)
+					blocks.push_back(center + ivec3{ x, y, z });
+			}
+		}
+	}
+	return blocks;
+}
+
+void Game::explode() {
+	if (canReloadBlocks() && targetPos.has_value()) {
+		std::vector<ivec3> blocks = explosionBlocks(targetPos.value(), 10);
+		for (ivec3 pos : blocks) {
+			m_chunkMap.setBlock(pos, +ID::AIR);
+		}
+		reloadBlocks(blocks);
 	}
 }
 
