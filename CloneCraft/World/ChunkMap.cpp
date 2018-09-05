@@ -77,13 +77,21 @@ void ChunkMap::unloadFarChunks() {
 void ChunkMap::update() {
 	m_deleteChunksMutex.lock();
 	for (auto& c : m_chunks) {
-		Chunk::State state = c.second->getState();
-		if (state == Chunk::TO_LOAD_VAOS) {
-			c.second->loadVAOs();
-		} else if (state == Chunk::TO_UNLOAD_VAOS) {
+		if (c.second->getState() == Chunk::TO_UNLOAD_VAOS) {
 			c.second->unloadVAOs();
 		}
 	}
+	while (!toLoadChunks.empty()) {
+		getChunk(toLoadChunks.front()).loadVAOs();
+		toLoadChunks.pop();
+	}
+
+	while (!toReloadSections.empty()) {
+		getSection(toReloadSections.front()).unloadVAOs();
+		getSection(toReloadSections.front()).loadVAOs();
+		toReloadSections.pop();
+	}
+
 	m_deleteChunksMutex.unlock();
 }
 
@@ -106,6 +114,7 @@ void ChunkMap::loadBlocks(ivec2 pos) {
 void ChunkMap::loadFaces(ivec2 pos) {
 	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_FACES) {
 		m_chunks[pos]->loadFaces();
+		toLoadChunks.push(pos);
 	}
 }
 
@@ -145,25 +154,29 @@ ivec2 ChunkMap::getCenter() {
 }
 
 void ChunkMap::reloadSection(ivec3 pos) {
-	getSection(pos).loadFaces();
+	auto chunkIt = m_chunks.find({ pos.x, pos.z });
+	if (chunkIt != m_chunks.end() && chunkIt->second->getState() >= Chunk::TO_RENDER &&
+		0 <= pos.y && pos.y < Const::CHUNK_NB_SECTIONS) {
+		chunkIt->second->getSection(pos.y).loadFaces();
+		toReloadSections.push(pos);
+	}
 }
 
 void ChunkMap::reloadBlocks(const std::vector<ivec3>& blocks) {
 	struct Comp_ivec3 {
-		size_t operator()(const ivec3& vec) const {
+		size_t operator()(ivec3 vec) const {
 			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1) ^ (std::hash<int>()(vec.z) << 2);
 		}
-		bool operator()(const ivec3& a, const ivec3& b) const {
+		bool operator()(ivec3 a, ivec3 b) const {
 			return a.x == b.x && a.y == b.y && a.z == b.z;
 		}
 	};
 
 	std::unordered_set<ivec3, Comp_ivec3> sectionsToUpdate;
 	for (ivec3 block : blocks) {
+		sectionsToUpdate.insert(Converter::globalToSection(block));
 		for (Dir3D::Dir dir : Dir3D::all()) {
-			ivec3 section = Converter::globalToSection(block + Dir3D::find(dir));
-			if (0 <= section.y && section.y < Const::CHUNK_NB_SECTIONS)
-				sectionsToUpdate.insert(section);
+			sectionsToUpdate.insert(Converter::globalToSection(block + Dir3D::find(dir)));
 		}
 	}
 
@@ -176,20 +189,32 @@ void ChunkMap::setCenter(ivec2 center) {
 	m_newCenter = center;
 }
 
+std::unordered_map<ivec2, std::unique_ptr<Chunk>, ChunkMap::Comp_ivec2, ChunkMap::Comp_ivec2>::iterator 
+ChunkMap::hasBlock(ivec3 globalPos) {
+	auto chunkIt = m_chunks.find(Converter::globalToChunk(globalPos));
+	if (chunkIt != m_chunks.end() && chunkIt->second->getState() > Chunk::TO_LOAD_BLOCKS &&
+		0 <= globalPos.y && globalPos.y < Const::CHUNK_HEIGHT)
+		return chunkIt;
+	else
+		return m_chunks.end();
+}
+
 bool ChunkMap::isInLoadDistance(ivec2 pos) {
 	return m_center.x - LOAD_DISTANCE <= pos.x && pos.x <= m_center.x + LOAD_DISTANCE &&
 		m_center.y - LOAD_DISTANCE <= pos.y && pos.y <= m_center.y + LOAD_DISTANCE;
 }
 
 void ChunkMap::setBlock(ivec3 globalPos, Block block) {
-	m_chunks[Converter::globalToChunk(globalPos)]->getSection(floorDiv(globalPos.y, Const::SECTION_HEIGHT))
-		.setBlock(Converter::globalToInnerSection(globalPos), block);
+	auto chunkIt = hasBlock(globalPos);
+	if (chunkIt != m_chunks.end()) {
+		chunkIt->second->getSection(floorDiv(globalPos.y, Const::SECTION_HEIGHT))
+			.setBlock(Converter::globalToInnerSection(globalPos), block);
+	}
 }
 
 Block ChunkMap::getBlock(ivec3 globalPos) {
-	auto chunkIt = m_chunks.find(Converter::globalToChunk(globalPos));
-	if (chunkIt != m_chunks.end() && chunkIt->second->getState() > Chunk::TO_LOAD_BLOCKS && 
-			0 <= globalPos.y && globalPos.y < Const::CHUNK_HEIGHT) {
+	auto chunkIt = hasBlock(globalPos);
+	if (chunkIt != m_chunks.end()) {
 		return chunkIt->second->getSection(floorDiv(globalPos.y, Const::SECTION_HEIGHT))
 			.getBlock(Converter::globalToInnerSection(globalPos));
 	}

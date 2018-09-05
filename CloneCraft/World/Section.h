@@ -28,13 +28,14 @@ public:
 	void render(const DefaultRenderer& shader) const;
 	void render(const WaterRenderer& waterRenderer) const;
 
+	ivec3 getPosition() const;
 	void setBlock(ivec3 pos, Block block);
 	Block getBlock(ivec3 pos) const;
 
 private:
 	ChunkMap* const p_chunkMap{ nullptr };
 	Chunk* const p_chunk{ nullptr };
-	const ivec3 m_position;
+	ivec3 m_position;
 
 	Array3D<Block> m_blocks;
 	DefaultMesh activeDefaultMesh;

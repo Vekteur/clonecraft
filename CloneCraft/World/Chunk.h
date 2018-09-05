@@ -5,13 +5,13 @@
 #include "WorldConstants.h"
 
 #include <memory>
+#include <queue>
 
 class Chunk {
 public:
 	enum State {
 		TO_LOAD_BLOCKS,
 		TO_LOAD_FACES,
-		TO_LOAD_VAOS,
 		TO_RENDER,
 		TO_UNLOAD_VAOS,
 		TO_REMOVE,
@@ -31,6 +31,7 @@ public:
 	void render(const DefaultRenderer& defaultRenderer) const;
 	void render(const WaterRenderer& waterRenderer) const;
 	ChunkGenerator& getChunkGenerator();
+	std::array<std::unique_ptr<Section>, Const::CHUNK_NB_SECTIONS>& getSections();
 
 	Section& getSection(int height);
 

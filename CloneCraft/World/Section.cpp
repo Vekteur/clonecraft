@@ -183,8 +183,14 @@ void Section::render(const WaterRenderer& waterRenderer) const {
 	waterRenderer.render(activeWaterMesh);
 }
 
+ivec3 Section::getPosition() const {
+	return m_position;
+}
+
 void Section::setBlock(ivec3 pos, Block block) {
 	m_blocks.at(pos) = block;
+	if (block.id != static_cast<ID>(ID::AIR))
+		empty = false;
 }
 
 Block Section::getBlock(ivec3 pos) const {

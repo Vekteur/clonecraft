@@ -12,6 +12,7 @@
 #include "WindowTextDrawer.h"
 #include "CaptureMouse.h"
 #include "Crosshair.h"
+#include "Commands.h"
 
 extern "C" {
 	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
@@ -40,18 +41,23 @@ int main(int argc, char* argv[]) {
 		fpsCounter.update(deltaTime);
 
 		sf::Event event;
+		Commands commands;
 		while (window.pollEvent(event)) {
 			switch (event.type) {
-			case sf::Event::KeyPressed:
-				if (event.key.code == sf::Keyboard::Escape) {
-					captureMouse.toggle();
-				}
-				break;
 			case sf::Event::Closed:
 				window.toClose();
 				break;
 			case sf::Event::Resized:
 				game.onChangedSize({ event.size.width, event.size.height });
+				break;
+			case sf::Event::KeyPressed:
+				commands.onPressedEvent(event.key.code);
+				if (event.key.code == sf::Keyboard::Escape) {
+					captureMouse.toggle();
+				}
+				break;
+			case sf::Event::MouseButtonPressed:
+				commands.onPressedEvent(event.mouseButton.button);
 				break;
 			case sf::Event::MouseWheelScrolled:
 				if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
@@ -62,8 +68,9 @@ int main(int argc, char* argv[]) {
 		}
 
 		if (captureMouse.isEnabled()) {
-			game.processKeyboard(deltaTime.asSeconds());
 			game.processMouseMove(deltaTime.asSeconds());
+			game.processKeyboard(deltaTime.asSeconds(), commands);
+			game.processMouseClick(deltaTime.asSeconds(), commands);
 		}
 		game.update(deltaTime.asSeconds());
 		captureMouse.update();

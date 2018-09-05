@@ -5,6 +5,7 @@
 #include "Frustum.h"
 
 #include <vector>
+#include <queue>
 #include <unordered_map>
 #include <memory>
 #include <utility>
@@ -12,6 +13,15 @@
 
 class ChunkMap {
 public:
+	struct Comp_ivec2 {
+		size_t operator()(const ivec2& vec) const {
+			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1);
+		}
+		bool operator()(const ivec2& a, const ivec2& b) const {
+			return a.x == b.x && a.y == b.y;
+		}
+	};
+
 	static const int VIEW_DISTANCE{ 10 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
 
 	ChunkMap(ivec2 center = ivec2{ 0, 0 });
@@ -40,16 +50,9 @@ public:
 	int getRenderedChunks();
 
 private:
-	struct Comp_ivec2 {
-		size_t operator()(const ivec2& vec) const {
-			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1);
-		}
-		bool operator()(const ivec2& a, const ivec2& b) const {
-			return a.x == b.x && a.y == b.y;
-		}
-	};
-
 	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2> m_chunks;
+	std::queue<ivec2> toLoadChunks;
+	std::queue<ivec3> toReloadSections;
 	ivec2 m_center;
 	ivec2 m_newCenter;
 	std::mutex m_deleteChunksMutex;
@@ -58,6 +61,7 @@ private:
 	int renderedChunks = 0;
 	std::array<int, Chunk::STATE_SIZE> countChunks;
 
+	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2>::iterator hasBlock(ivec3 globalPos);
 	bool isInLoadDistance(ivec2 pos);
 	void loadBlocks(ivec2 pos);
 	void loadFaces(ivec2 pos);

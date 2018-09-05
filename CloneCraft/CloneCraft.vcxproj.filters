@@ -31,6 +31,7 @@
     <ClCompile Include="Generator\Noise\OctavePerlin.cpp" />
     <ClCompile Include="Generator\Noise\PerlinNoise.cpp" />
     <ClCompile Include="Generator\Structure\Structure.cpp" />
+    <ClCompile Include="Commands\Commands.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -73,5 +74,6 @@
     <ClInclude Include="Generator\Noise\PerlinNoise.h" />
     <ClInclude Include="Generator\Noise\OctavePerlin.h" />
     <ClInclude Include="Generator\Structure\Structure.h" />
+    <ClInclude Include="Commands\Commands.h" />
   </ItemGroup>
 </Project>

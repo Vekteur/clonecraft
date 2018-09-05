@@ -26,14 +26,13 @@ void Chunk::loadFaces() {
 	for (auto& section : m_sections) {
 		section->loadFaces();
 	}
-	setState(TO_LOAD_VAOS);
+	setState(TO_RENDER);
 }
 
 void Chunk::loadVAOs() {
 	for (auto& section : m_sections) {
 		section->loadVAOs();
 	}
-	setState(TO_RENDER);
 }
 
 void Chunk::unloadVAOs() {
@@ -70,6 +69,10 @@ void Chunk::render(const WaterRenderer& waterRenderer) const {
 
 ChunkGenerator& Chunk::getChunkGenerator() {
 	return m_chunkGenerator;
+}
+
+std::array<std::unique_ptr<Section>, Const::CHUNK_NB_SECTIONS>& Chunk::getSections() {
+	return m_sections;
 }
 
 Section& Chunk::getSection(int height) {

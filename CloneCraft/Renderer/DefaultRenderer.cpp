@@ -9,9 +9,9 @@
 
 namespace fs = std::filesystem;
 
-DefaultRenderer::DefaultRenderer()
-{
+DefaultRenderer::DefaultRenderer() {
 	m_shader.loadFromFile("Resources/Shaders/cube.vs", "Resources/Shaders/cube.frag");
+	
 	getShader().use().set("distance", ChunkMap::SIDE);
 
 	std::string blockTexturesPath = "Resources/Textures/Blocks";
