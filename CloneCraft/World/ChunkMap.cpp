@@ -17,45 +17,37 @@ ChunkMap::ChunkMap(ivec2 center) : m_center{ center } { }
 
 ChunkMap::~ChunkMap() { }
 
-void ChunkMap::load() {
-	loadBlocks(ivec2{ m_center.x, m_center.y }); // load the blocks of the center chunk
-	for (int d = 1; d <= LOAD_DISTANCE; ++d) {
-		// load the blocks in the chunks at distance d
-		for (int dir = 0; dir < Dir2D::SIZE; ++dir) {
-			ivec2 curr = Dir2D::find(static_cast<Dir2D::Dir>(dir));
-			ivec2 prev = Dir2D::prev(static_cast<Dir2D::Dir>(dir));
-			ivec2 next = Dir2D::next(static_cast<Dir2D::Dir>(dir));
-			for (ivec2 relPos = prev * d; relPos != next * d; relPos += next) {
-				ivec2 pos = relPos + m_center + curr * d;
-				loadBlocks(pos);
-				if (mustStop)
-					return;
-			}
+void ChunkMap::load(const Frustum& frustum) {
+	std::vector<std::tuple<bool, int, ivec2>> viewableChunks;
+	for (int x = m_center.x - VIEW_DISTANCE; x <= m_center.x + VIEW_DISTANCE; ++x) {
+		for (int y = m_center.y - VIEW_DISTANCE; y <= m_center.y + VIEW_DISTANCE; ++y) {
+			ivec2 pos{ x, y };
+			int dist = math::euclidianPow2(pos, m_center);
+			if (dist <= LOAD_DISTANCE * LOAD_DISTANCE) // Take a small margin
+				viewableChunks.push_back({ !isChunkInFrustum(pos, frustum), dist, pos });
 		}
+	}
+	std::sort(viewableChunks.begin(), viewableChunks.end(),
+		[](const std::tuple<bool, int, ivec2>& c1, const std::tuple<bool, int, ivec2>& c2) {
 
-		// load the faces in the chunks at distance d - 1
-		int c = d - 1;
-		if (c == 0) {
-			loadFaces(ivec2{ m_center.x, m_center.y });
-		} else {
-			for (int dir = 0; dir < Dir2D::SIZE; ++dir) {
-				ivec2 curr = Dir2D::find(static_cast<Dir2D::Dir>(dir));
-				ivec2 prev = Dir2D::prev(static_cast<Dir2D::Dir>(dir));
-				ivec2 next = Dir2D::next(static_cast<Dir2D::Dir>(dir));
-				for (ivec2 relPos = prev * c; relPos != next * c; relPos += next) {
-					ivec2 pos = relPos + m_center + curr * c;
-					loadFaces(pos);
-					if (mustStop)
-						return;
-				}
+		if (std::get<0>(c1) == std::get<0>(c2))
+			return std::get<1>(c1) <= std::get<1>(c2);
+		return std::get<0>(c1) < std::get<0>(c2);
+	});
+
+	int loadedChunks = 0;
+	for (auto& viewableChunk : viewableChunks) {
+		ivec2 pos = std::get<2>(viewableChunk);
+		auto chunkIt = m_chunks.find(pos);
+		if (chunkIt == m_chunks.end() || chunkIt->second->getState() <= Chunk::TO_LOAD_FACES) {
+			loadBlocks(pos);
+			for (ivec2 dir : Dir2D::all_dirs()) {
+				loadBlocks(pos + dir);
 			}
-		}
-
-		glFlush();
-
-		if (m_newCenter != m_center) {
-			m_center = m_newCenter;
-			break;
+			loadFaces(pos);
+			++loadedChunks;
+			if (loadedChunks == CHUNKS_PER_LOAD)
+				break;
 		}
 	}
 }
@@ -118,15 +110,19 @@ void ChunkMap::loadFaces(ivec2 pos) {
 	}
 }
 
+bool ChunkMap::isChunkInFrustum(ivec2 chunkPos, const Frustum& frustum) {
+	Box chunkBox = { { chunkPos.x * Const::CHUNK_SIDE, 0.f, chunkPos.y * Const::CHUNK_SIDE },
+		{ Const::CHUNK_SIDE, Const::CHUNK_HEIGHT, Const::CHUNK_SIDE } };
+	return !frustum.isBoxOutside(chunkBox);
+}
+
 void ChunkMap::render(const Frustum& frustum, const DefaultRenderer* defaultRenderer, const WaterRenderer* waterRenderer) {
 	m_deleteChunksMutex.lock();
 
 	std::vector< std::tuple<int, Chunk* > > chunks;
-	for (auto& posChunk : m_chunks) {
-		std::unique_ptr<Chunk>& chunk = posChunk.second;
-		Box chunkBox = { {chunk->getPosition().x * Const::CHUNK_SIDE, 0.f, chunk->getPosition().y * Const::CHUNK_SIDE }, 
-		{ Const::CHUNK_SIDE, Const::CHUNK_HEIGHT, Const::CHUNK_SIDE } };
-		if (chunk->getState() == Chunk::TO_RENDER && !frustum.isBoxOutside(chunkBox)) {
+	for (auto& chunkPos : m_chunks) {
+		std::unique_ptr<Chunk>& chunk = chunkPos.second;
+		if (chunk->getState() == Chunk::TO_RENDER && isChunkInFrustum(chunk->getPosition(), frustum)) {
 			chunks.push_back({ math::manhattan(chunk->getPosition(), m_center), chunk.get() });
 		}
 	}
@@ -186,7 +182,7 @@ void ChunkMap::reloadBlocks(const std::vector<ivec3>& blocks) {
 }
 
 void ChunkMap::setCenter(ivec2 center) {
-	m_newCenter = center;
+	m_center = center;
 }
 
 std::unordered_map<ivec2, std::unique_ptr<Chunk>, ChunkMap::Comp_ivec2, ChunkMap::Comp_ivec2>::iterator 

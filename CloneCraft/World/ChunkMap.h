@@ -22,12 +22,13 @@ public:
 		}
 	};
 
-	static const int VIEW_DISTANCE{ 10 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
+	static const int VIEW_DISTANCE{ 12 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
+	static const int CHUNKS_PER_LOAD{ 4 };
 
 	ChunkMap(ivec2 center = ivec2{ 0, 0 });
 	~ChunkMap();
 
-	void load();
+	void load(const Frustum& frustum);
 	void update();
 	void render(const Frustum& frustum, const DefaultRenderer* defaultRenderer = nullptr,
 		const WaterRenderer* waterRenderer = nullptr);
@@ -54,7 +55,6 @@ private:
 	std::queue<ivec2> toLoadChunks;
 	std::queue<ivec3> toReloadSections;
 	ivec2 m_center;
-	ivec2 m_newCenter;
 	std::mutex m_deleteChunksMutex;
 	bool mustStop = false;
 
@@ -65,5 +65,6 @@ private:
 	bool isInLoadDistance(ivec2 pos);
 	void loadBlocks(ivec2 pos);
 	void loadFaces(ivec2 pos);
+	static bool isChunkInFrustum(ivec2 chunkPos, const Frustum& frustum);
 };
 

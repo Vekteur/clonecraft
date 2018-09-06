@@ -19,7 +19,7 @@ uniform mat4 projection;
 uniform int distance;
 uniform vec3 cameraPosition;
 
-const float density = 2.15f;
+const float density = 2.3f;
 const float gradient = 15.0f;
 
 void main()

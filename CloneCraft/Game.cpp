@@ -7,7 +7,7 @@
 #include "Logger.h"
 #include "BlockDatas.h"
 
-const float Game::TARGET_DISTANCE{ 100.f };
+const float Game::TARGET_DISTANCE{ 160.f };
 
 Game::Game(Window* const window, sf::Context* const context1, sf::Context* const context2)
 	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context1{ context1 }, p_context2{ context2 },
@@ -30,7 +30,7 @@ void Game::runChunkLoadingLoop(sf::Context* const p_context) {
 	p_context->setActive(true);
 
 	while (!m_stopGeneratingThread) {
-		m_chunkMap.load();
+		m_chunkMap.load(m_camera.getFrustum());
 		m_chunkMap.unloadFarChunks();
 	}
 }
@@ -149,10 +149,7 @@ void Game::update(sf::Time dt) {
 	m_waterRenderer.getShader().use().set("skyColor", p_window->getClearColor());
 	m_waterRenderer.getShader().use().set("cameraPosition", m_camera.getPosition());
 
-	ivec2 newCenter = Converter::globalToChunk(m_camera.getPosition());
-	if (m_chunkMap.getCenter() != newCenter)
-		m_chunkMap.setCenter(newCenter);
-
+	m_chunkMap.setCenter(Converter::globalToChunk(m_camera.getPosition()));
 	m_chunkMap.update();
 
 	LineBlockFinder lineBlockFinder{ m_camera.getPosition(), m_camera.getFront() };
@@ -161,8 +158,8 @@ void Game::update(sf::Time dt) {
 	while (lineBlockFinder.getDistance() <= TARGET_DISTANCE) {
 		ivec3 iterPos = lineBlockFinder.next();
 		Block block = m_chunkMap.getBlock(iterPos);
-		if (ResManager::blockDatas().get(block.id).getCategory() != BlockData::AIR /*&&
-			ResManager::blockDatas().get(block.id).getCategory() != BlockData::WATER*/) {
+		if (ResManager::blockDatas().get(block.id).getCategory() != BlockData::AIR &&
+			ResManager::blockDatas().get(block.id).getCategory() != BlockData::WATER) {
 			targetPos = iterPos;
 			break;
 		}
