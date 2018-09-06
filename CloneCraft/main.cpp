@@ -61,18 +61,18 @@ int main(int argc, char* argv[]) {
 				break;
 			case sf::Event::MouseWheelScrolled:
 				if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
-					game.processMouseWheel(event.mouseWheelScroll.delta);
+					game.processMouseWheel(deltaTime, event.mouseWheelScroll.delta);
 				}
 				break;
 			}
 		}
 
 		if (captureMouse.isEnabled()) {
-			game.processMouseMove(deltaTime.asSeconds());
-			game.processKeyboard(deltaTime.asSeconds(), commands);
-			game.processMouseClick(deltaTime.asSeconds(), commands);
+			game.processMouseMove(deltaTime);
+			game.processKeyboard(deltaTime, commands);
+			game.processMouseClick(deltaTime, commands);
 		}
-		game.update(deltaTime.asSeconds());
+		game.update(deltaTime);
 		captureMouse.update();
 
 		game.render();

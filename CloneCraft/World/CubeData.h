@@ -12,8 +12,8 @@ using arr = std::array<T, S>;
 namespace CubeData {
 namespace {
 const arr<GLuint, 6> faceElementIndices{
-		0, 1, 2,
-		2, 3, 0
+	0, 1, 2,
+	2, 3, 0
 };
 
 const arr<ivec2, 4> faceCoords{ {

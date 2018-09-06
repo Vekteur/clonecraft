@@ -19,6 +19,7 @@ public:
 	void render(const WaterMesh& mesh) const;
 	void onChangedSize(ivec2 windowSize);
 	const Shader& getShader() const;
+	sf::RenderTexture& getRefractionTexture();
 
 private:
 	void reflectCamera(const DefaultRenderer& defaultRenderer, Camera& camera, ivec2 windowSize);

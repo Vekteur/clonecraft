@@ -19,9 +19,6 @@ WaterRenderer::WaterRenderer(ivec2 windowSize) {
 	getShader().use().set("dudvMap", 2);
 
 	onChangedSize(windowSize);
-
-	if (simple)
-		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
 }
 
 void WaterRenderer::reflectCamera(const DefaultRenderer& defaultRenderer, Camera& camera, ivec2 windowSize) {
@@ -39,19 +36,19 @@ void WaterRenderer::reflectCamera(const DefaultRenderer& defaultRenderer, Camera
 
 void WaterRenderer::prepare(std::function<void()> renderFunc, std::function<void()> clearFunc,
 	const DefaultRenderer& defaultRenderer, Camera& camera, ivec2 windowSize) {
-	if (simple)
-		return;
-	reflectCamera(defaultRenderer, camera, windowSize);
+	if (!simple) {
+		reflectCamera(defaultRenderer, camera, windowSize);
 
-	defaultRenderer.getShader().use().set("clipPlane", vec4(0, 1, 0, -Const::SEA_LEVEL));
-	reflectionTexture.setActive(true);
-	clearFunc();
-	renderFunc();
-	reflectionTexture.display();
+		defaultRenderer.getShader().use().set("clipPlane", vec4(0, 1, 0, -Const::SEA_LEVEL));
+		reflectionTexture.setActive(true);
+		clearFunc();
+		renderFunc();
+		reflectionTexture.display();
 
-	reflectCamera(defaultRenderer, camera, windowSize);
+		reflectCamera(defaultRenderer, camera, windowSize);
+	}
 
-	defaultRenderer.getShader().use().set("clipPlane", vec4(0, -1, 0, Const::SEA_LEVEL));
+	defaultRenderer.getShader().use().set("clipPlane", vec4(0, -1, 0, 10000));
 	refractionTexture.setActive(true);
 	clearFunc();
 	renderFunc();
@@ -63,32 +60,26 @@ void WaterRenderer::prepare(std::function<void()> renderFunc, std::function<void
 void WaterRenderer::render(const WaterMesh& mesh) const {
 	if (mesh.indicesNb != 0) {
 		m_shader.use();
-		glEnable(GL_BLEND);
-		glDepthMask(GL_FALSE);
 		
 		if (!simple) {
 			glActiveTexture(GL_TEXTURE0);
 			sf::Texture::bind(&reflectionTexture.getTexture());
-			glActiveTexture(GL_TEXTURE1);
-			sf::Texture::bind(&refractionTexture.getTexture());
-			glActiveTexture(GL_TEXTURE2);
-			sf::Texture::bind(&dudvMap);
 		}
+		glActiveTexture(GL_TEXTURE1);
+		sf::Texture::bind(&refractionTexture.getTexture());
+		glActiveTexture(GL_TEXTURE2);
+		sf::Texture::bind(&dudvMap);
 		mesh.draw();
-		glDepthMask(GL_TRUE);
-		glDisable(GL_BLEND);
 	}
 }
 
 void WaterRenderer::onChangedSize(ivec2 windowSize) {
-	if (simple)
-		return;
 	sf::ContextSettings settings;
 	settings.majorVersion = 4;
 	settings.minorVersion = 3;
 	settings.depthBits = 24;
 	settings.stencilBits = 8;
-	if (!reflectionTexture.create(windowSize.x, windowSize.y, settings)) {
+	if (!simple && !reflectionTexture.create(windowSize.x, windowSize.y, settings)) {
 		LOG(Level::ERROR) << "Could not create reflection texture" << std::endl;
 	}
 	if (!refractionTexture.create(windowSize.x, windowSize.y, settings)) {
@@ -100,6 +91,10 @@ void WaterRenderer::onChangedSize(ivec2 windowSize) {
 	dudvMap.setRepeated(true);
 }
 
-const Shader & WaterRenderer::getShader() const {
+const Shader& WaterRenderer::getShader() const {
 	return m_shader;
+}
+
+sf::RenderTexture& WaterRenderer::getRefractionTexture() {
+	return refractionTexture;
 }

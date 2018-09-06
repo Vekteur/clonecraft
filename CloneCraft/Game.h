@@ -19,6 +19,7 @@
 #include "LineBlockFinder.h"
 #include "DefaultRenderer.h"
 #include "WaterRenderer.h"
+#include "PostProcessingRenderer.h"
 #include "Commands.h"
 
 class Window;
@@ -28,11 +29,11 @@ public:
 	Game(Window* const window, sf::Context* const context1, sf::Context* const context2);
 	~Game();
 
-	void processKeyboard(GLfloat dt, Commands& commands);
-	void processMouseClick(GLfloat dt, Commands& commands);
-	void processMouseMove(GLfloat dt);
-	void processMouseWheel(GLfloat dt);
-	void update(GLfloat dt);
+	void processKeyboard(sf::Time dt, Commands& commands);
+	void processMouseClick(sf::Time dt, Commands& commands);
+	void processMouseMove(sf::Time dt);
+	void processMouseWheel(sf::Time dt, GLfloat delta);
+	void update(sf::Time dt);
 	void render();
 	void runChunkLoadingLoop(sf::Context* const p_context);
 
@@ -69,6 +70,7 @@ private:
 
 	DefaultRenderer m_defaultRenderer;
 	WaterRenderer m_waterRenderer;
+	PostProcessingRenderer m_postProcessingRenderer;
 
 	std::thread m_generatingThread;
 	std::thread m_updatingThread;

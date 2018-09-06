@@ -11,7 +11,7 @@ const float Game::TARGET_DISTANCE{ 100.f };
 
 Game::Game(Window* const window, sf::Context* const context1, sf::Context* const context2)
 	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context1{ context1 }, p_context2{ context2 },
-	m_waterRenderer{ { p_window->size() } } {
+	m_waterRenderer{ { p_window->size() } }, m_postProcessingRenderer{ { p_window->size() } } {
 
 	ResManager::initBlockDatas(std::vector<TextureArray*>{ &m_defaultRenderer.getTextureArray() });
 
@@ -39,6 +39,7 @@ void Game::onChangedSize(ivec2 size) {
 	glViewport(0, 0, size.x, size.y);
 	p_window->setView(sf::View(sf::FloatRect(0, 0, size.x, size.y)));
 	m_waterRenderer.onChangedSize(p_window->size());
+	m_postProcessingRenderer.onChangedSize(p_window->size());
 }
 
 bool Game::canReloadBlocks() {
@@ -59,19 +60,20 @@ void Game::reloadBlocks(const std::vector<ivec3>& blocks) {
 	}
 }
 
-void Game::processKeyboard(GLfloat dt, Commands& commands) {
+void Game::processKeyboard(sf::Time dt, Commands& commands) {
+	GLfloat dtSec = dt.asSeconds();
 	if (commands.isActive(Command::FORWARD))
-		m_camera.move(Camera::FORWARD, dt);
+		m_camera.move(Camera::FORWARD, dtSec);
 	if (commands.isActive(Command::BACKWARD))
-		m_camera.move(Camera::BACKWARD, dt);
+		m_camera.move(Camera::BACKWARD, dtSec);
 	if (commands.isActive(Command::LEFT))
-		m_camera.move(Camera::LEFT, dt);
+		m_camera.move(Camera::LEFT, dtSec);
 	if (commands.isActive(Command::RIGHT))
-		m_camera.move(Camera::RIGHT, dt);
+		m_camera.move(Camera::RIGHT, dtSec);
 	if (commands.isActive(Command::UP))
-		m_camera.move(Camera::UP, dt);
+		m_camera.move(Camera::UP, dtSec);
 	if (commands.isActive(Command::DOWN))
-		m_camera.move(Camera::DOWN, dt);
+		m_camera.move(Camera::DOWN, dtSec);
 	if (commands.isActive(Command::EXPLODE))
 		explode();
 }
@@ -103,11 +105,11 @@ void Game::explode() {
 	}
 }
 
-void Game::processMouseClick(GLfloat dt, Commands& commands) {
+void Game::processMouseClick(sf::Time dt, Commands& commands) {
 	if (commands.isActive(Command::PICK) && targetPos.has_value()) {
 		pickedBlock = m_chunkMap.getBlock(targetPos.value());
 	}
-	breakAccumulator += sf::seconds(dt);
+	breakAccumulator += dt;
 	if (commands.isActive(Command::BREAK) && breakAccumulator >= sf::seconds(0.1f) && targetPos.has_value()
 		&& canReloadBlocks()) {
 
@@ -115,7 +117,7 @@ void Game::processMouseClick(GLfloat dt, Commands& commands) {
 		reloadBlocks({ targetPos.value() });
 		breakAccumulator = sf::seconds(0.f);
 	}
-	placeAccumulator += sf::seconds(dt);
+	placeAccumulator += dt;
 	if (commands.isActive(Command::PLACE) && placeAccumulator >= sf::seconds(0.1f) && placePos.has_value() &&
 		pickedBlock.has_value() && canReloadBlocks()) {
 
@@ -125,7 +127,7 @@ void Game::processMouseClick(GLfloat dt, Commands& commands) {
 	}
 }
 
-void Game::processMouseMove(GLfloat dt) {
+void Game::processMouseMove(sf::Time dt) {
 	sf::Vector2i mousePosTemp{ sf::Mouse::getPosition(*p_window) };
 	ivec2 mousePosition{ mousePosTemp.x, mousePosTemp.y };
 	ivec2 windowCenter{ p_window->getCenter() };
@@ -133,11 +135,11 @@ void Game::processMouseMove(GLfloat dt) {
 	m_camera.processMouse(mouseOffset);
 }
 
-void Game::processMouseWheel(GLfloat dt) {
-	m_camera.processMouseScroll(dt);
+void Game::processMouseWheel(sf::Time dt, GLfloat delta) {
+	m_camera.processMouseScroll(delta);
 }
 
-void Game::update(GLfloat dt) {
+void Game::update(sf::Time dt) {
 	m_camera.update({ p_window->size() });
 	m_defaultRenderer.getShader().use().set("view", m_camera.getViewMatrix());
 	m_defaultRenderer.getShader().use().set("projection", m_camera.getProjMatrix());
@@ -159,8 +161,8 @@ void Game::update(GLfloat dt) {
 	while (lineBlockFinder.getDistance() <= TARGET_DISTANCE) {
 		ivec3 iterPos = lineBlockFinder.next();
 		Block block = m_chunkMap.getBlock(iterPos);
-		if (ResManager::blockDatas().get(block.id).getCategory() != BlockData::AIR &&
-			ResManager::blockDatas().get(block.id).getCategory() != BlockData::WATER) {
+		if (ResManager::blockDatas().get(block.id).getCategory() != BlockData::AIR /*&&
+			ResManager::blockDatas().get(block.id).getCategory() != BlockData::WATER*/) {
 			targetPos = iterPos;
 			break;
 		}
@@ -169,7 +171,7 @@ void Game::update(GLfloat dt) {
 	if (targetPos == std::nullopt)
 		placePos = std::nullopt;
 
-	moveOffset = fmod(moveOffset + 0.02f * dt, 1.f);
+	moveOffset = fmod(moveOffset + 0.02f * dt.asSeconds(), 1.f);
 	m_waterRenderer.getShader().use().set("moveOffset", moveOffset);
 }
 
@@ -180,15 +182,21 @@ void Game::clearRenderTarget() {
 }
 
 void Game::render() {
-	m_waterRenderer.prepare([&]() {
+	m_waterRenderer.prepare([this]() {
 		m_chunkMap.render(m_camera.getFrustum(), &m_defaultRenderer);
-	}, [&]() { 
+	}, [this]() { 
 		clearRenderTarget(); 
 	}, m_defaultRenderer, m_camera, p_window->size());
 
+	m_postProcessingRenderer.prepare([this]() {
+		m_chunkMap.render(m_camera.getFrustum(), &m_defaultRenderer, &m_waterRenderer);
+	}, [this]() {
+		clearRenderTarget();
+	});
+
 	p_window->setActive(true);
 	clearRenderTarget();
-	m_chunkMap.render(m_camera.getFrustum(), &m_defaultRenderer, &m_waterRenderer);
+	m_postProcessingRenderer.render();
 }
 
 Camera& Game::getCamera() {
