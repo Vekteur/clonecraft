@@ -15,7 +15,7 @@ const float Camera::YAW{ -90.f };
 const float Camera::PITCH{ 0.f };
 
 const float Camera::NEARPLANE{ 0.1f };
-const float Camera::FARPLANE{ 1000.f };
+const float Camera::FARPLANE{ 2000.f };
 
 const vec3 Camera::POSITION{ vec3{0.f, 0.f, 0.f } };
 const vec3 Camera::WORLDUP{ vec3{ 0.f, 1.f, 0.f } };

@@ -16,22 +16,10 @@ using arr = std::array<T, S>;
 template<typename T>
 using vec = std::vector<T>;
 
-Section::Section(ChunkMap* const chunkMap, Chunk* const chunk, ivec3 position)
-	: p_chunkMap{ chunkMap }, p_chunk{ chunk }, m_position{ position },
-	m_blocks{ ivec3{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE } }
+Section::Section(const ChunkMap* chunkMap, const Chunk* chunk, ivec3 position)
+	: p_chunkMap{ chunkMap }, p_chunk{ chunk }, m_position{ position }, 
+	m_blocks{ std::make_unique<BlockArray>() }
 { }
-
-void Section::loadBlocks() {
-	for (int x = 0; x < Const::SECTION_SIDE; ++x)
-		for (int z = 0; z < Const::SECTION_SIDE; ++z)
-			for (int y = 0; y < Const::SECTION_HEIGHT; ++y) {
-				ivec3 pos{ x, y, z };
-				Block block = p_chunk->getChunkGenerator().getBlock(pos + Converter::sectionToGlobal(m_position));
-				if (block.id != static_cast<ID>(ID::AIR))
-					empty = false;
-				m_blocks.at(pos) = block;
-			}
-}
 
 int dirToBin(ivec3 dir) {
 	dir += 1;
@@ -52,7 +40,7 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 		const ivec3 dirPos = Dir3D::find(static_cast<Dir3D::Dir>(dir));
 		const int axe = dir % 3; // Axe of the current direction
 		const ivec3 neighbourPos = m_position + dirPos; // Position of the neighbour section
-		const Section* neighbour = (neighbourPos.y < 0 || neighbourPos.y >= Const::CHUNK_NB_SECTIONS) 
+		const Section* neighbour = (neighbourPos.y < 0 || neighbourPos.y >= p_chunk->getHeight()) 
 			? nullptr : &(p_chunkMap->getSection(neighbourPos)); // Neighbour section (nullptr if does not exist)
 		const arr<vec3, 4> face = CubeData::dirToFace[dir]; // Face associated with the current direction
 		const ivec3 order = axeOrder[axe]; // For the current axe, order[i] = j means that the axe i is associated with the value j
@@ -113,7 +101,7 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 						const ivec3 localFacePos{ localPos + dirPos };
 						const ivec3 globalFacePos = { globalPos + dirPos };
 						Block blockFace{ ID::AIR }; // Face of the block in the direction of the face
-						if (globalFacePos.y < 0 || globalFacePos.y >= Const::CHUNK_HEIGHT) {
+						if (globalFacePos.y < 0 || globalFacePos.y >= p_chunk->getHeight() * Const::SECTION_HEIGHT) {
 							blockFace = Block{ ID::AIR };
 						} else {
 							// The block can only be in the current section or the neighbour section
@@ -188,13 +176,13 @@ ivec3 Section::getPosition() const {
 }
 
 void Section::setBlock(ivec3 pos, Block block) {
-	m_blocks.at(pos) = block;
-	if (block.id != static_cast<ID>(ID::AIR))
+	m_blocks->at(pos) = block;
+	if (block.id != +ID::AIR)
 		empty = false;
 }
 
 Block Section::getBlock(ivec3 pos) const {
-	return m_blocks.at(pos);
+	return m_blocks->at(pos);
 }
 
 bool Section::isInSection(ivec3 pos) {

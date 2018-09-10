@@ -13,6 +13,11 @@
 #include <algorithm>
 #include <unordered_set>
 
+const int ChunkMap::VIEW_DISTANCE{ 12 };
+const int ChunkMap::LOAD_DISTANCE{ VIEW_DISTANCE + 1 };
+const int ChunkMap::SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
+const int ChunkMap::CHUNKS_PER_LOAD{ 4 };
+
 ChunkMap::ChunkMap(ivec2 center) : m_center{ center } { }
 
 ChunkMap::~ChunkMap() { }
@@ -23,7 +28,7 @@ void ChunkMap::load(const Frustum& frustum) {
 		for (int y = m_center.y - VIEW_DISTANCE; y <= m_center.y + VIEW_DISTANCE; ++y) {
 			ivec2 pos{ x, y };
 			int dist = math::euclidianPow2(pos, m_center);
-			if (dist <= LOAD_DISTANCE * LOAD_DISTANCE) // Take a small margin
+			if (dist < VIEW_DISTANCE * VIEW_DISTANCE)
 				viewableChunks.push_back({ !isChunkInFrustum(pos, frustum), dist, pos });
 		}
 	}
@@ -50,6 +55,10 @@ void ChunkMap::load(const Frustum& frustum) {
 				break;
 		}
 	}
+}
+
+bool ChunkMap::isInLoadDistance(ivec2 pos) const {
+	return math::euclidianPow2(pos, m_center) <= LOAD_DISTANCE * LOAD_DISTANCE;
 }
 
 void ChunkMap::unloadFarChunks() {
@@ -111,8 +120,11 @@ void ChunkMap::loadFaces(ivec2 pos) {
 }
 
 bool ChunkMap::isChunkInFrustum(ivec2 chunkPos, const Frustum& frustum) {
+	auto chunkIt = m_chunks.find(chunkPos);
+	int height = ((chunkIt == m_chunks.end()) ? 
+		Const::INIT_CHUNK_NB_SECTIONS : chunkIt->second->getHeight()) * Const::SECTION_HEIGHT;
 	Box chunkBox = { { chunkPos.x * Const::CHUNK_SIDE, 0.f, chunkPos.y * Const::CHUNK_SIDE },
-		{ Const::CHUNK_SIDE, Const::CHUNK_HEIGHT, Const::CHUNK_SIDE } };
+		{ Const::CHUNK_SIDE, height, Const::CHUNK_SIDE } };
 	return !frustum.isBoxOutside(chunkBox);
 }
 
@@ -152,7 +164,7 @@ ivec2 ChunkMap::getCenter() {
 void ChunkMap::reloadSection(ivec3 pos) {
 	auto chunkIt = m_chunks.find({ pos.x, pos.z });
 	if (chunkIt != m_chunks.end() && chunkIt->second->getState() >= Chunk::TO_RENDER &&
-		0 <= pos.y && pos.y < Const::CHUNK_NB_SECTIONS) {
+		0 <= pos.y && pos.y < chunkIt->second->getHeight()) {
 		chunkIt->second->getSection(pos.y).loadFaces();
 		toReloadSections.push(pos);
 	}
@@ -185,34 +197,29 @@ void ChunkMap::setCenter(ivec2 center) {
 	m_center = center;
 }
 
-std::unordered_map<ivec2, std::unique_ptr<Chunk>, ChunkMap::Comp_ivec2, ChunkMap::Comp_ivec2>::iterator 
-ChunkMap::hasBlock(ivec3 globalPos) {
+std::unordered_map<ivec2, std::unique_ptr<Chunk>, ChunkMap::Comp_ivec2, ChunkMap::Comp_ivec2>::const_iterator 
+ChunkMap::hasBlock(ivec3 globalPos, bool canSurpass) const {
 	auto chunkIt = m_chunks.find(Converter::globalToChunk(globalPos));
 	if (chunkIt != m_chunks.end() && chunkIt->second->getState() > Chunk::TO_LOAD_BLOCKS &&
-		0 <= globalPos.y && globalPos.y < Const::CHUNK_HEIGHT)
+		0 <= globalPos.y && (canSurpass || globalPos.y < chunkIt->second->getHeight() * Const::SECTION_HEIGHT))
 		return chunkIt;
 	else
 		return m_chunks.end();
 }
 
-bool ChunkMap::isInLoadDistance(ivec2 pos) {
-	return m_center.x - LOAD_DISTANCE <= pos.x && pos.x <= m_center.x + LOAD_DISTANCE &&
-		m_center.y - LOAD_DISTANCE <= pos.y && pos.y <= m_center.y + LOAD_DISTANCE;
-}
-
 void ChunkMap::setBlock(ivec3 globalPos, Block block) {
-	auto chunkIt = hasBlock(globalPos);
+	auto chunkIt = hasBlock(globalPos, true);
 	if (chunkIt != m_chunks.end()) {
-		chunkIt->second->getSection(floorDiv(globalPos.y, Const::SECTION_HEIGHT))
-			.setBlock(Converter::globalToInnerSection(globalPos), block);
+		ivec2 innerChunkPos = Converter::globalToInnerChunk(globalPos);
+		chunkIt->second->setBlock({ innerChunkPos.x, globalPos.y, innerChunkPos.y }, block);
 	}
 }
 
-Block ChunkMap::getBlock(ivec3 globalPos) {
+Block ChunkMap::getBlock(ivec3 globalPos) const {
 	auto chunkIt = hasBlock(globalPos);
 	if (chunkIt != m_chunks.end()) {
-		return chunkIt->second->getSection(floorDiv(globalPos.y, Const::SECTION_HEIGHT))
-			.getBlock(Converter::globalToInnerSection(globalPos));
+		ivec2 innerChunkPos = Converter::globalToInnerChunk(globalPos);
+		return chunkIt->second->getBlock({ innerChunkPos.x, globalPos.y, innerChunkPos.y });
 	}
 	return { ID::AIR };
 }
@@ -221,7 +228,15 @@ Chunk& ChunkMap::getChunk(ivec2 chunkPos) { // Must be a valid chunk position
 	return *m_chunks[chunkPos].get();
 }
 
+const Chunk& ChunkMap::getChunk(ivec2 chunkPos) const { // Must be a valid chunk position
+	return *m_chunks.at(chunkPos).get();
+}
+
 Section& ChunkMap::getSection(ivec3 sectionPos) { // Must be a valid section position
+	return getChunk({ sectionPos.x, sectionPos.z }).getSection(sectionPos.y);
+}
+
+const Section& ChunkMap::getSection(ivec3 sectionPos) const { // Must be a valid section position
 	return getChunk({ sectionPos.x, sectionPos.z }).getSection(sectionPos.y);
 }
 
@@ -248,4 +263,3 @@ int ChunkMap::chunksInState(Chunk::State state) {
 int ChunkMap::getRenderedChunks() {
 	return renderedChunks;
 }
-

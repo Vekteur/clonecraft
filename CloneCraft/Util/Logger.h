@@ -10,8 +10,7 @@ enum class Level {
 	DEBUG, TRACE, INFO, WARNING, ERROR, OFF
 };
 
-class Logger
-{
+class Logger {
 public:
 	Logger(Level standardOutputLevel = Level::DEBUG, Level fileOutputLevel = Level::OFF);
 

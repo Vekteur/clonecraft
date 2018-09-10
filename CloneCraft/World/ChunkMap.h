@@ -22,8 +22,7 @@ public:
 		}
 	};
 
-	static const int VIEW_DISTANCE{ 12 }, LOAD_DISTANCE{ VIEW_DISTANCE + 1 }, SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
-	static const int CHUNKS_PER_LOAD{ 4 };
+	static const int VIEW_DISTANCE, LOAD_DISTANCE, SIDE, CHUNKS_PER_LOAD;
 
 	ChunkMap(ivec2 center = ivec2{ 0, 0 });
 	~ChunkMap();
@@ -38,9 +37,11 @@ public:
 	void reloadBlocks(const std::vector<ivec3>& blocks);
 
 	void setBlock(ivec3 globalPos, Block block);
-	Block getBlock(ivec3 globalPos);
+	Block getBlock(ivec3 globalPos) const;
 	Chunk& getChunk(ivec2 pos);
+	const Chunk& getChunk(ivec2 pos) const;
 	Section& getSection(ivec3 pos);
+	const Section& getSection(ivec3 pos) const;
 	void unloadFarChunks();
 	int size();
 	void stop();
@@ -61,10 +62,11 @@ private:
 	int renderedChunks = 0;
 	std::array<int, Chunk::STATE_SIZE> countChunks;
 
-	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2>::iterator hasBlock(ivec3 globalPos);
-	bool isInLoadDistance(ivec2 pos);
+	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2>::const_iterator
+		hasBlock(ivec3 globalPos, bool canSurpass = false) const;
+	bool isInLoadDistance(ivec2 pos) const;
 	void loadBlocks(ivec2 pos);
 	void loadFaces(ivec2 pos);
-	static bool isChunkInFrustum(ivec2 chunkPos, const Frustum& frustum);
+	bool isChunkInFrustum(ivec2 chunkPos, const Frustum& frustum);
 };
 

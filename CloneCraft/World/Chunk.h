@@ -4,8 +4,7 @@
 #include "ChunkGenerator.h"
 #include "WorldConstants.h"
 
-#include <memory>
-#include <queue>
+#include <vector>
 
 class Chunk {
 public:
@@ -21,6 +20,8 @@ public:
 	Chunk(ChunkMap* const chunkMap = nullptr, ivec2 position = ivec2{0, 0});
 	~Chunk();
 
+	void setBlock(ivec3 pos, Block block);
+	Block getBlock(ivec3 pos) const;
 	void loadBlocks();
 	void loadFaces();
 	void loadVAOs();
@@ -28,18 +29,21 @@ public:
 	State getState() const;
 	void setState(State state);
 	ivec2 getPosition() const;
+	int getHeight() const;
 	void render(const DefaultRenderer& defaultRenderer) const;
 	void render(const WaterRenderer& waterRenderer) const;
 	ChunkGenerator& getChunkGenerator();
-	std::array<std::unique_ptr<Section>, Const::CHUNK_NB_SECTIONS>& getSections();
+	const ChunkGenerator& getChunkGenerator() const;
+	std::vector<Section>& getSections();
 
 	Section& getSection(int height);
+	const Section& getSection(int height) const;
 
 private:
 	ChunkMap* const p_chunkMap{ nullptr };
 	const vec2 m_position;
-	ChunkGenerator m_chunkGenerator{ m_position };
+	ChunkGenerator m_chunkGenerator;
 	State m_state{ STATE_SIZE };
 
-	std::array<std::unique_ptr<Section>, Const::CHUNK_NB_SECTIONS> m_sections;
+	std::vector<Section> m_sections;
 };

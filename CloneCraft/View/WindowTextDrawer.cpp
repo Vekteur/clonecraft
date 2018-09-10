@@ -22,8 +22,8 @@ void WindowTextDrawer::drawAll(int fps, Game& game) {
 	drawRenderedChunks(game.getChunkMap().getRenderedChunks());
 	drawBlockChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES));
 	drawFaceChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_RENDER));
-	drawBlockNumber(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES) *
-		Const::CHUNK_SIDE * Const::CHUNK_SIDE * Const::CHUNK_HEIGHT);
+	/*drawBlockNumber(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES) *
+		Const::CHUNK_SIDE * Const::CHUNK_SIDE * Const::CHUNK_HEIGHT);*/
 }
 
 void WindowTextDrawer::drawFPS(int fps) {

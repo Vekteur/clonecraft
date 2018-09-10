@@ -76,6 +76,13 @@ void Game::processKeyboard(sf::Time dt, Commands& commands) {
 		m_camera.move(Camera::DOWN, dtSec);
 	if (commands.isActive(Command::EXPLODE))
 		explode();
+	if (commands.isActive(Command::TELEPORT))
+		teleport();
+}
+
+void Game::teleport() {
+	if (targetPos.has_value())
+		m_camera.setPosition(targetPos.value());
 }
 
 std::vector<ivec3> Game::explosionBlocks(ivec3 center, int radius) {

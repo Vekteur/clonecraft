@@ -13,6 +13,6 @@ public:
 	virtual std::optional<ivec3> getLocalPos(ivec3 globalPos) const = 0;
 
 private:
-	Array3D<Block> m_blocks;
+	//Array3D<Block> m_blocks;
 };
 

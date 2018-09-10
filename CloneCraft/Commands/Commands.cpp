@@ -20,6 +20,7 @@ Command Commands::findKey(sf::Keyboard::Key key) const {
 	using namespace sf;
 	switch (key) {
 	case Keyboard::E: return Command::EXPLODE;
+	case Keyboard::T: return Command::TELEPORT;
 	default: return Command::UNKNOWN;
 	}
 }

@@ -4,15 +4,22 @@
 #include "WorldConstants.h"
 #include "Converter.h"
 #include "Block.h"
+#include "WorldConstants.h"
 
-class ChunkGenerator
-{
+#include <array>
+
+class Chunk;
+class ChunkGenerator {
 public:
-	ChunkGenerator(ivec2 pos);
+	ChunkGenerator(Chunk& chunk);
 
-	Block getBlock(ivec3 globalPos);
+	void loadNoise();
+	void load();
 
 private:
+	Block getBlock(ivec3 globalPos) const;
+
+	Chunk& chunk;
 	ivec2 m_position;
 	float m_noise[Const::SECTION_SIDE][Const::SECTION_SIDE];
 };

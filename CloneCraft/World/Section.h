@@ -13,15 +13,19 @@
 #include "Mesh.h"
 #include "DefaultRenderer.h"
 #include "WaterRenderer.h"
+#include "WorldConstants.h"
 
 class ChunkMap;
 class Chunk;
 
 class Section {
 public:
-	Section(ChunkMap* const chunkMap, Chunk* const chunk, ivec3 position = ivec3{ 0, 0, 0 });
+	Section(const ChunkMap* chunkMap = nullptr, const Chunk* chunk = nullptr, ivec3 position = ivec3{ 0, 0, 0 });
+	Section(Section&& other) = default;
+	Section& operator=(Section&& other) = default;
+	Section(const Section& other) = delete;
+	Section& operator=(const Section& other) = delete;
 
-	void loadBlocks();
 	void loadFaces();
 	void loadVAOs();
 	void unloadVAOs();
@@ -33,11 +37,12 @@ public:
 	Block getBlock(ivec3 pos) const;
 
 private:
-	ChunkMap* const p_chunkMap{ nullptr };
-	Chunk* const p_chunk{ nullptr };
+	using BlockArray = Array3D<Block, Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE>;
+	const ChunkMap* p_chunkMap{ nullptr };
+	const Chunk* p_chunk{ nullptr };
 	ivec3 m_position;
 
-	Array3D<Block> m_blocks;
+	std::unique_ptr<BlockArray> m_blocks;
 	DefaultMesh activeDefaultMesh;
 	DefaultMesh nextDefaultMesh;
 	WaterMesh activeWaterMesh;

@@ -3,6 +3,5 @@
 
 
 Structure::Structure()
-	: m_blocks{ {  } }
 {}
 

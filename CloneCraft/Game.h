@@ -50,6 +50,7 @@ private:
 
 	std::vector<ivec3> explosionBlocks(ivec3 center, int radius);
 	void explode();
+	void teleport();
 
 	static const float TARGET_DISTANCE;
 
