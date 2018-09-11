@@ -185,7 +185,7 @@ Block Section::getBlock(ivec3 pos) const {
 	return m_blocks->at(pos);
 }
 
-bool Section::isInSection(ivec3 pos) {
-	return 0 <= pos.x && pos.x < Const::SECTION_SIDE && 0 <= pos.y && pos.y < Const::SECTION_HEIGHT && 
-			0 <= pos.z && pos.z < Const::SECTION_SIDE;
+bool Section::isInSection(ivec3 globalPos) {
+	return 0 <= globalPos.x && globalPos.x < Const::SECTION_SIDE && 0 <= globalPos.y && globalPos.y < Const::SECTION_HEIGHT && 
+			0 <= globalPos.z && globalPos.z < Const::SECTION_SIDE;
 }

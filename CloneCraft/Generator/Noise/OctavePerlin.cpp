@@ -10,7 +10,7 @@ OctavePerlin::OctavePerlin(int octaves, float persistence, float frequency)
 OctavePerlin::~OctavePerlin() {
 }
 
-double OctavePerlin::getNoise(vec2 pos) {
+double OctavePerlin::getNoise(vec2 pos) const {
 	float total = 0;
 	float frequency = m_frequency;
 	float amplitude = 1;

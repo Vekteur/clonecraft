@@ -8,7 +8,7 @@ public:
 	PerlinNoise();
 	~PerlinNoise();
 
-	float getNoise(vec2 pos);
+	float getNoise(vec2 pos) const;
 
 private:
 	static double lerp(float amount, float left, float right);

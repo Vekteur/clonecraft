@@ -2,17 +2,19 @@
 
 #include "Array3D.h"
 #include "Block.h"
+#include "OctavePerlin.h"
 
 #include "GlmCommon.h"
 
 #include <optional>
 
+class Chunk;
 class Structure {
 public:
-	Structure();
-	virtual std::optional<ivec3> getLocalPos(ivec3 globalPos) const = 0;
-
-private:
-	//Array3D<Block> m_blocks;
+	Structure() { }
+	virtual ~Structure() = default;
+	virtual std::optional<ivec3> getLocalPos(ivec2 zonePos, vec2 freq, const Chunk& chunk) const = 0;
+	virtual Block getBlock(ivec3 pos) const = 0;
+	virtual ivec3 size() const = 0;
 };
 

@@ -49,6 +49,6 @@ private:
 	WaterMesh nextWaterMesh;
 	bool empty = true;
 
-	bool isInSection(ivec3 block);
+	bool isInSection(ivec3 globalPos);
 	std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex>>  findFaces();
 };

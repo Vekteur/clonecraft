@@ -13,14 +13,20 @@ class ChunkGenerator {
 public:
 	ChunkGenerator(Chunk& chunk);
 
-	void loadNoise();
 	void load();
 
+	int getHeight(double noise) const;
+	Block getBlock(int y, int height) const;
+	double getNoise(ivec2 pos) const;
+
 private:
-	Block getBlock(ivec3 globalPos) const;
+	void loadNoise();
+	void loadBlocks();
+	void loadStructures();
 
 	Chunk& chunk;
 	ivec2 m_position;
-	float m_noise[Const::SECTION_SIDE][Const::SECTION_SIDE];
+	OctavePerlin perlin{ 4, 0.5, 2.0 };
+	double m_noise[Const::SECTION_SIDE][Const::SECTION_SIDE];
 };
 

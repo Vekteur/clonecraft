@@ -7,10 +7,6 @@ Chunk::Chunk(ChunkMap* const chunkMap, ivec2 position)
 	: p_chunkMap{ chunkMap }, m_position{ position }, m_chunkGenerator{ *this } {
 	setState(TO_LOAD_BLOCKS);
 	m_sections.reserve(Const::INIT_CHUNK_NB_SECTIONS);
-	/*for (int i = 0; i < Const::CHUNK_NB_SECTIONS; ++i) {
-		//m_sections[i] = std::make_unique<Section>(p_chunkMap, this, ivec3{ m_position.x, i, m_position.y });
-		m_sections[i] = Section(p_chunkMap, this, ivec3{ m_position.x, i, m_position.y });
-	}*/
 }
 
 Chunk::~Chunk() {
@@ -94,6 +90,12 @@ const ChunkGenerator& Chunk::getChunkGenerator() const {
 
 std::vector<Section>& Chunk::getSections() {
 	return m_sections;
+}
+
+bool Chunk::isInChunk(ivec3 globalPos) const {
+	return 0 <= globalPos.x && globalPos.x < Const::SECTION_SIDE && 0 <= globalPos.y && 
+		globalPos.y < getHeight() * Const::SECTION_HEIGHT &&
+		0 <= globalPos.z && globalPos.z < Const::SECTION_SIDE;
 }
 
 Section& Chunk::getSection(int height) {

@@ -11,7 +11,7 @@ public:
 	OctavePerlin(int octaves = 4, float persistence = 0.5, float frequency = 1.0);
 	~OctavePerlin();
 
-	double getNoise(vec2 pos);
+	double getNoise(vec2 pos) const;
 
 private:
 	std::vector<PerlinNoise> noises;

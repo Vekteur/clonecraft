@@ -30,9 +30,9 @@
     <ClCompile Include="Generator\ChunkGenerator.cpp" />
     <ClCompile Include="Generator\Noise\OctavePerlin.cpp" />
     <ClCompile Include="Generator\Noise\PerlinNoise.cpp" />
-    <ClCompile Include="Generator\Structure\Structure.cpp" />
     <ClCompile Include="Commands\Commands.cpp" />
     <ClCompile Include="Renderer\PostProcessingRenderer.cpp" />
+    <ClCompile Include="Generator\Structure\Tree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -77,5 +77,6 @@
     <ClInclude Include="Generator\Structure\Structure.h" />
     <ClInclude Include="Commands\Commands.h" />
     <ClInclude Include="Renderer\PostProcessingRenderer.h" />
+    <ClInclude Include="Generator\Structure\Tree.h" />
   </ItemGroup>
 </Project>

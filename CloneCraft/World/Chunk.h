@@ -36,6 +36,7 @@ public:
 	const ChunkGenerator& getChunkGenerator() const;
 	std::vector<Section>& getSections();
 
+	bool isInChunk(ivec3 globalPos) const;
 	Section& getSection(int height);
 	const Section& getSection(int height) const;
 

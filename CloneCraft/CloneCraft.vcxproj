@@ -26,6 +26,7 @@
     <ClInclude Include="Commands\Commands.h" />
     <ClInclude Include="Generator\Structure\Structure.h" />
     <ClInclude Include="Renderer\PostProcessingRenderer.h" />
+    <ClInclude Include="Generator\Structure\Tree.h" />
     <ClInclude Include="View\CaptureMouse.h" />
     <ClInclude Include="Renderer\DefaultRenderer.h" />
     <ClInclude Include="FPSCounter.h" />
@@ -55,7 +56,7 @@
     <ClCompile Include="Renderer\PostProcessingRenderer.cpp" />
     <ClCompile Include="ResManager\TextureArray.cpp" />
     <ClCompile Include="Renderer\DefaultRenderer.cpp" />
-    <ClCompile Include="Generator\Structure\Structure.cpp" />
+    <ClCompile Include="Generator\Structure\Tree.cpp" />
     <ClCompile Include="View\Frustum.cpp" />
     <ClCompile Include="Maths\LineBlockFinder.cpp" />
     <ClCompile Include="Maths\Dir3D.cpp" />

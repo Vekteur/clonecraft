@@ -7,7 +7,7 @@ PerlinNoise::~PerlinNoise() {
 }
 
 // p has coordinates in [0, 1[
-float PerlinNoise::getNoise(vec2 p) {
+float PerlinNoise::getNoise(vec2 p) const {
 	// Unit square that contains the coordinates p, modulo 255
 	ivec2 pi{ (int)floor(p.x) & 255 , (int)floor(p.y) & 255 };
 
