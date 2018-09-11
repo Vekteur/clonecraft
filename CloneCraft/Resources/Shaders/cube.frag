@@ -17,6 +17,9 @@ void main()
 	float diffuse = max(dot(normal, sunDir), 0.f);
 	color = vec4(vec3(ambient + diffuse), 1.f);
 
-	color *= texture(arrayTexture, fragTex);
+	vec4 texColor = texture(arrayTexture, fragTex);
+	if (texColor.a < 0.01f)
+		discard;
+	color *= texColor;
     color = mix(vec4(skyColor, 1.0f), color, visibility);
 }

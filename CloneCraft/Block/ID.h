@@ -10,5 +10,6 @@ BETTER_ENUM(ID, char,
 	SAND,
 	WATER,
 	LOG,
+	LEAVES,
 	SIZE
 );

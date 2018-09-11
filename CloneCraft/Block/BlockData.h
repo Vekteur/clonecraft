@@ -13,7 +13,7 @@ using json = nlohmann::json;
 class BlockData {
 public:
 	enum Category {
-		DEFAULT, WATER, AIR
+		DEFAULT, SEMI_TRANSPARENT, WATER, AIR
 	};
 
 	BlockData();

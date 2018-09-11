@@ -70,7 +70,7 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 						int length = currBlockPos - firstBlockPos; // Length of the face
 						const ivec3 firstBlockGlobalPos{ Converter::sectionToGlobal(m_position) + localPos + oppositeOfLastAxe * length };
 						
-						if (category == BlockData::DEFAULT) {
+						if (category == BlockData::DEFAULT || category == BlockData::SEMI_TRANSPARENT) {
 							GLuint texID = ResManager::blockDatas().get(lastBlock.id).getTexture(static_cast<Dir3D::Dir>(dir));
 							for (int vtx = 0; vtx < 4; ++vtx) {
 								vec3 currVtx = face[vtx];

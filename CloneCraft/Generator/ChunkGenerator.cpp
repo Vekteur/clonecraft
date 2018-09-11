@@ -61,7 +61,7 @@ void ChunkGenerator::loadStructures() {
 	std::vector<std::unique_ptr<Structure>> structures;
 	structures.push_back(std::make_unique<Tree>());
 
-	for (auto& structure : structures) {
+	for (const auto& structure : structures) {
 		ivec3 size = structure->size();
 		ivec2 zoneSize = { size.x, size.z };
 
