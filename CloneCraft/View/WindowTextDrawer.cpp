@@ -101,7 +101,7 @@ void WindowTextDrawer::draw(std::string message) {
 	sf::Text text;
 	text.setFont(m_font);
 	text.setString(message);
-	text.setCharacterSize(textSize * p_window->getSize().y);
+	text.setCharacterSize(static_cast<unsigned int>(textSize * p_window->getSize().y));
 	text.setPosition({ paddingLeft * p_window->getSize().x, 
 		p_window->getSize().y * (paddingTop + line * textSpacing) });
 	p_window->draw(text);

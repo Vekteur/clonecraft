@@ -10,13 +10,14 @@ public:
 	enum Dir {UP = 0, RIGHT, DOWN, LEFT};
 
 	Dir2D() = delete;
-	static std::array<ivec2, SIZE> all_dirs();
-	static ivec2 find(Dir dir);
-	static ivec2 prev(Dir dir);
-	static ivec2 next(Dir dir);
-	static ivec2 oppDir(Dir dir);
+	static std::array<Dir, SIZE> all();
+	static ivec2 to_ivec2(Dir dir);
+	static Dir prev(Dir dir);
+	static Dir next(Dir dir);
+	static Dir oppDir(Dir dir);
 
 private:
-	static const std::array<ivec2, SIZE> dirs;
+	static const std::array<Dir2D::Dir, SIZE> s_all;
+	static const std::array<ivec2, SIZE> s_all_dirs;
 };
 

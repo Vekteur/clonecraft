@@ -40,9 +40,9 @@ http://gamedevs.org/uploads/fast-extraction-viewing-frustum-planes-from-world-vi
 */
 Frustum::Frustum(mat4 projView) {
 	for (int dir = 0; dir < Dir3D::SIZE; ++dir) {
-		float factor = ((dir & 1) ? 1 : -1);
+		int factor = ((dir & 1) ? 1 : -1);
 		for (int i = 0; i < 4; ++i) {
-			planes[dir][i] = projView[i][3] + projView[i][dir / 2] * factor;
+			planes[dir][i] = projView[i][3] + projView[i][dir / 2] * static_cast<float>(factor);
 		}
 	}
 	for (Plane& plane : planes) {

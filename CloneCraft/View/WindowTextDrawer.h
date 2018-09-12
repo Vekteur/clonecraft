@@ -13,10 +13,10 @@ public:
 	void drawAll(int fps, Game& game);
 
 private:
-	const float paddingLeft = 0.005;
-	const float paddingTop = 0.005;
-	const float textSize = 0.025;
-	const float textSpacing = 0.03;
+	const float paddingLeft = 0.005f;
+	const float paddingTop = 0.005f;
+	const float textSize = 0.025f;
+	const float textSpacing = 0.03f;
 
 	Window * p_window;
 	sf::Font m_font;

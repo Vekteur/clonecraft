@@ -11,7 +11,7 @@ public:
 	float getDistance();
 
 private:
-	const float epsilon = 1e-6;
+	const float epsilon = static_cast<float>(1e-6f);
 	vec3 pos;
 	vec3 dir;
 	float distance = 0.f;

@@ -37,7 +37,8 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 	} };
 
 	for (int dir = 0; dir < Dir3D::SIZE; ++dir) {
-		const ivec3 dirPos = Dir3D::find(static_cast<Dir3D::Dir>(dir));
+		//int oppDir = static_cast<int>(Dir3D::opp(static_cast<Dir3D::Dir>(dir)));
+		const ivec3 dirPos = Dir3D::to_ivec3(static_cast<Dir3D::Dir>(dir));
 		const int axe = dir % 3; // Axe of the current direction
 		const ivec3 neighbourPos = m_position + dirPos; // Position of the neighbour section
 		const Section* neighbour = (neighbourPos.y < 0 || neighbourPos.y >= p_chunk->getHeight()) 
@@ -80,6 +81,13 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 								defaultVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, dirPos, texID });
 							}
 						} else if (category == BlockData::WATER) {
+							for (int vtx = 0; vtx < 4; ++vtx) {
+								vec3 currVtx = face[vtx];
+								currVtx[indexOfLastAxe] *= length;
+								// Multiply coordinate x of the texture (depends on the vertices of the face)
+								vec2 tex = { CubeData::faceCoords[vtx].x * length, CubeData::faceCoords[vtx].y };
+								waterVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, dirPos });
+							}
 							for (int vtx = 0; vtx < 4; ++vtx) {
 								vec3 currVtx = face[vtx];
 								currVtx[indexOfLastAxe] *= length;

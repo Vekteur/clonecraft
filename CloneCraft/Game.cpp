@@ -7,7 +7,7 @@
 #include "Logger.h"
 #include "BlockDatas.h"
 
-const float Game::TARGET_DISTANCE{ 160.f };
+const float Game::TARGET_DISTANCE{ static_cast<float>(ChunkMap::VIEW_DISTANCE * Const::SECTION_SIDE) };
 
 Game::Game(Window* const window, sf::Context* const context1, sf::Context* const context2)
 	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context1{ context1 }, p_context2{ context2 },
@@ -37,7 +37,7 @@ void Game::runChunkLoadingLoop(sf::Context* const p_context) {
 
 void Game::onChangedSize(ivec2 size) {
 	glViewport(0, 0, size.x, size.y);
-	p_window->setView(sf::View(sf::FloatRect(0, 0, size.x, size.y)));
+	p_window->setView(sf::View(sf::FloatRect(0.f, 0.f, static_cast<float>(size.x), static_cast<float>(size.y))));
 	m_waterRenderer.onChangedSize(p_window->size());
 	m_postProcessingRenderer.onChangedSize(p_window->size());
 }

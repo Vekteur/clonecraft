@@ -11,12 +11,11 @@ public:
 
 	Dir3D() = delete;
 	static std::array<Dir3D::Dir, SIZE> all();
-	static std::array<ivec3, SIZE> all_dirs();
-	static ivec3 find(Dir dir);
-	static ivec3 prev(Dir dir);
-	static ivec3 next(Dir dir);
-	static ivec3 oppDir(Dir dir);
-	static std::array<Dir3D::Dir, 4> horizontal();
+	static ivec3 to_ivec3(Dir dir);
+	static Dir prev(Dir dir);
+	static Dir next(Dir dir);
+	static Dir oppDir(Dir dir);
+	static std::array<Dir3D::Dir, 4> all_horizontal();
 
 private:
 	static const std::array<Dir3D::Dir, SIZE> s_all;

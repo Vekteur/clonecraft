@@ -40,7 +40,7 @@ BlockData::BlockData(const json& j, const std::vector<TextureArray*>& texArrays)
 		}
 		it = texJ.find("side");
 		if (it != texJ.end()) {
-			for (Dir3D::Dir dir : Dir3D::horizontal()) {
+			for (Dir3D::Dir dir : Dir3D::all_horizontal()) {
 				m_textures[dir] = findID(*it, texArrays);
 			}
 		}

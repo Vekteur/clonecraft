@@ -11,7 +11,7 @@ TextureArray::TextureArray(const std::vector<std::filesystem::path>& paths, ivec
 	glBindTexture(GL_TEXTURE_2D_ARRAY, textureArray);
 	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, imageFormat, size.x, size.y, paths.size(), 0, imageFormat, GL_UNSIGNED_BYTE, nullptr);
 
-	for (int i = 0; i < paths.size(); ++i) {
+	for (int i = 0; i < int(paths.size()); ++i) {
 		const std::filesystem::path& path = paths[i];
 		loadTexture(path.string(), i, size, imageFormat);
 		textureMap[path.stem().string()] = i;

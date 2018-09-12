@@ -104,7 +104,7 @@ void Camera::processMouse(vec2 offset) {
 	offset.x *= m_sensitivity * (m_zoom / ZOOM);
 	offset.y *= m_sensitivity * (m_zoom / ZOOM);
 
-	m_yaw = fmod(m_yaw + offset.x + 360, 360);
+	m_yaw = static_cast<float>(fmod(m_yaw + offset.x + 360, 360));
 	m_pitch -= offset.y;
 	m_pitch = clamp(m_pitch, -89.9f, 89.9f);
 

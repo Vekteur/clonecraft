@@ -13,9 +13,9 @@ ivec3 LineBlockFinder::next() {
 	ivec3 nextBlock;
 	for (int axe = 0; axe < 3; ++axe) {
 		if (posMod(pos[axe], 1.f) < epsilon) {
-			nextBlock[axe] = (dir[axe] >= 0) ? pos[axe] : pos[axe] - 1;
+			nextBlock[axe] = static_cast<int>((dir[axe] >= 0) ? pos[axe] : pos[axe] - 1.f);
 		} else {
-			nextBlock[axe] = floor(pos[axe]);
+			nextBlock[axe] = static_cast<int>(floor(pos[axe]));
 		}
 	}
 

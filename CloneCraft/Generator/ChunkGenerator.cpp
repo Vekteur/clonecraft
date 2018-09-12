@@ -18,8 +18,7 @@ double ChunkGenerator::getNoise(ivec2 pos) const {
 }
 
 int ChunkGenerator::getHeight(double noise) const {
-	return Const::SEA_LEVEL + 1 +
-		floor(noise * 32);
+	return Const::SEA_LEVEL + 1 + static_cast<int>(floor(noise * 32));
 }
 
 Block ChunkGenerator::getBlock(int y, int height) const {

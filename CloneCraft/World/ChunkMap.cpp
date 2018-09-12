@@ -13,10 +13,10 @@
 #include <algorithm>
 #include <unordered_set>
 
-const int ChunkMap::VIEW_DISTANCE{ 12 };
+const int ChunkMap::VIEW_DISTANCE{ 24 };
 const int ChunkMap::LOAD_DISTANCE{ VIEW_DISTANCE + 1 };
-const int ChunkMap::SIDE{ (2 * VIEW_DISTANCE + 1) * Const::CHUNK_SIDE };
-const int ChunkMap::CHUNKS_PER_LOAD{ 4 };
+const int ChunkMap::SIDE{ (2 * VIEW_DISTANCE + 1) * Const::SECTION_SIDE };
+const int ChunkMap::CHUNKS_PER_LOAD{ 8 };
 
 ChunkMap::ChunkMap(ivec2 center) : m_center{ center } { }
 
@@ -46,8 +46,8 @@ void ChunkMap::load(const Frustum& frustum) {
 		auto chunkIt = m_chunks.find(pos);
 		if (chunkIt == m_chunks.end() || chunkIt->second->getState() <= Chunk::TO_LOAD_FACES) {
 			loadBlocks(pos);
-			for (ivec2 dir : Dir2D::all_dirs()) {
-				loadBlocks(pos + dir);
+			for (Dir2D::Dir dir : Dir2D::all()) {
+				loadBlocks(pos + Dir2D::to_ivec2(dir));
 			}
 			loadFaces(pos);
 			++loadedChunks;
@@ -123,8 +123,8 @@ bool ChunkMap::isChunkInFrustum(ivec2 chunkPos, const Frustum& frustum) {
 	auto chunkIt = m_chunks.find(chunkPos);
 	int height = ((chunkIt == m_chunks.end()) ? 
 		Const::INIT_CHUNK_NB_SECTIONS : chunkIt->second->getHeight()) * Const::SECTION_HEIGHT;
-	Box chunkBox = { { chunkPos.x * Const::CHUNK_SIDE, 0.f, chunkPos.y * Const::CHUNK_SIDE },
-		{ Const::CHUNK_SIDE, height, Const::CHUNK_SIDE } };
+	Box chunkBox = { { chunkPos.x * Const::SECTION_SIDE, 0.f, chunkPos.y * Const::SECTION_SIDE },
+		{ Const::SECTION_SIDE, height, Const::SECTION_SIDE } };
 	return !frustum.isBoxOutside(chunkBox);
 }
 
@@ -184,7 +184,7 @@ void ChunkMap::reloadBlocks(const std::vector<ivec3>& blocks) {
 	for (ivec3 block : blocks) {
 		sectionsToUpdate.insert(Converter::globalToSection(block));
 		for (Dir3D::Dir dir : Dir3D::all()) {
-			sectionsToUpdate.insert(Converter::globalToSection(block + Dir3D::find(dir)));
+			sectionsToUpdate.insert(Converter::globalToSection(block + Dir3D::to_ivec3(dir)));
 		}
 	}
 
