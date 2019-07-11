@@ -1,7 +1,7 @@
 #pragma once
 
 #include "glad/glad.h"
-#include "GlmCommon.h"
+#include "Maths/GlmCommon.h"
 
 #include <vector>
 #include <atomic>
@@ -103,12 +103,12 @@ public:
 protected:
 	void addFloatVertexAttribPointer(GLuint id, GLint size, std::size_t offset) {
 		glEnableVertexAttribArray(id);
-		glVertexAttribPointer(id, size, GL_FLOAT, GL_FALSE, sizeof(V), (GLvoid*)offset);
+		glVertexAttribPointer(id, size, GL_FLOAT, GL_TRUE, sizeof(V), (GLvoid*)offset);
 	}
 
 	void addIntVertexAttribPointer(GLuint id, GLint size, std::size_t offset) {
 		glEnableVertexAttribArray(id);
-		glVertexAttribIPointer(id, size, GL_UNSIGNED_INT, sizeof(Vertex), (GLvoid*)offset);
+		glVertexAttribIPointer(id, size, GL_UNSIGNED_INT, sizeof(V), (GLvoid*)offset);
 	}
 };
 
@@ -130,8 +130,7 @@ struct PostProcessingVertex {
 	vec2 tex;
 };
 
-struct DefaultMesh : Mesh<DefaultVertex, DefaultMesh>
-{
+struct DefaultMesh : Mesh<DefaultVertex, DefaultMesh> {
 	void loadAttributes() {
 		addFloatVertexAttribPointer(0, 3, 0);
 		addFloatVertexAttribPointer(1, 2, sizeof(vec3));

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GlmCommon.h"
+#include "Maths/GlmCommon.h"
 
 #include <array>
 
@@ -14,7 +14,7 @@ public:
 	static ivec3 to_ivec3(Dir dir);
 	static Dir prev(Dir dir);
 	static Dir next(Dir dir);
-	static Dir oppDir(Dir dir);
+	static Dir opp(Dir dir);
 	static std::array<Dir3D::Dir, 4> all_horizontal();
 
 private:

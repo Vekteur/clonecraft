@@ -1,12 +1,12 @@
 #include "ChunkMap.h"
 
-#include "ResManager.h"
-#include "Debug.h"
-#include "Dir2D.h"
-#include "Dir3D.h"
-#include "Array3D.h"
-#include "Logger.h"
-#include "MiscMath.h"
+#include "ResManager/ResManager.h"
+#include "Util/Debug.h"
+#include "Maths/Dir2D.h"
+#include "Maths/Dir3D.h"
+#include "Util/Array3D.h"
+#include "Util/Logger.h"
+#include "Maths/MiscMath.h"
 
 #include <GLFW\glfw3.h>
 #include <vector>
@@ -28,7 +28,7 @@ void ChunkMap::load(const Frustum& frustum) {
 		for (int y = m_center.y - VIEW_DISTANCE; y <= m_center.y + VIEW_DISTANCE; ++y) {
 			ivec2 pos{ x, y };
 			int dist = math::euclidianPow2(pos, m_center);
-			if (dist < VIEW_DISTANCE * VIEW_DISTANCE)
+			if (dist <= VIEW_DISTANCE * VIEW_DISTANCE)
 				viewableChunks.push_back({ !isChunkInFrustum(pos, frustum), dist, pos });
 		}
 	}
@@ -36,7 +36,7 @@ void ChunkMap::load(const Frustum& frustum) {
 		[](const std::tuple<bool, int, ivec2>& c1, const std::tuple<bool, int, ivec2>& c2) {
 
 		if (std::get<0>(c1) == std::get<0>(c2))
-			return std::get<1>(c1) <= std::get<1>(c2);
+			return std::get<1>(c1) < std::get<1>(c2);
 		return std::get<0>(c1) < std::get<0>(c2);
 	});
 

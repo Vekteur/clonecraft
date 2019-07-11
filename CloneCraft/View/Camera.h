@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glad\glad.h>
-#include "GlmCommon.h"
+#include "Maths/GlmCommon.h"
 #include "Frustum.h"
 
 class Camera

@@ -1,9 +1,8 @@
 #include "DefaultRenderer.h"
 
-#include "ResManager.h"
-#include "Logger.h"
-
-#include "ChunkMap.h"
+#include "ResManager/ResManager.h"
+#include "Util/Logger.h"
+#include "World/ChunkMap.h"
 
 #include <filesystem>
 
@@ -29,9 +28,7 @@ void DefaultRenderer::render(const DefaultMesh& mesh) const {
 		glActiveTexture(GL_TEXTURE0);
 		texArray.bind();
 		m_shader.use();
-
 		mesh.draw();
-
 		texArray.unbind();
 	}
 }

@@ -2,7 +2,7 @@
 
 #include <iomanip>
 
-#include "Logger.h"
+#include "Util/Logger.h"
 
 WindowTextDrawer::WindowTextDrawer(Window * window) : p_window{ window } {
 	if (!m_font.loadFromFile("Resources/Fonts/arial.ttf")) {

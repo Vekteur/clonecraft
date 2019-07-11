@@ -1,11 +1,11 @@
 #include "WaterRenderer.h"
 
-#include "ResManager.h"
-#include "Logger.h"
-#include "ChunkMap.h"
+#include "ResManager/ResManager.h"
+#include "Util/Logger.h"
+#include "World/ChunkMap.h"
 
 #include <filesystem>
-#include <WorldConstants.h>
+#include <World/WorldConstants.h>
 
 namespace fs = std::filesystem;
 
@@ -53,8 +53,6 @@ void WaterRenderer::prepare(std::function<void()> renderFunc, std::function<void
 	clearFunc();
 	renderFunc();
 	refractionTexture.display();
-	// Disable clip plane
-	defaultRenderer.getShader().use().set("clipPlane", vec4(0, -1, 0, 10000));
 }
 
 void WaterRenderer::render(const WaterMesh& mesh) const {

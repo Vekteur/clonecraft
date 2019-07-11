@@ -16,7 +16,7 @@ Dir2D::Dir Dir2D::next(Dir dir) {
 	return static_cast<Dir2D::Dir>((dir + 1) % SIZE);
 }
 
-Dir2D::Dir Dir2D::oppDir(Dir dir) {
+Dir2D::Dir Dir2D::opp(Dir dir) {
 	return static_cast<Dir2D::Dir>((dir + SIZE / 2) % SIZE);
 }
 

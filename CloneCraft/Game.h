@@ -11,16 +11,16 @@
 #include <utility>
 #include <vector>
 
-#include "Camera.h"
-#include "ResManager.h"
-#include "Chunk.h"
-#include "ChunkMap.h"
-#include "Window.h"
-#include "LineBlockFinder.h"
-#include "DefaultRenderer.h"
-#include "WaterRenderer.h"
-#include "PostProcessingRenderer.h"
-#include "Commands.h"
+#include "View/Camera.h"
+#include "ResManager/ResManager.h"
+#include "World/Chunk.h"
+#include "World/ChunkMap.h"
+#include "View/Window.h"
+#include "Maths/LineBlockFinder.h"
+#include "Renderer/DefaultRenderer.h"
+#include "Renderer/WaterRenderer.h"
+#include "Renderer/PostProcessingRenderer.h"
+#include "Commands/Commands.h"
 
 class Window;
 

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "OctavePerlin.h"
-#include "WorldConstants.h"
-#include "Converter.h"
-#include "Block.h"
-#include "WorldConstants.h"
+#include "Noise/OctavePerlin.h"
+#include "World/WorldConstants.h"
+#include "Maths/Converter.h"
+#include "Block/Block.h"
+#include "World/WorldConstants.h"
 
 #include <array>
 
@@ -27,6 +27,6 @@ private:
 	Chunk& chunk;
 	ivec2 m_position;
 	OctavePerlin perlin{ 4, 0.5, 2.0 };
-	double m_noise[Const::SECTION_SIDE][Const::SECTION_SIDE];
+	double m_noise[Const::SECTION_SIDE][Const::SECTION_SIDE]{};
 };
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "enum.h"
+#include "Util/enum.h"
 
 BETTER_ENUM(ID, char,
 	AIR,

@@ -1,8 +1,8 @@
 #include "PostProcessingRenderer.h"
 
-#include "CubeData.h"
-#include "ResManager.h"
-#include "Logger.h"
+#include "World/CubeData.h"
+#include "ResManager/ResManager.h"
+#include "Util/Logger.h"
 
 PostProcessingRenderer::PostProcessingRenderer(ivec2 windowSize) {
 	m_shader.loadFromFile("Resources/Shaders/post_processing.vs", "Resources/Shaders/post_processing.frag");
@@ -33,16 +33,16 @@ PostProcessingRenderer::~PostProcessingRenderer() {
 }
 
 void PostProcessingRenderer::prepare(std::function<void()> renderFunc, std::function<void()> clearFunc) {
-	renderTexture.setActive(true);
+	m_renderTexture.setActive(true);
 	clearFunc();
 	renderFunc();
-	renderTexture.display();
+	m_renderTexture.display();
 }
 
 void PostProcessingRenderer::render() {
 	m_shader.use();
 	glActiveTexture(GL_TEXTURE0);
-	sf::Texture::bind(&renderTexture.getTexture());
+	sf::Texture::bind(&m_renderTexture.getTexture());
 	m_mesh.draw();
 }
 
@@ -52,13 +52,17 @@ void PostProcessingRenderer::onChangedSize(ivec2 windowSize) {
 	settings.minorVersion = 3;
 	settings.depthBits = 24;
 	settings.stencilBits = 8;
-	if (!renderTexture.create(windowSize.x, windowSize.y, settings)) {
+	if (!m_renderTexture.create(windowSize.x, windowSize.y, settings)) {
 		LOG(Level::ERROR) << "Could not create render texture" << std::endl;
 	}
 }
 
 const Shader& PostProcessingRenderer::getShader() const {
 	return m_shader;
+}
+
+sf::RenderTexture& PostProcessingRenderer::getRenderTexture() {
+	return m_renderTexture;
 }
 
 

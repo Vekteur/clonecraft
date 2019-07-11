@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Shader.h"
-#include "Mesh.h"
+#include "ResManager/Shader.h"
+#include "World/Mesh.h"
 
 #include <functional>
+#include <memory>
 
 #include <SFML/Graphics.hpp>
 
@@ -16,9 +17,10 @@ public:
 	void render();
 	void onChangedSize(ivec2 windowSize);
 	const Shader& getShader() const;
+	sf::RenderTexture& getRenderTexture();
 
 private:
 	Shader m_shader;
 	PostProcessingMesh m_mesh;
-	sf::RenderTexture renderTexture;
+	sf::RenderTexture m_renderTexture;
 };

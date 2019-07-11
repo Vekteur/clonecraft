@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GlmCommon.h"
+#include "Maths/GlmCommon.h"
 
 #include <array>
 
@@ -14,7 +14,7 @@ public:
 	static ivec2 to_ivec2(Dir dir);
 	static Dir prev(Dir dir);
 	static Dir next(Dir dir);
-	static Dir oppDir(Dir dir);
+	static Dir opp(Dir dir);
 
 private:
 	static const std::array<Dir2D::Dir, SIZE> s_all;

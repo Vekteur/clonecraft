@@ -1,7 +1,7 @@
 #include "TextureArray.h"
 
-#include "stb_image.h"
-#include "Logger.h"
+#include "Util/stb_image.h"
+#include "Util/Logger.h"
 #include "ResManager.h"
 
 namespace fs = std::filesystem;

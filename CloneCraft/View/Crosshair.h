@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Window.h"
-#include "Logger.h"
+#include "Util/Logger.h"
 
 class Crosshair
 {

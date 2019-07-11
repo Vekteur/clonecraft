@@ -1,6 +1,7 @@
 #pragma once
 
 #include <set>
+
 #include <SFML/Window.hpp>
 
 enum class Command {

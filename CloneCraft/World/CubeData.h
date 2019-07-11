@@ -2,9 +2,9 @@
 
 #include <array>
 #include <glad\glad.h>
-#include <GlmCommon.h>
 
-#include "Dir3D.h"
+#include <Maths/GlmCommon.h>
+#include "Maths/Dir3D.h"
 
 template<typename T, int S>
 using arr = std::array<T, S>;

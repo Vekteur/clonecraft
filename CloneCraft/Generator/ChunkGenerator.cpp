@@ -1,10 +1,10 @@
 #include "ChunkGenerator.h"
 
-#include "Chunk.h"
-#include "Structure.h"
-#include "Tree.h"
-#include "Converter.h"
-#include "Logger.h"
+#include "World/Chunk.h"
+#include "Structure/Structure.h"
+#include "Structure/Tree.h"
+#include "Maths/Converter.h"
+#include "Util/Logger.h"
 
 #include <memory>
 #include <optional>

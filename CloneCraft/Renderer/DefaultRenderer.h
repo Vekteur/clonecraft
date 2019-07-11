@@ -1,10 +1,10 @@
 #pragma once
 
-#include "GlmCommon.h"
+#include "Maths/GlmCommon.h"
 #include "glad/glad.h"
-#include "Shader.h"
-#include "TextureArray.h"
-#include "Mesh.h"
+#include "ResManager/Shader.h"
+#include "ResManager/TextureArray.h"
+#include "World/Mesh.h"
 
 class DefaultRenderer {
 public:

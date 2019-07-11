@@ -4,8 +4,8 @@
 #include <cmath>
 
 #include "Window.h"
-#include "Converter.h"
-#include "Logger.h"
+#include "Maths/Converter.h"
+#include "Util/Logger.h"
 
 const float Camera::SPEED{ 30.f };
 const float Camera::SENSIVITY{ 0.16f };
@@ -78,18 +78,26 @@ vec3 toHorizontal(vec3 vec) { // There must be a horizontal movement
 void Camera::move(Direction direction, float deltaTime) {
 	float velocity = m_speed * deltaTime;
 
-	if (direction == FORWARD)
+	switch (direction) {
+	case FORWARD:
 		m_position += toHorizontal(m_front) * velocity;
-	if (direction == BACKWARD)
+		break;
+	case BACKWARD:
 		m_position -= toHorizontal(m_front) * velocity;
-	if (direction == RIGHT)
+		break;
+	case RIGHT:
 		m_position += toHorizontal(m_right) * velocity;
-	if (direction == LEFT)
+		break;
+	case LEFT:
 		m_position -= toHorizontal(m_right) * velocity;
-	if (direction == UP)
+		break;
+	case UP:
 		m_position += WORLDUP * velocity;
-	if (direction == DOWN)
+		break;
+	case DOWN:
 		m_position -= WORLDUP * velocity;
+		break;
+	}
 }
 
 void Camera::move(vec3 offset) {

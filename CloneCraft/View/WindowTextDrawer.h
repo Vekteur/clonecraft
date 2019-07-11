@@ -3,7 +3,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "Window.h"
-#include "GlmCommon.h"
+#include "Maths/GlmCommon.h"
 #include "Game.h"
 
 class WindowTextDrawer

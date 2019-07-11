@@ -1,6 +1,6 @@
 #include "BlockData.h"
 
-#include "Logger.h"
+#include "Util/Logger.h"
 #include "ID.h"
 
 BlockData::BlockData() {}

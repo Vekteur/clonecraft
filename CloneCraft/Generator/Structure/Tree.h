@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Structure.h"
-#include "Array3D.h"
-#include "GlmCommon.h"
-#include "Block.h"
+#include "Util/Array3D.h"
+#include "Maths/GlmCommon.h"
+#include "Block/Block.h"
 
 class Tree : public Structure {
 public:

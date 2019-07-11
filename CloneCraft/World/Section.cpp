@@ -1,11 +1,11 @@
 #include "Section.h"
 
-#include "OctavePerlin.h"
-#include "Converter.h"
+#include "Generator/Noise/OctavePerlin.h"
+#include "Maths/Converter.h"
 #include "ChunkMap.h"
-#include "Debug.h"
-#include "ResManager.h"
-#include "Logger.h"
+#include "Util/Debug.h"
+#include "ResManager/ResManager.h"
+#include "Util/Logger.h"
 #include "CubeData.h"
 
 #include <iostream>
@@ -36,14 +36,13 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 		{ 2, 1, 0 }  // Z axe
 	} };
 
-	for (int dir = 0; dir < Dir3D::SIZE; ++dir) {
-		//int oppDir = static_cast<int>(Dir3D::opp(static_cast<Dir3D::Dir>(dir)));
-		const ivec3 dirPos = Dir3D::to_ivec3(static_cast<Dir3D::Dir>(dir));
+	for (Dir3D::Dir dir : Dir3D::all()) {
+		Dir3D::Dir oppDir = Dir3D::opp(dir);
+		const ivec3 dirPos = Dir3D::to_ivec3(dir);
 		const int axe = dir % 3; // Axe of the current direction
 		const ivec3 neighbourPos = m_position + dirPos; // Position of the neighbour section
 		const Section* neighbour = (neighbourPos.y < 0 || neighbourPos.y >= p_chunk->getHeight()) 
-			? nullptr : &(p_chunkMap->getSection(neighbourPos)); // Neighbour section (nullptr if does not exist)
-		const arr<vec3, 4> face = CubeData::dirToFace[dir]; // Face associated with the current direction
+			? nullptr : &p_chunkMap->getSection(neighbourPos); // Neighbour section (nullptr if does not exist)
 		const ivec3 order = axeOrder[axe]; // For the current axe, order[i] = j means that the axe i is associated with the value j
 
 		const ivec3 MAXS{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE };
@@ -71,10 +70,11 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 						int length = currBlockPos - firstBlockPos; // Length of the face
 						const ivec3 firstBlockGlobalPos{ Converter::sectionToGlobal(m_position) + localPos + oppositeOfLastAxe * length };
 						
+						// TO IMPROVE
 						if (category == BlockData::DEFAULT || category == BlockData::SEMI_TRANSPARENT) {
-							GLuint texID = ResManager::blockDatas().get(lastBlock.id).getTexture(static_cast<Dir3D::Dir>(dir));
+							GLuint texID = ResManager::blockDatas().get(lastBlock.id).getTexture(dir);
 							for (int vtx = 0; vtx < 4; ++vtx) {
-								vec3 currVtx = face[vtx];
+								vec3 currVtx = CubeData::dirToFace[dir][vtx];
 								currVtx[indexOfLastAxe] *= length;
 								// Multiply coordinate x of the texture (depends on the vertices of the face)
 								vec2 tex = { CubeData::faceCoords[vtx].x * length, CubeData::faceCoords[vtx].y };
@@ -82,18 +82,18 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 							}
 						} else if (category == BlockData::WATER) {
 							for (int vtx = 0; vtx < 4; ++vtx) {
-								vec3 currVtx = face[vtx];
+								vec3 currVtx = CubeData::dirToFace[dir][vtx];
 								currVtx[indexOfLastAxe] *= length;
 								// Multiply coordinate x of the texture (depends on the vertices of the face)
 								vec2 tex = { CubeData::faceCoords[vtx].x * length, CubeData::faceCoords[vtx].y };
 								waterVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, dirPos });
 							}
 							for (int vtx = 0; vtx < 4; ++vtx) {
-								vec3 currVtx = face[vtx];
+								vec3 currVtx = CubeData::dirToFace[oppDir][vtx];
 								currVtx[indexOfLastAxe] *= length;
 								// Multiply coordinate x of the texture (depends on the vertices of the face)
 								vec2 tex = { CubeData::faceCoords[vtx].x * length, CubeData::faceCoords[vtx].y };
-								waterVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, dirPos });
+								waterVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, Dir3D::to_ivec3(oppDir) });
 							}
 						}
 					}

@@ -4,16 +4,17 @@
 #include <SFML/Graphics.hpp>
 
 #include "Game.h"
-#include "Debug.h"
-#include "Window.h"
-#include "Logger.h"
+#include "Util/Debug.h"
+#include "View/Window.h"
+#include "Util/Logger.h"
 #include "FPSCounter.h"
-#include "WorldConstants.h"
-#include "WindowTextDrawer.h"
-#include "CaptureMouse.h"
-#include "Crosshair.h"
-#include "Commands.h"
+#include "World/WorldConstants.h"
+#include "View/WindowTextDrawer.h"
+#include "View/CaptureMouse.h"
+#include "View/Crosshair.h"
+#include "Commands/Commands.h"
 
+// Use NVidia graphics card
 extern "C" {
 	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 }

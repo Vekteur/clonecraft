@@ -1,8 +1,8 @@
 #include "Tree.h"
 
-#include "ChunkMap.h"
-#include "Logger.h"
-#include "PerlinNoise.h"
+#include "World/ChunkMap.h"
+#include "Util/Logger.h"
+#include "Generator/Noise/PerlinNoise.h"
 
 #include <random>
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Chunk.h"
-#include "WorldConstants.h"
-#include "Frustum.h"
+#include "World/Chunk.h"
+#include "World/WorldConstants.h"
+#include "View/Frustum.h"
 
 #include <vector>
 #include <queue>
@@ -56,7 +56,7 @@ private:
 	std::queue<ivec2> toLoadChunks;
 	std::queue<ivec3> toReloadSections;
 	ivec2 m_center;
-	std::mutex m_deleteChunksMutex;
+	mutable std::mutex m_deleteChunksMutex;
 	bool mustStop = false;
 
 	int renderedChunks = 0;

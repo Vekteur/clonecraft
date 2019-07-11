@@ -1,14 +1,15 @@
 #pragma once
 
-#include "Array3D.h"
-#include "Block.h"
-#include "OctavePerlin.h"
+#include "Util/Array3D.h"
+#include "Block/Block.h"
+#include "Generator/Noise/OctavePerlin.h"
 
-#include "GlmCommon.h"
+#include "Maths/GlmCommon.h"
 
 #include <optional>
 
 class Chunk;
+
 class Structure {
 public:
 	Structure() { }

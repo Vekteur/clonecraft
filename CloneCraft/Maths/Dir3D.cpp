@@ -17,7 +17,7 @@ Dir3D::Dir Dir3D::next(Dir dir) {
 	return static_cast<Dir3D::Dir>((dir + 1) % SIZE);
 }
 
-Dir3D::Dir Dir3D::oppDir(Dir dir) {
+Dir3D::Dir Dir3D::opp(Dir dir) {
 	return static_cast<Dir3D::Dir>((dir + SIZE / 2) % SIZE);
 }
 

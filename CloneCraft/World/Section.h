@@ -1,18 +1,18 @@
 #pragma once
 
 #include <glad\glad.h>
-#include <GlmCommon.h>
+#include <Maths/GlmCommon.h>
 
 #include <array>
 #include <vector>
 #include <optional>
 
-#include "Array3D.h"
-#include "Dir3D.h"
-#include "Block.h"
+#include "Util/Array3D.h"
+#include "Maths/Dir3D.h"
+#include "Block/Block.h"
 #include "Mesh.h"
-#include "DefaultRenderer.h"
-#include "WaterRenderer.h"
+#include "Renderer/DefaultRenderer.h"
+#include "Renderer/WaterRenderer.h"
 #include "WorldConstants.h"
 
 class ChunkMap;

@@ -1,11 +1,11 @@
 #pragma once
 
-#include "GlmCommon.h"
+#include "Maths/GlmCommon.h"
 #include "glad/glad.h"
-#include "Shader.h"
-#include "Mesh.h"
+#include "ResManager/Shader.h"
+#include "World/Mesh.h"
 #include "DefaultRenderer.h"
-#include "Camera.h"
+#include "View/Camera.h"
 
 #include <functional>
 #include <SFML/Graphics.hpp>

@@ -1,7 +1,7 @@
 
 #include "texture2D.h"
 
-#include "stb_image.h"
+#include "Util/stb_image.h"
 
 #include <iostream>
 

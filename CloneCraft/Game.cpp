@@ -2,10 +2,10 @@
 
 #include <random>
 
-#include "Converter.h"
-#include "Debug.h"
-#include "Logger.h"
-#include "BlockDatas.h"
+#include "Maths/Converter.h"
+#include "Util/Debug.h"
+#include "Util/Logger.h"
+#include "Block/BlockDatas.h"
 
 const float Game::TARGET_DISTANCE{ static_cast<float>(ChunkMap::VIEW_DISTANCE * Const::SECTION_SIDE) };
 
@@ -104,9 +104,9 @@ std::vector<ivec3> Game::explosionBlocks(ivec3 center, int radius) {
 
 void Game::explode() {
 	if (canReloadBlocks() && targetPos.has_value()) {
-		std::vector<ivec3> blocks = explosionBlocks(targetPos.value(), 10);
+		std::vector<ivec3> blocks = explosionBlocks(targetPos.value(), 15);
 		for (ivec3 pos : blocks) {
-			m_chunkMap.setBlock(pos, +ID::AIR);
+			m_chunkMap.setBlock(pos, +ID::AIR); // Try STONE
 		}
 		reloadBlocks(blocks);
 	}
@@ -188,16 +188,30 @@ void Game::clearRenderTarget() {
 void Game::render() {
 	m_waterRenderer.prepare([this]() {
 		m_chunkMap.render(m_camera.getFrustum(), &m_defaultRenderer);
-	}, [this]() { 
+	}, [this]() {
 		clearRenderTarget(); 
 	}, m_defaultRenderer, m_camera, p_window->size());
 
 	m_postProcessingRenderer.prepare([this]() {
 		m_chunkMap.render(m_camera.getFrustum(), &m_defaultRenderer, &m_waterRenderer);
+		
+		// TODO : use the refraction texture both for rendering and in the water shaders
+
+		/*glBindFramebuffer(GL_READ_FRAMEBUFFER,
+			m_waterRenderer.getRefractionTexture().getTexture().getNativeHandle());
+		Debug::glCheckError();
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER,
+			m_postProcessingRenderer.getRenderTexture().getTexture().getNativeHandle());
+		Debug::glCheckError();
+		glBlitFramebuffer(0, 0, p_window->size().x, p_window->size().y, 0, 0, p_window->size().x, p_window->size().y,
+			GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		Debug::glCheckError();
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		m_chunkMap.render(m_camera.getFrustum(), nullptr, &m_waterRenderer);*/
 	}, [this]() {
 		clearRenderTarget();
 	});
-
+	
 	p_window->setActive(true);
 	clearRenderTarget();
 	m_postProcessingRenderer.render();

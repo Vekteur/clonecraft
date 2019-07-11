@@ -1,8 +1,9 @@
 #pragma once
 
 #include <array>
-#include <Dir3D.h>
-#include <GlmCommon.h>
+
+#include <Maths/Dir3D.h>
+#include <Maths/GlmCommon.h>
 
 struct Plane : vec4 {
 	vec3 norm() const;

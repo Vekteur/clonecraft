@@ -8,10 +8,10 @@ PerlinNoise::~PerlinNoise() {
 
 // p has coordinates in [0, 1[
 double PerlinNoise::getNoise(vec2 p) const {
-	// Unit square that contains the coordinates p, modulo 255
+	// Unit square that contains the coordinates p, modulo 256
 	ivec2 pi{ (int)floor(p.x) & 255 , (int)floor(p.y) & 255 };
 
-	// Give random values to each corner of the square (only the 2 last bits matter)
+	// Give random values to each corner of the square (only the last 2 bits matter)
 	int g1 = perm[perm[pi.x] + pi.y];
 	int g2 = perm[perm[pi.x + 1] + pi.y];
 	int g3 = perm[perm[pi.x] + pi.y + 1];

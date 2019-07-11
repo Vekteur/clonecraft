@@ -1,6 +1,6 @@
 #include "Converter.h"
-#include "Chunk.h"
-#include "Section.h"
+#include "World/Chunk.h"
+#include "World/Section.h"
 
 ivec3 Converter::chunkToGlobal(ivec2 pos) {
 	return { pos.x * Const::SECTION_SIDE, 0, pos.y * Const::SECTION_SIDE };

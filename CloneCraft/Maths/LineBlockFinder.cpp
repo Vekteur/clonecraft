@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include "Converter.h"
-#include "Logger.h"
+#include "Util/Logger.h"
 
 LineBlockFinder::LineBlockFinder(vec3 pos, vec3 dir) : pos{ pos }, dir{ dir } 
 {}
