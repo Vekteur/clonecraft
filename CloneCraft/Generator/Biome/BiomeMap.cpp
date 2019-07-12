@@ -6,6 +6,7 @@
 #include "Plain.h"
 
 #include "Generator/Structure/Tree.h"
+#include "Util/Logger.h"
 
 BiomeMap::BiomeMap() {
 	addBiome(std::make_unique<Plain>(), BiomeID::PLAIN);
@@ -15,12 +16,18 @@ BiomeMap::BiomeMap() {
 }
 
 BiomeID BiomeMap::getBiomeID(ivec2 pos) const {
+	double maxValue = 0.;
+	BiomeID chosenbiomeID = BiomeID::SIZE;
 	for (int biomeID = 0; biomeID < static_cast<int>(BiomeID::SIZE); ++biomeID) {
-		if (m_biomes[biomeID]->isInBiome(getTemperature(pos), getHumidity(pos))) {
-			return static_cast<BiomeID>(biomeID);
+		double value = m_biomes[biomeID]->biomeValue(getTemperature(pos), getHumidity(pos));
+		if (value > maxValue) {
+			maxValue = value;
+			chosenbiomeID = static_cast<BiomeID>(biomeID);
 		}
 	}
-	throw "Biome not found";
+	if (chosenbiomeID == BiomeID::SIZE)
+		throw "Biome not found";
+	return chosenbiomeID;
 }
 
 const Biome& BiomeMap::getBiome(ivec2 pos) const {
@@ -32,7 +39,24 @@ const Biome& BiomeMap::getBiome(BiomeID biomeID) const {
 }
 
 int BiomeMap::getHeight(ivec2 pos) const {
-	return getBiome(pos).getHeight(pos);
+	double sumValues = 0.;
+	std::vector<std::tuple<BiomeID, double>> values;
+	for (int biomeID = 0; biomeID < static_cast<int>(BiomeID::SIZE); ++biomeID) {
+		double value = m_biomes[biomeID]->biomeValue(getTemperature(pos), getHumidity(pos));
+		sumValues += value;
+		if (value != 0.)
+			values.push_back({ static_cast<BiomeID>(biomeID), value });
+	}
+
+	//LOG(Level::INFO) << values.size() << " " << sumValues << std::endl;
+
+	double height = 0.;
+	for (auto& p : values) {
+		BiomeID biomeID; double value;
+		std::tie(biomeID, value) = p;
+		height += (value / sumValues) * getBiome(biomeID).getHeight(pos);
+	}
+	return static_cast<int>(height);
 }
 
 const Structure& BiomeMap::getStructure(StructureID structureID) const {

@@ -5,7 +5,7 @@
 
 int Plain::getHeight(ivec2 pos) const {
 	double noise = perlin.getNoise(static_cast<dvec2>(pos));
-	return Const::SEA_LEVEL + 4 + static_cast<int>(noise * 8);
+	return Const::SEA_LEVEL + 40 + static_cast<int>(noise * 8);
 }
 
 Block Plain::getBlock(int y, int height) const {
@@ -27,7 +27,7 @@ std::vector<StructureInfo> Plain::getStructures() const {
 	return { { StructureID::TREE, 0.005f } };
 }
 
-bool Plain::isInBiome(double temperature, double humidity) const {
+double Plain::biomeValue(double temperature, double humidity) const {
 	/*double thresh = 0.14;
 	static int inThresh1 = 0, inThresh2 = 0, inThresh3 = 0;
 	double nb = temperature;
@@ -42,5 +42,5 @@ bool Plain::isInBiome(double temperature, double humidity) const {
 	++count;*/
 
 	//return false;
-	return high(temperature) && medium(humidity);
+	return high(temperature) * medium(humidity);
 }

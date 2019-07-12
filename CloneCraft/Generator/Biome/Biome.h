@@ -18,12 +18,14 @@ public:
 	virtual int getHeight(ivec2 pos) const = 0;
 	virtual Block getBlock(int y, int height) const = 0;
 	virtual std::vector<StructureInfo> getStructures() const = 0;
-	virtual bool isInBiome(double temperature, double humidity) const = 0;
+	virtual double biomeValue(double temperature, double humidity) const = 0;
 
 protected:
-	double threshold = 0.14;
+	static double threshold, transition;
 
-	bool low(double value) const;
-	bool medium(double value) const;
-	bool high(double value) const;
+	static double low(double value);
+	static double medium(double value);
+	static double high(double value);
+	static double step(double value, double threshold);
+	static double smooth(double x);
 };

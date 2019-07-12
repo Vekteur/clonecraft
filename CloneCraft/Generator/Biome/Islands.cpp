@@ -26,6 +26,6 @@ std::vector<StructureInfo> Islands::getStructures() const {
 	return { { StructureID::TREE, 0.06f } };
 }
 
-bool Islands::isInBiome(double temperature, double humidity) const {
-	return true;
+double Islands::biomeValue(double temperature, double humidity) const {
+	return 1.;
 }

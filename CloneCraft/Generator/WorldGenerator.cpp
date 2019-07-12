@@ -22,9 +22,9 @@ void WorldGenerator::loadHeights(Chunk& chunk) const {
 			ivec2 innerPos{ x, z };
 			ivec2 pos = innerPos + chunk.getPosition() * Const::SECTION_SIDE;
 			BiomeID biomeID = m_biomeMap.getBiomeID(pos);
-			const Biome& biome = m_biomeMap.getBiome(biomeID);
+			int height = m_biomeMap.getHeight(pos);
 			chunk.chunkInfo().biome(innerPos) = biomeID;
-			chunk.chunkInfo().height(innerPos) = biome.getHeight(pos);
+			chunk.chunkInfo().height(innerPos) = height;
 		}
 }
 

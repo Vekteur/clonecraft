@@ -20,7 +20,7 @@ Tree::Tree() : Structure() {
 bool Tree::isValidPos(ivec2 pos) const {
 	ivec2 centerPos = getCenterPos(pos);
 	const Biome& biome = g_worldGenerator.biomeMap().getBiome(centerPos);
-	int height = biome.getHeight(centerPos);
+	int height = g_worldGenerator.biomeMap().getHeight(pos);
 	return biome.getBlock(height - 1, height).id == +BlockID::GRASS;
 }
 
