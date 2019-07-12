@@ -3,6 +3,7 @@
 #include <iomanip>
 
 #include "Util/Logger.h"
+#include "Maths/Converter.h"
 
 WindowTextDrawer::WindowTextDrawer(Window * window) : p_window{ window } {
 	if (!m_font.loadFromFile("Resources/Fonts/arial.ttf")) {
@@ -14,9 +15,10 @@ void WindowTextDrawer::drawAll(int fps, Game& game) {
 	line = 0;
 	drawFPS(fps);
 	vec3 pos = game.getCamera().getPosition();
+	ivec3 blockPos = Converter::globalPosToBlock(pos);
 	drawGlobalPosition(pos);
 	drawLocalPosition(Converter::globalToInnerSection(pos));
-	drawSectionPosition(Converter::globalToSection(pos));
+	drawSectionPosition(Converter::globalToSection(blockPos));
 	drawTarget(game.getTarget());
 	drawDirection(game.getCamera().getYaw(), game.getCamera().getPitch());
 	drawRenderedChunks(game.getChunkMap().getRenderedChunks());

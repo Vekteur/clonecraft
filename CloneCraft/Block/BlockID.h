@@ -2,7 +2,7 @@
 
 #include "Util/enum.h"
 
-BETTER_ENUM(ID, char,
+BETTER_ENUM(BlockID, char,
 	AIR,
 	STONE,
 	DIRT,

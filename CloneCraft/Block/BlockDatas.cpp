@@ -12,15 +12,15 @@ BlockDatas::BlockDatas(const std::vector<TextureArray*>& texArrays) {
 		json j;
 		ifs >> j;
 		std::string filename = entry.path().stem().string();
-		ID id = ID::_from_string_nocase(filename.c_str());
+		BlockID id = BlockID::_from_string_nocase(filename.c_str());
 		blockDatas[id] = BlockData(j, texArrays);
 	}
 }
 
-const BlockData& BlockDatas::get(ID id) const {
+const BlockData& BlockDatas::get(BlockID id) const {
 	return blockDatas[id];
 }
 
-BlockData & BlockDatas::get(ID id) {
+BlockData & BlockDatas::get(BlockID id) {
 	return blockDatas[id];
 }

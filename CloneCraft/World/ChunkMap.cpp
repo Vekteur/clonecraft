@@ -7,6 +7,7 @@
 #include "Util/Array3D.h"
 #include "Util/Logger.h"
 #include "Maths/MiscMath.h"
+#include "Maths/Converter.h"
 
 #include <GLFW\glfw3.h>
 #include <vector>
@@ -83,7 +84,7 @@ void ChunkMap::update() {
 		}
 	}
 	while (!toLoadChunks.empty()) {
-		getChunk(toLoadChunks.front()).loadVAOs();
+   		getChunk(toLoadChunks.front()).loadVAOs();
 		toLoadChunks.pop();
 	}
 
@@ -221,7 +222,7 @@ Block ChunkMap::getBlock(ivec3 globalPos) const {
 		ivec2 innerChunkPos = Converter::globalToInnerChunk(globalPos);
 		return chunkIt->second->getBlock({ innerChunkPos.x, globalPos.y, innerChunkPos.y });
 	}
-	return { ID::AIR };
+	return { BlockID::AIR };
 }
 
 Chunk& ChunkMap::getChunk(ivec2 chunkPos) { // Must be a valid chunk position

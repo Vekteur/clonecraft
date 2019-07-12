@@ -2,9 +2,10 @@
 
 #include "Maths/GlmCommon.h"
 #include "ChunkMap.h"
+#include "Generator/WorldGenerator.h"
 
 Chunk::Chunk(ChunkMap* const chunkMap, ivec2 position)
-	: p_chunkMap{ chunkMap }, m_position{ position }, m_chunkGenerator{ *this } {
+	: p_chunkMap{ chunkMap }, m_position{ position } {
 	setState(TO_LOAD_BLOCKS);
 	m_sections.reserve(Const::INIT_CHUNK_NB_SECTIONS);
 }
@@ -27,7 +28,9 @@ Block Chunk::getBlock(ivec3 pos) const {
 }
 
 void Chunk::loadBlocks() {
-	m_chunkGenerator.load();
+	//m_chunkGenerator.load();
+	g_worldGenerator.loadChunk(*this);
+
 	setState(TO_LOAD_FACES);
 }
 
@@ -80,12 +83,12 @@ void Chunk::render(const WaterRenderer& waterRenderer) const {
 	}
 }
 
-ChunkGenerator& Chunk::getChunkGenerator() {
-	return m_chunkGenerator;
+ChunkGenerationInfo& Chunk::chunkInfo() {
+	return m_chunkGenerationInfo;
 }
 
-const ChunkGenerator& Chunk::getChunkGenerator() const {
-	return m_chunkGenerator;
+const ChunkGenerationInfo& Chunk::chunkInfo() const {
+	return m_chunkGenerationInfo;
 }
 
 std::vector<Section>& Chunk::getSections() {

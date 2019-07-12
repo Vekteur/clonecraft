@@ -27,12 +27,18 @@
     <ClCompile Include="ResManager\TextureArray.cpp" />
     <ClCompile Include="Block\BlockData.cpp" />
     <ClCompile Include="Block\BlockDatas.cpp" />
-    <ClCompile Include="Generator\ChunkGenerator.cpp" />
     <ClCompile Include="Generator\Noise\OctavePerlin.cpp" />
     <ClCompile Include="Generator\Noise\PerlinNoise.cpp" />
     <ClCompile Include="Commands\Commands.cpp" />
     <ClCompile Include="Renderer\PostProcessingRenderer.cpp" />
     <ClCompile Include="Generator\Structure\Tree.cpp" />
+    <ClCompile Include="Generator\WorldGenerator.cpp" />
+    <ClCompile Include="Generator\Biome\Islands.cpp" />
+    <ClCompile Include="Generator\Biome\Plain.cpp" />
+    <ClCompile Include="Generator\Biome\BiomeMap.cpp" />
+    <ClCompile Include="Generator\Biome\Biome.cpp" />
+    <ClCompile Include="Generator\Structure\Structure.cpp" />
+    <ClCompile Include="Generator\ChunkGenerationInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -70,13 +76,20 @@
     <ClInclude Include="Block\Block.h" />
     <ClInclude Include="Block\BlockData.h" />
     <ClInclude Include="Block\BlockDatas.h" />
-    <ClInclude Include="Block\ID.h" />
-    <ClInclude Include="Generator\ChunkGenerator.h" />
     <ClInclude Include="Generator\Noise\PerlinNoise.h" />
     <ClInclude Include="Generator\Noise\OctavePerlin.h" />
     <ClInclude Include="Generator\Structure\Structure.h" />
     <ClInclude Include="Commands\Commands.h" />
     <ClInclude Include="Renderer\PostProcessingRenderer.h" />
     <ClInclude Include="Generator\Structure\Tree.h" />
+    <ClInclude Include="Generator\Biome\Biome.h" />
+    <ClInclude Include="Generator\WorldGenerator.h" />
+    <ClInclude Include="Generator\Biome\Islands.h" />
+    <ClInclude Include="Generator\Biome\Plain.h" />
+    <ClInclude Include="Generator\Biome\BiomeMap.h" />
+    <ClInclude Include="Block\BlockID.h" />
+    <ClInclude Include="Generator\Biome\BiomeID.h" />
+    <ClInclude Include="Generator\Structure\StructureID.h" />
+    <ClInclude Include="Generator\ChunkGenerationInfo.h" />
   </ItemGroup>
 </Project>

@@ -15,7 +15,7 @@ ivec2 Converter::globalToInnerChunk(ivec3 pos) {
 }
 
 vec2 Converter::globalToInnerChunk(vec3 pos) {
-	return { posMod(pos.x, (float)Const::SECTION_SIDE), posMod(pos.z, (float)Const::SECTION_SIDE) };
+	return { posMod(pos.x, float(Const::SECTION_SIDE)), posMod(pos.z, float(Const::SECTION_SIDE)) };
 }
 
 ivec3 Converter::sectionToGlobal(ivec3 pos) {
@@ -31,7 +31,19 @@ ivec3 Converter::globalToInnerSection(ivec3 pos) {
 }
 
 vec3 Converter::globalToInnerSection(vec3 pos) {
-	return { posMod(pos.x, (float)Const::SECTION_SIDE), posMod(pos.y, (float)Const::SECTION_HEIGHT), posMod(pos.z, (float)Const::SECTION_SIDE) };
+	return { posMod(pos.x, float(Const::SECTION_SIDE)), posMod(pos.y, float(Const::SECTION_HEIGHT)), posMod(pos.z, float(Const::SECTION_SIDE)) };
+}
+
+ivec3 Converter::globalPosToBlock(vec3 pos) {
+	return floor(pos);
+}
+
+ivec2 Converter::to2D(ivec3 pos) {
+	return { pos.x, pos.z };
+}
+
+ivec3 Converter::to3D(ivec2 pos) {
+	return { pos.x, 0, pos.y };
 }
 
 int floorDiv(int base, int divider) {

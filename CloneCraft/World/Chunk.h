@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Section.h"
-#include "Generator/ChunkGenerator.h"
+#include "Generator/ChunkGenerationInfo.h"
 #include "WorldConstants.h"
 
 #include <vector>
@@ -32,8 +32,8 @@ public:
 	int getHeight() const;
 	void render(const DefaultRenderer& defaultRenderer) const;
 	void render(const WaterRenderer& waterRenderer) const;
-	ChunkGenerator& getChunkGenerator();
-	const ChunkGenerator& getChunkGenerator() const;
+	ChunkGenerationInfo& chunkInfo();
+	const ChunkGenerationInfo& chunkInfo() const;
 	std::vector<Section>& getSections();
 
 	bool isInChunk(ivec3 globalPos) const;
@@ -43,7 +43,8 @@ public:
 private:
 	ChunkMap* const p_chunkMap{ nullptr };
 	const vec2 m_position;
-	ChunkGenerator m_chunkGenerator;
+	ChunkGenerationInfo m_chunkGenerationInfo;
+
 	State m_state{ STATE_SIZE };
 
 	std::vector<Section> m_sections;

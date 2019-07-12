@@ -1,15 +1,11 @@
 #include "PerlinNoise.h"
 
-PerlinNoise::PerlinNoise() {
-}
-
-PerlinNoise::~PerlinNoise() {
-}
+#include "Util/Logger.h"
 
 // p has coordinates in [0, 1[
-double PerlinNoise::getNoise(vec2 p) const {
+double PerlinNoise::getNoise(dvec2 p) {
 	// Unit square that contains the coordinates p, modulo 256
-	ivec2 pi{ (int)floor(p.x) & 255 , (int)floor(p.y) & 255 };
+	ivec2 pi{ int(floor(p.x)) & 255 , int(floor(p.y)) & 255 };
 
 	// Give random values to each corner of the square (only the last 2 bits matter)
 	int g1 = perm[perm[pi.x] + pi.y];
@@ -36,13 +32,17 @@ double PerlinNoise::getNoise(vec2 p) const {
 	return yInter;
 }
 
+double PerlinNoise::getNoise(dvec2 pos, double frequency) {
+	return getNoise(pos * frequency);
+}
+
 // Linear interpolation
 double PerlinNoise::lerp(double amount, double left, double right) {
 	return left + amount * (right - left);
 }
 
 // Fade function
-double PerlinNoise::fade(float t) {
+double PerlinNoise::fade(double t) {
 	return t * t * t * (t * (t * 6 - 15) + 10);
 }
 

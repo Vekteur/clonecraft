@@ -61,7 +61,7 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 		ivec3 abstPos;
 		for (abstPos.x = 0; abstPos.x < maxsAxe.x; ++abstPos) {
 			for (abstPos.y = 0; abstPos.y < maxsAxe.y; ++abstPos.y) {
-				Block lastBlock{ ID::AIR }; // Last block we have iterated on
+				Block lastBlock{ BlockID::AIR }; // Last block we have iterated on
 				int firstBlockPos = -1; // Index of the last axe containing the first block of the iteration
 
 				auto addFace = [&](int currBlockPos, ivec3 localPos) {
@@ -100,17 +100,17 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 				};
 
 				for (abstPos.z = 0; abstPos.z < maxsAxe.z; ++abstPos.z) {
-					Block currBlock{ ID::AIR }; // Current block of which we can see the face
+					Block currBlock{ BlockID::AIR }; // Current block of which we can see the face
 					// Position in the section with correct x, y and z coordinates
 					const ivec3 localPos{ abstPos[order.x], abstPos[order.y], abstPos[order.z] };
 					const Block block = getBlock(localPos);
-					if (block.id != +ID::AIR) { // If the block is air, its face will be air anyway
+					if (block.id != +BlockID::AIR) { // If the block is air, its face will be air anyway
 						const ivec3 globalPos{ Converter::sectionToGlobal(m_position) + localPos };
 						const ivec3 localFacePos{ localPos + dirPos };
 						const ivec3 globalFacePos = { globalPos + dirPos };
-						Block blockFace{ ID::AIR }; // Face of the block in the direction of the face
+						Block blockFace{ BlockID::AIR }; // Face of the block in the direction of the face
 						if (globalFacePos.y < 0 || globalFacePos.y >= p_chunk->getHeight() * Const::SECTION_HEIGHT) {
-							blockFace = Block{ ID::AIR };
+							blockFace = Block{ BlockID::AIR };
 						} else {
 							// The block can only be in the current section or the neighbour section
 							blockFace = isInSection(localFacePos) ? this->getBlock(localFacePos)
@@ -185,7 +185,7 @@ ivec3 Section::getPosition() const {
 
 void Section::setBlock(ivec3 pos, Block block) {
 	m_blocks->at(pos) = block;
-	if (block.id != +ID::AIR)
+	if (block.id != +BlockID::AIR)
 		empty = false;
 }
 

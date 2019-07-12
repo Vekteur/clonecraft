@@ -3,45 +3,25 @@
 #include "World/ChunkMap.h"
 #include "Util/Logger.h"
 #include "Generator/Noise/PerlinNoise.h"
+#include "Maths/Converter.h"
+#include "Generator/WorldGenerator.h"
 
 #include <random>
 
 const ivec3 Tree::s_size{ s_sizeX, s_sizeY, s_sizeZ };
 
 Tree::Tree() : Structure() {
-	ivec2 center = ivec2{ size().x, size().z } / 2;
-	for (int y = 3; y <= 4; ++y)
-		for (int x = center.x - 2; x <= center.x + 2; ++x)
-			for (int z = center.y - 2; z <= center.y + 2; ++z)
-				m_blocks.at({ x, y, z }) = +ID::LEAVES;
-
-	for (int y = 5; y <= 6; ++y)
-		for (int x = center.x - 1; x <= center.x + 1; ++x)
-			for (int z = center.y - 1; z <= center.y + 1; ++z)
-				m_blocks.at({ x, y, z }) = +ID::LEAVES;
-
-	for (int y = 0; y <= 4; ++y)
-		m_blocks.at({ center.x, y, center.y }) = +ID::LOG;
+	ivec2 center = getCenterPos({ 0, 0 });
+	fill({ center.x - 2, 3, center.y - 2 }, { center.x + 2, 4, center.y + 2 }, +BlockID::LEAVES);
+	fill({ center.x - 1, 5, center.y - 1 }, { center.x + 1, 6, center.y + 1 }, +BlockID::LEAVES);
+	fill({ center.x, 0, center.y }, { center.x, 4, center.y }, +BlockID::LOG);
 }
 
-std::optional<ivec3> Tree::getLocalPos(ivec2 zonePos, vec2 freq, const Chunk& chunk) const {
-
-	ivec2 zoneSize = { size().x, size().z };
-	ivec2 bounds = (1.f / freq) * vec2(zoneSize);
-
-	int posX = PerlinNoise::perm[PerlinNoise::perm[posMod(zonePos.x, 256)] + posMod(zonePos.y, 256)];
-	int posY = PerlinNoise::perm[posX];
-	ivec2 pos = { posX % bounds.x, posY % bounds.y };
-
-	if (pos.x < zoneSize.x && pos.y < zoneSize.y) {
-		ivec2 centerPos = zonePos * zoneSize + pos + zoneSize / 2;
-		double noise = chunk.getChunkGenerator().getNoise(centerPos);
-		int height = chunk.getChunkGenerator().getHeight(noise);
-		if (chunk.getChunkGenerator().getBlock(height - 1, height).id == +ID::GRASS) {
-			return ivec3{ pos.x, height, pos.y };
-		}
-	}
-	return std::nullopt;
+bool Tree::isValidPos(ivec2 pos) const {
+	ivec2 centerPos = getCenterPos(pos);
+	const Biome& biome = g_worldGenerator.biomeMap().getBiome(centerPos);
+	int height = biome.getHeight(centerPos);
+	return biome.getBlock(height - 1, height).id == +BlockID::GRASS;
 }
 
 Block Tree::getBlock(ivec3 pos) const {
@@ -50,4 +30,12 @@ Block Tree::getBlock(ivec3 pos) const {
 
 ivec3 Tree::size() const { 
 	return s_size; 
+}
+
+void Tree::fill(ivec3 low, ivec3 high, Block block) {
+	for (int y = low.y; y <= high.y; ++y)
+		for (int x = low.x; x <= high.x; ++x)
+			for (int z = low.z; z <= high.z; ++z) {
+				m_blocks.at({ x, y, z }) = block;
+			}
 }

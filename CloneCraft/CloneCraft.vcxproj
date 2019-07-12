@@ -19,12 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Generator\Biome\BiomeID.h" />
+    <ClInclude Include="Generator\Biome\BiomeMap.h" />
+    <ClInclude Include="Generator\Biome\Biome.h" />
     <ClInclude Include="Block\BlockDatas.h" />
     <ClInclude Include="Block\Block.h" />
     <ClInclude Include="Block\BlockData.h" />
-    <ClInclude Include="Block\ID.h" />
+    <ClInclude Include="Block\BlockID.h" />
     <ClInclude Include="Commands\Commands.h" />
+    <ClInclude Include="Generator\ChunkGenerationInfo.h" />
     <ClInclude Include="Generator\Structure\Structure.h" />
+    <ClInclude Include="Generator\Biome\Islands.h" />
+    <ClInclude Include="Generator\Biome\Plain.h" />
+    <ClInclude Include="Generator\Structure\StructureID.h" />
     <ClInclude Include="Renderer\PostProcessingRenderer.h" />
     <ClInclude Include="Generator\Structure\Tree.h" />
     <ClInclude Include="View\CaptureMouse.h" />
@@ -38,21 +45,27 @@
     <ClInclude Include="Maths\Dir2D.h" />
     <ClInclude Include="Maths\MiscMath.h" />
     <ClInclude Include="Util\Debug.h" />
-    <ClInclude Include="Generator\ChunkGenerator.h" />
     <ClInclude Include="Util\enum.h" />
     <ClInclude Include="Util\json.hpp" />
     <ClInclude Include="Util\Logger.h" />
     <ClInclude Include="Util\stb_image.h" />
     <ClInclude Include="Renderer\WaterRenderer.h" />
     <ClInclude Include="View\WindowTextDrawer.h" />
+    <ClInclude Include="Generator\WorldGenerator.h" />
     <ClInclude Include="World\ChunkMap.h" />
     <ClInclude Include="Maths\Converter.h" />
     <ClInclude Include="Maths\GlmCommon.h">
       <FileType>CppCode</FileType>
     </ClInclude>
+    <ClCompile Include="Generator\Biome\Biome.cpp" />
+    <ClCompile Include="Generator\Biome\BiomeMap.cpp" />
     <ClCompile Include="Block\BlockDatas.cpp" />
     <ClCompile Include="Block\BlockData.cpp" />
     <ClCompile Include="Commands\Commands.cpp" />
+    <ClCompile Include="Generator\Biome\Islands.cpp" />
+    <ClCompile Include="Generator\Biome\Plain.cpp" />
+    <ClCompile Include="Generator\ChunkGenerationInfo.cpp" />
+    <ClCompile Include="Generator\Structure\Structure.cpp" />
     <ClCompile Include="Renderer\PostProcessingRenderer.cpp" />
     <ClCompile Include="ResManager\TextureArray.cpp" />
     <ClCompile Include="Renderer\DefaultRenderer.cpp" />
@@ -62,12 +75,12 @@
     <ClCompile Include="Maths\Dir3D.cpp" />
     <ClCompile Include="Maths\Dir2D.cpp" />
     <ClCompile Include="Util\Debug.cpp" />
-    <ClCompile Include="Generator\ChunkGenerator.cpp" />
     <ClCompile Include="Util\glad.c" />
     <ClCompile Include="Util\Logger.cpp" />
     <ClCompile Include="Util\stb_image.cpp" />
     <ClCompile Include="Renderer\WaterRenderer.cpp" />
     <ClCompile Include="View\WindowTextDrawer.cpp" />
+    <ClCompile Include="Generator\WorldGenerator.cpp" />
     <ClCompile Include="World\ChunkMap.cpp" />
     <ClCompile Include="Maths\Converter.cpp" />
     <ClCompile Include="Maths\GlmCommon.cpp" />

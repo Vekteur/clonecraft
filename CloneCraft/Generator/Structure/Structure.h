@@ -14,8 +14,9 @@ class Structure {
 public:
 	Structure() { }
 	virtual ~Structure() = default;
-	virtual std::optional<ivec3> getLocalPos(ivec2 zonePos, vec2 freq, const Chunk& chunk) const = 0;
+	virtual bool isValidPos(ivec2 pos) const = 0;
 	virtual Block getBlock(ivec3 pos) const = 0;
 	virtual ivec3 size() const = 0;
+	ivec2 getCenterPos(ivec2 globalPos) const;
 };
 

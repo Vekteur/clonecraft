@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ID.h"
+#include "BlockID.h"
 
 struct Block
 {
-	ID id;
+	BlockID id;
 	char data;
 
-	Block(ID id = ID::AIR, char data = 0) : id{ id }, data{ data } {}
+	Block(BlockID id = BlockID::AIR, char data = 0) : id{ id }, data{ data } {}
 };

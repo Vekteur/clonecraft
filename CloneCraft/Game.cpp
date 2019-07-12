@@ -14,7 +14,6 @@ Game::Game(Window* const window, sf::Context* const context1, sf::Context* const
 	m_waterRenderer{ { p_window->size() } }, m_postProcessingRenderer{ { p_window->size() } } {
 
 	ResManager::initBlockDatas(std::vector<TextureArray*>{ &m_defaultRenderer.getTextureArray() });
-
 	m_generatingThread = std::thread{ &Game::runChunkLoadingLoop, this, p_context1 };
 }
 
@@ -106,7 +105,7 @@ void Game::explode() {
 	if (canReloadBlocks() && targetPos.has_value()) {
 		std::vector<ivec3> blocks = explosionBlocks(targetPos.value(), 15);
 		for (ivec3 pos : blocks) {
-			m_chunkMap.setBlock(pos, +ID::AIR); // Try STONE
+			m_chunkMap.setBlock(pos, +BlockID::AIR); // Try STONE
 		}
 		reloadBlocks(blocks);
 	}
@@ -120,7 +119,7 @@ void Game::processMouseClick(sf::Time dt, Commands& commands) {
 	if (commands.isActive(Command::BREAK) && breakAccumulator >= sf::seconds(0.1f) && targetPos.has_value()
 		&& canReloadBlocks()) {
 
-		m_chunkMap.setBlock(targetPos.value(), +ID::AIR);
+		m_chunkMap.setBlock(targetPos.value(), +BlockID::AIR);
 		reloadBlocks({ targetPos.value() });
 		breakAccumulator = sf::seconds(0.f);
 	}
@@ -166,7 +165,7 @@ void Game::update(sf::Time dt) {
 		ivec3 iterPos = lineBlockFinder.next();
 		Block block = m_chunkMap.getBlock(iterPos);
 		if (ResManager::blockDatas().get(block.id).getCategory() != BlockData::AIR &&
-			ResManager::blockDatas().get(block.id).getCategory() != BlockData::WATER) {
+				ResManager::blockDatas().get(block.id).getCategory() != BlockData::WATER) {
 			targetPos = iterPos;
 			break;
 		}

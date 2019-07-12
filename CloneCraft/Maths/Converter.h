@@ -15,6 +15,9 @@ public:
 	static ivec3 globalToSection(ivec3 pos);
 	static ivec3 globalToInnerSection(ivec3 pos);
 	static vec3 globalToInnerSection(vec3 pos);
+	static ivec3 globalPosToBlock(vec3 pos);
+	static ivec2 to2D(ivec3 pos);
+	static ivec3 to3D(ivec2 pos);
 };
 
 int floorDiv(int base, int divider);
