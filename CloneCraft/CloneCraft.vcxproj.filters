@@ -39,6 +39,13 @@
     <ClCompile Include="Generator\Biome\Biome.cpp" />
     <ClCompile Include="Generator\Structure\Structure.cpp" />
     <ClCompile Include="Generator\ChunkGenerationInfo.cpp" />
+    <ClCompile Include="Generator\Biome\Desert.cpp" />
+    <ClCompile Include="Generator\Biome\ExtremeMountains.cpp" />
+    <ClCompile Include="Generator\Biome\Forest.cpp" />
+    <ClCompile Include="Generator\Biome\Mountains.cpp" />
+    <ClCompile Include="Generator\Biome\Ocean.cpp" />
+    <ClCompile Include="Generator\Biome\Snow.cpp" />
+    <ClCompile Include="Generator\Biome\Swamp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -91,5 +98,12 @@
     <ClInclude Include="Generator\Biome\BiomeID.h" />
     <ClInclude Include="Generator\Structure\StructureID.h" />
     <ClInclude Include="Generator\ChunkGenerationInfo.h" />
+    <ClInclude Include="Generator\Biome\Swamp.h" />
+    <ClInclude Include="Generator\Biome\Desert.h" />
+    <ClInclude Include="Generator\Biome\ExtremeMountains.h" />
+    <ClInclude Include="Generator\Biome\Forest.h" />
+    <ClInclude Include="Generator\Biome\Mountains.h" />
+    <ClInclude Include="Generator\Biome\Ocean.h" />
+    <ClInclude Include="Generator\Biome\Snow.h" />
   </ItemGroup>
 </Project>

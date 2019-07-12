@@ -1,0 +1,8 @@
+{
+	"opaque" : true,
+	"obstacle" : true,
+	"category" : "default",
+	"textures" : {
+		"all" : "ice"
+	}
+}

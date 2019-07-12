@@ -11,5 +11,7 @@ BETTER_ENUM(BlockID, char,
 	WATER,
 	LOG,
 	LEAVES,
+	SNOW,
+	ICE,
 	SIZE
 );

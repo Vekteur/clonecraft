@@ -1,13 +1,13 @@
-#include "Islands.h"
+#include "Swamp.h"
 
 #include "World/WorldConstants.h"
 
-int Islands::getHeight(ivec2 pos) const {
+int Swamp::getHeight(ivec2 pos) const {
 	double noise = perlin.getNoise(static_cast<dvec2>(pos));
-	return Const::SEA_LEVEL - 1 + static_cast<int>(noise * 32);
+	return Const::SEA_LEVEL + 4 + static_cast<int>(noise * 32);
 }
 
-Block Islands::getBlock(int y, int height) const {
+Block Swamp::getBlock(int y, int height) const {
 	if (y < height - 4)
 		return { BlockID::STONE };
 	if (y < Const::SEA_LEVEL + 1 && height - 3 <= y && y <= height - 1)
@@ -22,10 +22,10 @@ Block Islands::getBlock(int y, int height) const {
 	return { BlockID::AIR };
 }
 
-std::vector<StructureInfo> Islands::getStructures() const {
-	return { { StructureID::TREE, 0.06f } };
+std::vector<StructureInfo> Swamp::getStructures() const {
+	return { { StructureID::TREE, 0.1f } };
 }
 
-double Islands::biomeValue(double temperature, double humidity) const {
-	return medium(temperature) * high(humidity);
+double Swamp::biomeValue(double temperature, double humidity) const {
+	return high(temperature) * high(humidity);
 }

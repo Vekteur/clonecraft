@@ -1,13 +1,14 @@
-#include "Islands.h"
+#include "Forest.h"
 
 #include "World/WorldConstants.h"
+#include "Util/Logger.h"
 
-int Islands::getHeight(ivec2 pos) const {
+int Forest::getHeight(ivec2 pos) const {
 	double noise = perlin.getNoise(static_cast<dvec2>(pos));
-	return Const::SEA_LEVEL - 1 + static_cast<int>(noise * 32);
+	return Const::SEA_LEVEL + 4 + static_cast<int>(noise * 8);
 }
 
-Block Islands::getBlock(int y, int height) const {
+Block Forest::getBlock(int y, int height) const {
 	if (y < height - 4)
 		return { BlockID::STONE };
 	if (y < Const::SEA_LEVEL + 1 && height - 3 <= y && y <= height - 1)
@@ -22,10 +23,10 @@ Block Islands::getBlock(int y, int height) const {
 	return { BlockID::AIR };
 }
 
-std::vector<StructureInfo> Islands::getStructures() const {
-	return { { StructureID::TREE, 0.06f } };
+std::vector<StructureInfo> Forest::getStructures() const {
+	return { { StructureID::TREE, 0.2f } };
 }
 
-double Islands::biomeValue(double temperature, double humidity) const {
-	return medium(temperature) * high(humidity);
+double Forest::biomeValue(double temperature, double humidity) const {
+	return medium(temperature) * medium(humidity);
 }

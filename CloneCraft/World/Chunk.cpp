@@ -28,9 +28,7 @@ Block Chunk::getBlock(ivec3 pos) const {
 }
 
 void Chunk::loadBlocks() {
-	//m_chunkGenerator.load();
 	g_worldGenerator.loadChunk(*this);
-
 	setState(TO_LOAD_FACES);
 }
 

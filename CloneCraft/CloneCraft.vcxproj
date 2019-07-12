@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Generator\Biome\Desert.h" />
+    <ClInclude Include="Generator\Biome\ExtremeMountains.h" />
+    <ClInclude Include="Generator\Biome\Forest.h" />
     <ClInclude Include="Generator\Biome\BiomeID.h" />
     <ClInclude Include="Generator\Biome\BiomeMap.h" />
     <ClInclude Include="Generator\Biome\Biome.h" />
@@ -32,8 +35,12 @@
     <ClInclude Include="Generator\Biome\Islands.h" />
     <ClInclude Include="Generator\Biome\Plain.h" />
     <ClInclude Include="Generator\Structure\StructureID.h" />
+    <ClInclude Include="Generator\Biome\Mountains.h" />
+    <ClInclude Include="Generator\Biome\Ocean.h" />
     <ClInclude Include="Renderer\PostProcessingRenderer.h" />
     <ClInclude Include="Generator\Structure\Tree.h" />
+    <ClInclude Include="Generator\Biome\Snow.h" />
+    <ClInclude Include="Generator\Biome\Swamp.h" />
     <ClInclude Include="View\CaptureMouse.h" />
     <ClInclude Include="Renderer\DefaultRenderer.h" />
     <ClInclude Include="FPSCounter.h" />
@@ -57,6 +64,9 @@
     <ClInclude Include="Maths\GlmCommon.h">
       <FileType>CppCode</FileType>
     </ClInclude>
+    <ClCompile Include="Generator\Biome\Desert.cpp" />
+    <ClCompile Include="Generator\Biome\ExtremeMountains.cpp" />
+    <ClCompile Include="Generator\Biome\Forest.cpp" />
     <ClCompile Include="Generator\Biome\Biome.cpp" />
     <ClCompile Include="Generator\Biome\BiomeMap.cpp" />
     <ClCompile Include="Block\BlockDatas.cpp" />
@@ -66,10 +76,14 @@
     <ClCompile Include="Generator\Biome\Plain.cpp" />
     <ClCompile Include="Generator\ChunkGenerationInfo.cpp" />
     <ClCompile Include="Generator\Structure\Structure.cpp" />
+    <ClCompile Include="Generator\Biome\Mountains.cpp" />
+    <ClCompile Include="Generator\Biome\Ocean.cpp" />
     <ClCompile Include="Renderer\PostProcessingRenderer.cpp" />
     <ClCompile Include="ResManager\TextureArray.cpp" />
     <ClCompile Include="Renderer\DefaultRenderer.cpp" />
     <ClCompile Include="Generator\Structure\Tree.cpp" />
+    <ClCompile Include="Generator\Biome\Snow.cpp" />
+    <ClCompile Include="Generator\Biome\Swamp.cpp" />
     <ClCompile Include="View\Frustum.cpp" />
     <ClCompile Include="Maths\LineBlockFinder.cpp" />
     <ClCompile Include="Maths\Dir3D.cpp" />

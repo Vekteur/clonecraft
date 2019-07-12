@@ -1,7 +1,14 @@
 #pragma once
 
 enum class BiomeID {
-	PLAIN = 0,
+	EXTREME_MOUNTAINS = 0,
+	MOUNTAINS,
+	DESERT,
+	SNOW,
+	FOREST,
+	PLAIN,
+	OCEAN,
 	ISLANDS,
+	SWAMP,
 	SIZE
 };
