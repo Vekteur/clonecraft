@@ -46,6 +46,8 @@
     <ClCompile Include="Generator\Biome\Ocean.cpp" />
     <ClCompile Include="Generator\Biome\Snow.cpp" />
     <ClCompile Include="Generator\Biome\Swamp.cpp" />
+    <ClCompile Include="Generator\Structure\Cactus.cpp" />
+    <ClCompile Include="Generator\Structure\Fir.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -105,5 +107,8 @@
     <ClInclude Include="Generator\Biome\Mountains.h" />
     <ClInclude Include="Generator\Biome\Ocean.h" />
     <ClInclude Include="Generator\Biome\Snow.h" />
+    <ClInclude Include="Generator\Structure\Cactus.h" />
+    <ClInclude Include="Util\DynamicArray3D.h" />
+    <ClInclude Include="Generator\Structure\Fir.h" />
   </ItemGroup>
 </Project>

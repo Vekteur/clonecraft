@@ -2,6 +2,7 @@
 
 #include <iomanip>
 
+#include "Generator/WorldGenerator.h"
 #include "Util/Logger.h"
 #include "Maths/Converter.h"
 
@@ -21,6 +22,7 @@ void WindowTextDrawer::drawAll(int fps, Game& game) {
 	drawSectionPosition(Converter::globalToSection(blockPos));
 	drawTarget(game.getTarget());
 	drawDirection(game.getCamera().getYaw(), game.getCamera().getPitch());
+	drawBiome(g_worldGenerator.biomeMap().getBiomeName(Converter::to2D(blockPos)));
 	drawRenderedChunks(game.getChunkMap().getRenderedChunks());
 	drawBlockChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES));
 	drawFaceChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_RENDER));
@@ -73,6 +75,10 @@ void WindowTextDrawer::drawDirection(float pitch, float yaw) {
 	oss << "Pitch / Yaw : " << std::setprecision(3) << std::fixed << std::setw(9) << pitch << ' ' <<
 		std::fixed << std::setw(9) << yaw;
 	draw(oss.str());
+}
+
+void WindowTextDrawer::drawBiome(std::string biomeName) {
+	draw("Biome : " + biomeName);
 }
 
 void WindowTextDrawer::drawRenderedChunks(int renderedChunks) {

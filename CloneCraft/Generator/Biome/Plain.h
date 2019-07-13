@@ -5,10 +5,10 @@
 
 class Plain : public Biome {
 	virtual int getHeight(ivec2 pos) const override;
-	virtual Block getBlock(int y, int height) const override;
+	virtual Block getBlock(ivec3 pos, int height) const override;
 	virtual std::vector<StructureInfo> getStructures() const override;
-	virtual double biomeValue(double temperature, double humidity) const override;
+	virtual double biomeValue(double temperature, double altitude) const override;
 
 private:
-	OctavePerlin perlin{ 4, 0.5, 1. / 128. };
+	OctavePerlin perlin{ 2, 0.5, 1. / 128. };
 };

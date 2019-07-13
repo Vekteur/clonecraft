@@ -41,8 +41,8 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 		const ivec3 dirPos = Dir3D::to_ivec3(dir);
 		const int axe = dir % 3; // Axe of the current direction
 		const ivec3 neighbourPos = m_position + dirPos; // Position of the neighbour section
-		const Section* neighbour = (neighbourPos.y < 0 || neighbourPos.y >= p_chunk->getHeight()) 
-			? nullptr : &p_chunkMap->getSection(neighbourPos); // Neighbour section (nullptr if does not exist)
+		const Section* neighbour = (neighbourPos.y < 0 || neighbourPos.y >= p_chunk->getHeight()) ?
+				nullptr : &p_chunkMap->getSection(neighbourPos); // Neighbour section (nullptr if does not exist)
 		const ivec3 order = axeOrder[axe]; // For the current axe, order[i] = j means that the axe i is associated with the value j
 
 		const ivec3 MAXS{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE };
@@ -113,7 +113,7 @@ std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces
 							blockFace = Block{ BlockID::AIR };
 						} else {
 							// The block can only be in the current section or the neighbour section
-							blockFace = isInSection(localFacePos) ? this->getBlock(localFacePos)
+ 							blockFace = isInSection(localFacePos) ? this->getBlock(localFacePos)
 								: neighbour->getBlock(Converter::globalToInnerSection(localFacePos));
 						}
 						// The face is visible only if the block in the direction of the face is transparent

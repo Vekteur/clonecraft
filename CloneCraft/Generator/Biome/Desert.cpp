@@ -8,19 +8,19 @@ int Desert::getHeight(ivec2 pos) const {
 	return Const::SEA_LEVEL + 4 + static_cast<int>(noise * 8);
 }
 
-Block Desert::getBlock(int y, int height) const {
-	if (y < height - 4)
+Block Desert::getBlock(ivec3 pos, int height) const {
+	if (pos.y < height - 4)
 		return { BlockID::STONE };
-	if (y <= height - 1)
+	if (pos.y <= height - 1)
 		return { BlockID::SAND };
 
 	return { BlockID::AIR };
 }
 
 std::vector<StructureInfo> Desert::getStructures() const {
-	return { };
+	return { /*{ StructureID::CACTUS, 0.005f }*/ };
 }
 
-double Desert::biomeValue(double temperature, double humidity) const {
-	return high(temperature) * low(humidity);
+double Desert::biomeValue(double temperature, double altitude) const {
+	return high(temperature) * low(altitude);
 }

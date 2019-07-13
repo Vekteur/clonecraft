@@ -1,0 +1,10 @@
+{
+	"opaque" : true,
+	"obstacle" : true,
+	"category" : "default",
+	"textures" : {
+		"up" : "cactus_top",
+		"down" : "cactus_bottom",
+		"side" : "cactus_side"
+	}
+}

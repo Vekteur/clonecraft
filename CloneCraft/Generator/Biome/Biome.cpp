@@ -1,6 +1,6 @@
 #include "Biome.h"
 
-double Biome::threshold = 0.14, Biome::transition = 0.1;
+double Biome::threshold = 0.14, Biome::transition = 0.15;
 
 double Biome::low(double value) {
 	return step(value, -threshold);

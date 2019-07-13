@@ -8,10 +8,10 @@ int Mountains::getHeight(ivec2 pos) const {
 	return Const::SEA_LEVEL + 40 + static_cast<int>(noise * 16);
 }
 
-Block Mountains::getBlock(int y, int height) const {
-	if (y <= height - 1)
+Block Mountains::getBlock(ivec3 pos, int height) const {
+	if (pos.y <= height - 1)
 		return { BlockID::STONE };
-	if (y < Const::SEA_LEVEL)
+	if (pos.y < Const::SEA_LEVEL)
 		return { BlockID::WATER };
 
 	return { BlockID::AIR };
@@ -21,6 +21,6 @@ std::vector<StructureInfo> Mountains::getStructures() const {
 	return { { StructureID::TREE, 0.005f } };
 }
 
-double Mountains::biomeValue(double temperature, double humidity) const {
-	return medium(temperature) * low(humidity);
+double Mountains::biomeValue(double temperature, double altitude) const {
+	return high(temperature) * medium(altitude);
 }

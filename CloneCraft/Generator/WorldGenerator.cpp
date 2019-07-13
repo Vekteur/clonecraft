@@ -34,10 +34,11 @@ void WorldGenerator::loadBlocks(Chunk& chunk) const {
 			ivec2 pos2D{ x, z };
 			const Biome& biome = m_biomeMap.getBiome(chunk.chunkInfo().biome(pos2D));
 			int height = chunk.chunkInfo().height(pos2D);
-			for (int y = 0; y < Const::INIT_CHUNK_HEIGHT; ++y) {
-				ivec3 pos{ x, y, z };
-				Block block = biome.getBlock(pos.y, height);
-				chunk.setBlock(pos, block);
+			for (int y = 0; y < std::max(Const::SEA_LEVEL, height); ++y) {
+				ivec3 localPos{ x, y, z };
+				ivec3 globalPos = Converter::chunkToGlobal(chunk.getPosition()) + localPos;
+				Block block = biome.getBlock(globalPos, height);
+				chunk.setBlock(localPos, block);
 			}
 		}
 }
@@ -68,10 +69,11 @@ void WorldGenerator::loadStructure(Chunk& chunk, const Structure& structure, flo
 			if (optLocalPos.has_value()) {
 				ivec2 localPos = optLocalPos.value();
 				ivec2 globalPos2D = zonePos * zoneSize + localPos;
+				ivec2 centerPos = structure.getCenterPos(globalPos2D);
 				if (!structure.isValidPos(globalPos2D) ||
-						biomeMap().getBiomeID(structure.getCenterPos(globalPos2D)) != biomeID)
+						biomeMap().getBiomeID(centerPos) != biomeID)
 					continue;
-				ivec3 globalPos = { globalPos2D.x, biomeMap().getHeight(globalPos2D), globalPos2D.y };
+				ivec3 globalPos = { globalPos2D.x, biomeMap().getHeight(centerPos), globalPos2D.y };
 				drawStructure(chunk, structure, globalPos);
 			}
 		}

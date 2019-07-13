@@ -1,0 +1,8 @@
+{
+	"opaque" : false,
+	"obstacle" : true,
+	"category" : "semi-transparent",
+	"textures" : {
+		"all" : "dark_leaves"
+	}
+}

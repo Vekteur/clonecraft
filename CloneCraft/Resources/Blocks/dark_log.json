@@ -1,0 +1,10 @@
+{
+	"opaque" : true,
+	"obstacle" : true,
+	"category" : "default",
+	"textures" : {
+		"up" : "dark_log_top",
+		"down" : "dark_log_top",
+		"side" : "dark_log_side"
+	}
+}

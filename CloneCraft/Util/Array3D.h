@@ -18,7 +18,7 @@ public:
 		return m_array[index.x][index.y][index.z];
 	}
 
-	ivec3 size() {
+	ivec3 size() const {
 		return { S1, S2, S3 };
 	}
 };

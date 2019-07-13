@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Generator\Structure\Fir.h" />
+    <ClInclude Include="Generator\Structure\Cactus.h" />
     <ClInclude Include="Generator\Biome\Desert.h" />
     <ClInclude Include="Generator\Biome\ExtremeMountains.h" />
     <ClInclude Include="Generator\Biome\Forest.h" />
@@ -41,6 +43,7 @@
     <ClInclude Include="Generator\Structure\Tree.h" />
     <ClInclude Include="Generator\Biome\Snow.h" />
     <ClInclude Include="Generator\Biome\Swamp.h" />
+    <ClInclude Include="Util\DynamicArray3D.h" />
     <ClInclude Include="View\CaptureMouse.h" />
     <ClInclude Include="Renderer\DefaultRenderer.h" />
     <ClInclude Include="FPSCounter.h" />
@@ -64,6 +67,7 @@
     <ClInclude Include="Maths\GlmCommon.h">
       <FileType>CppCode</FileType>
     </ClInclude>
+    <ClCompile Include="Generator\Structure\Fir.cpp" />
     <ClCompile Include="Generator\Biome\Desert.cpp" />
     <ClCompile Include="Generator\Biome\ExtremeMountains.cpp" />
     <ClCompile Include="Generator\Biome\Forest.cpp" />
@@ -75,6 +79,7 @@
     <ClCompile Include="Generator\Biome\Islands.cpp" />
     <ClCompile Include="Generator\Biome\Plain.cpp" />
     <ClCompile Include="Generator\ChunkGenerationInfo.cpp" />
+    <ClCompile Include="Generator\Structure\Cactus.cpp" />
     <ClCompile Include="Generator\Structure\Structure.cpp" />
     <ClCompile Include="Generator\Biome\Mountains.cpp" />
     <ClCompile Include="Generator\Biome\Ocean.cpp" />

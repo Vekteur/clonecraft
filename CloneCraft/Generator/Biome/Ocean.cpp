@@ -8,12 +8,12 @@ int Ocean::getHeight(ivec2 pos) const {
 	return Const::SEA_LEVEL - 40 + static_cast<int>(noise * 8);
 }
 
-Block Ocean::getBlock(int y, int height) const {
-	if (y < height - 4)
+Block Ocean::getBlock(ivec3 pos, int height) const {
+	if (pos.y < height - 3)
 		return { BlockID::STONE };
-	if (height - 3 <= y && y <= height - 1)
+	if (pos.y < height)
 		return { BlockID::SAND };
-	if (y < Const::SEA_LEVEL)
+	if (pos.y < Const::SEA_LEVEL)
 		return { BlockID::WATER };
 
 	return { BlockID::AIR };
@@ -23,6 +23,6 @@ std::vector<StructureInfo> Ocean::getStructures() const {
 	return { };
 }
 
-double Ocean::biomeValue(double temperature, double humidity) const {
-	return low(temperature) * high(humidity);
+double Ocean::biomeValue(double temperature, double altitude) const {
+	return low(temperature) * low(altitude);
 }

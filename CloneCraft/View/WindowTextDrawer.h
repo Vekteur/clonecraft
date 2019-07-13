@@ -28,6 +28,7 @@ private:
 	void drawSectionPosition(ivec3 pos);
 	void drawTarget(std::optional<ivec3> pos);
 	void drawDirection(float pitch, float yaw);
+	void drawBiome(std::string biomeName);
 	void drawRenderedChunks(int renderedChunks);
 	void drawBlockChunks(int blockChunks);
 	void drawFaceChunks(int faceChunks);
