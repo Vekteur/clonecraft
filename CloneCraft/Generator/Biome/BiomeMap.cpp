@@ -14,6 +14,8 @@
 
 #include "Generator/Structure/Tree.h"
 #include "Generator/Structure/Fir.h"
+#include "Generator/Structure/Palm.h"
+#include "Generator/Structure/DeadTree.h"
 #include "Generator/Structure/Cactus.h"
 #include "Util/Logger.h"
 
@@ -30,6 +32,8 @@ BiomeMap::BiomeMap() {
 
 	addStructure(std::make_unique<Tree>(), StructureID::TREE);
 	addStructure(std::make_unique<Fir>(), StructureID::FIR);
+	addStructure(std::make_unique<Palm>(), StructureID::PALM);
+	addStructure(std::make_unique<DeadTree>(), StructureID::DEAD_TREE);
 	addStructure(std::make_unique<Cactus>(), StructureID::CACTUS);
 }
 

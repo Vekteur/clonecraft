@@ -1,7 +1,6 @@
 #version 330 core
 
 layout (location = 0) in vec3 pos;
-layout (location = 1) in vec2 tex;
 layout (location = 2) in vec3 norm;
 
 out VS_OUT
@@ -12,6 +11,7 @@ out VS_OUT
 	vec3 norm;
 	float visibility;
 	vec3 toCamera;
+	float distanceFromPlayer;
 } vs_out;
 
 uniform mat4 view;
@@ -26,6 +26,7 @@ void main()
 {
 	vec4 posRelativeToCam = view * vec4(pos, 1.0f);
 	
+	vs_out.distanceFromPlayer = length(posRelativeToCam.xyz);
 	float vDistance = length(posRelativeToCam.xz);
 	vs_out.visibility = exp(-pow((vDistance * density / distance), gradient));
 	vs_out.visibility = clamp(vs_out.visibility, 0.0f, 1.0f);

@@ -77,6 +77,7 @@ void WaterRenderer::onChangedSize(ivec2 windowSize) {
 	settings.minorVersion = 3;
 	settings.depthBits = 24;
 	settings.stencilBits = 8;
+	settings.antialiasingLevel = 2;
 	if (!simple && !reflectionTexture.create(windowSize.x, windowSize.y, settings)) {
 		LOG(Level::ERROR) << "Could not create reflection texture" << std::endl;
 	}

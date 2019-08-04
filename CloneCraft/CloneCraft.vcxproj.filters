@@ -48,6 +48,8 @@
     <ClCompile Include="Generator\Biome\Swamp.cpp" />
     <ClCompile Include="Generator\Structure\Cactus.cpp" />
     <ClCompile Include="Generator\Structure\Fir.cpp" />
+    <ClCompile Include="Generator\Structure\Palm.cpp" />
+    <ClCompile Include="Generator\Structure\DeadTree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -110,5 +112,7 @@
     <ClInclude Include="Generator\Structure\Cactus.h" />
     <ClInclude Include="Util\DynamicArray3D.h" />
     <ClInclude Include="Generator\Structure\Fir.h" />
+    <ClInclude Include="Generator\Structure\Palm.h" />
+    <ClInclude Include="Generator\Structure\DeadTree.h" />
   </ItemGroup>
 </Project>

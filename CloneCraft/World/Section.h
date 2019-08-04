@@ -49,6 +49,18 @@ private:
 	WaterMesh nextWaterMesh;
 	bool empty = true;
 
-	bool isInSection(ivec3 globalPos);
-	std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex>>  findFaces();
+	bool isInSection(ivec3 globalPos) const;
+	const Section* findNeighboringSection(Dir3D::Dir dir) const;
+	std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex>> findVisibleFaces() const;
+	void addVisibleFacesOnLastAxe(
+		std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
+		Dir3D::Dir dir, ivec3 localPos, int indexOfLastAxe, int sizeOfLastAxe,
+		const Section* neighboringSection
+	) const;
+	void addFace(std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
+		Dir3D::Dir dir, ivec3 localPos, int length, Block block, int indexOfLastAxe) const;
+	void addDefaultFace(std::vector<DefaultMesh::Vertex>& defaultVertices, Dir3D::Dir dir, Block block,
+		int indexOfLastAxe, int length, ivec3 firstBlockGlobalPos) const;
+	void addWaterFace(std::vector<WaterMesh::Vertex>& waterVertices, Dir3D::Dir dir,
+		int indexOfLastAxe, int length, ivec3 firstBlockGlobalPos) const;
 };

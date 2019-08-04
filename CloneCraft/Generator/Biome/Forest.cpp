@@ -5,7 +5,7 @@
 
 int Forest::getHeight(ivec2 pos) const {
 	double noise = perlin.getNoise(static_cast<dvec2>(pos));
-	return Const::SEA_LEVEL + 6 + static_cast<int>(noise * 12);
+	return Const::SEA_LEVEL + 8 + static_cast<int>(noise * 12);
 }
 
 Block Forest::getBlock(ivec3 pos, int height) const {

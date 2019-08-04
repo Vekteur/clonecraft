@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <unordered_set>
 
-const int ChunkMap::VIEW_DISTANCE{ 24 };
+const int ChunkMap::VIEW_DISTANCE{ 20 };
 const int ChunkMap::LOAD_DISTANCE{ VIEW_DISTANCE + 1 };
 const int ChunkMap::SIDE{ (2 * VIEW_DISTANCE + 1) * Const::SECTION_SIDE };
 const int ChunkMap::CHUNKS_PER_LOAD{ 8 };

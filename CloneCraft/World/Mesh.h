@@ -121,7 +121,6 @@ struct DefaultVertex {
 
 struct WaterVertex {
 	vec3 pos;
-	vec2 tex;
 	vec3 norm;
 };
 
@@ -142,8 +141,7 @@ struct DefaultMesh : Mesh<DefaultVertex, DefaultMesh> {
 struct WaterMesh : Mesh<WaterVertex, WaterMesh> {
 	void loadAttributes() {
 		addFloatVertexAttribPointer(0, 3, 0);
-		addFloatVertexAttribPointer(1, 2, sizeof(vec3));
-		addFloatVertexAttribPointer(2, 3, sizeof(vec3) + sizeof(vec2));
+		addFloatVertexAttribPointer(2, 3, sizeof(vec3));
 	}
 };
 

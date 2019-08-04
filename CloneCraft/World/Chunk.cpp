@@ -16,7 +16,7 @@ Chunk::~Chunk() {
 
 void Chunk::setBlock(ivec3 pos, Block block) {
 	int sectionY = pos.y / Const::SECTION_HEIGHT;
-	for (int height = int(m_sections.size()); height <= sectionY + 1; ++height) {
+	for (int height = int(m_sections.size()); height <= sectionY; ++height) {
 		m_sections.emplace_back(p_chunkMap, this, ivec3{ m_position.x, height, m_position.y });
 		p_chunkMap->reloadSection({ m_position.x, height, m_position.y });
 	}

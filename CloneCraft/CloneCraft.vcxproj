@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Generator\Structure\DeadTree.h" />
     <ClInclude Include="Generator\Structure\Fir.h" />
     <ClInclude Include="Generator\Structure\Cactus.h" />
     <ClInclude Include="Generator\Biome\Desert.h" />
@@ -39,6 +40,7 @@
     <ClInclude Include="Generator\Structure\StructureID.h" />
     <ClInclude Include="Generator\Biome\Mountains.h" />
     <ClInclude Include="Generator\Biome\Ocean.h" />
+    <ClInclude Include="Generator\Structure\Palm.h" />
     <ClInclude Include="Renderer\PostProcessingRenderer.h" />
     <ClInclude Include="Generator\Structure\Tree.h" />
     <ClInclude Include="Generator\Biome\Snow.h" />
@@ -67,6 +69,7 @@
     <ClInclude Include="Maths\GlmCommon.h">
       <FileType>CppCode</FileType>
     </ClInclude>
+    <ClCompile Include="Generator\Structure\DeadTree.cpp" />
     <ClCompile Include="Generator\Structure\Fir.cpp" />
     <ClCompile Include="Generator\Biome\Desert.cpp" />
     <ClCompile Include="Generator\Biome\ExtremeMountains.cpp" />
@@ -83,6 +86,7 @@
     <ClCompile Include="Generator\Structure\Structure.cpp" />
     <ClCompile Include="Generator\Biome\Mountains.cpp" />
     <ClCompile Include="Generator\Biome\Ocean.cpp" />
+    <ClCompile Include="Generator\Structure\Palm.cpp" />
     <ClCompile Include="Renderer\PostProcessingRenderer.cpp" />
     <ClCompile Include="ResManager\TextureArray.cpp" />
     <ClCompile Include="Renderer\DefaultRenderer.cpp" />

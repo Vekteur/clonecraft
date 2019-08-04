@@ -69,11 +69,14 @@ void WorldGenerator::loadStructure(Chunk& chunk, const Structure& structure, flo
 			if (optLocalPos.has_value()) {
 				ivec2 localPos = optLocalPos.value();
 				ivec2 globalPos2D = zonePos * zoneSize + localPos;
-				ivec2 centerPos = structure.getCenterPos(globalPos2D);
-				if (!structure.isValidPos(globalPos2D) ||
-						biomeMap().getBiomeID(centerPos) != biomeID)
+				ivec2 centerPos2D = structure.getCenterPos(globalPos2D);
+				BiomeID posBiomeID = biomeMap().getBiomeID(centerPos2D);
+				if (posBiomeID != biomeID)
 					continue;
-				ivec3 globalPos = { globalPos2D.x, biomeMap().getHeight(centerPos), globalPos2D.y };
+				ivec3 centerPos = { centerPos2D.x, biomeMap().getHeight(centerPos2D), centerPos2D.y };
+				if (!structure.isValidPos(centerPos, posBiomeID))
+					continue;
+				ivec3 globalPos = { globalPos2D.x, centerPos.y, globalPos2D.y };
 				drawStructure(chunk, structure, globalPos);
 			}
 		}

@@ -23,7 +23,7 @@ Block Islands::getBlock(ivec3 pos, int height) const {
 }
 
 std::vector<StructureInfo> Islands::getStructures() const {
-	return { { StructureID::TREE, 0.06f } };
+	return { { StructureID::PALM, 0.06f } };
 }
 
 double Islands::biomeValue(double temperature, double altitude) const {

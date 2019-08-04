@@ -10,5 +10,5 @@ class Desert : public Biome {
 	virtual double biomeValue(double temperature, double altitude) const override;
 
 private:
-	OctavePerlin perlin{ 4, 0.5, 1. / 128. };
+	OctavePerlin perlin{ 3, 0.5, 1. / 128. };
 };

@@ -2,6 +2,7 @@
 
 #include "Util/DynamicArray3D.h"
 #include "Block/Block.h"
+#include "Generator/Biome/BiomeID.h"
 
 #include "Maths/GlmCommon.h"
 
@@ -11,7 +12,7 @@ class Structure {
 public:
 	Structure(ivec3 size);
 	virtual ~Structure() = default;
-	virtual bool isValidPos(ivec2 pos) const = 0;
+	virtual bool isValidPos(ivec3 centerPos, BiomeID biomeID) const = 0;
 	Block getBlock(ivec3 pos) const;
 	ivec3 size() const;
 	ivec2 getCenterPos(ivec2 globalPos = ivec2{ 0, 0 }) const;

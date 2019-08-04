@@ -52,6 +52,7 @@ void PostProcessingRenderer::onChangedSize(ivec2 windowSize) {
 	settings.minorVersion = 3;
 	settings.depthBits = 24;
 	settings.stencilBits = 8;
+	settings.antialiasingLevel = 2;
 	if (!m_renderTexture.create(windowSize.x, windowSize.y, settings)) {
 		LOG(Level::ERROR) << "Could not create render texture" << std::endl;
 	}

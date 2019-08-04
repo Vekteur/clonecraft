@@ -5,5 +5,5 @@
 class Fir : public Structure {
 public:
 	Fir();
-	virtual bool isValidPos(ivec2 pos) const override;
+	virtual bool isValidPos(ivec3 centerPos, BiomeID biomeID) const override;
 };

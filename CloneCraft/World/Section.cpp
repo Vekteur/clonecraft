@@ -10,12 +10,6 @@
 
 #include <iostream>
 
-template<typename T, int S>
-using arr = std::array<T, S>;
-
-template<typename T>
-using vec = std::vector<T>;
-
 Section::Section(const ChunkMap* chunkMap, const Chunk* chunk, ivec3 position)
 	: p_chunkMap{ chunkMap }, p_chunk{ chunk }, m_position{ position }, 
 	m_blocks{ std::make_unique<BlockArray>() }
@@ -26,119 +20,153 @@ int dirToBin(ivec3 dir) {
 	return dir.x + (dir.y << 2) + (dir.z << 4);
 }
 
-std::tuple<vec<DefaultMesh::Vertex>, vec<WaterMesh::Vertex> > Section::findFaces() {
-	vec<DefaultMesh::Vertex> defaultVertices;
-	vec<WaterMesh::Vertex> waterVertices;
+const Section* Section::findNeighboringSection(Dir3D::Dir dir) const {
+	const ivec3 neighbourPos = m_position + Dir3D::to_ivec3(dir); // Position of the neighbour section
+	const Chunk& neighbourChunk = p_chunkMap->getChunk(Converter::to2D(neighbourPos));
+	const Section* neighbourSection = nullptr;
+	if (0 <= neighbourPos.y && neighbourPos.y < neighbourChunk.getHeight())
+		neighbourSection = &neighbourChunk.getSection(neighbourPos.y);
+	return neighbourSection;
+}
 
-	const arr<ivec3, 3> axeOrder{ {
-		{ 1, 0, 2 }, // Y axe
-		{ 0, 1, 2 }, // X axe
-		{ 2, 1, 0 }  // Z axe
+std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex> > Section::findVisibleFaces() const {
+	std::vector<DefaultMesh::Vertex> defaultVertices;
+	std::vector<WaterMesh::Vertex> waterVertices;
+	
+	// The axes are indexed by y = 0, x = 1 and z = 2;
+	const std::array<ivec3, 3> AXE_ORDER{ {
+		{ 1, 0, 2 }, // y axe
+		{ 0, 1, 2 }, // x axe
+		{ 2, 1, 0 }  // z axe
 	} };
+	const ivec3 SECTION_BOUNDS{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE };
 
 	for (Dir3D::Dir dir : Dir3D::all()) {
-		Dir3D::Dir oppDir = Dir3D::opp(dir);
-		const ivec3 dirPos = Dir3D::to_ivec3(dir);
 		const int axe = dir % 3; // Axe of the current direction
-		const ivec3 neighbourPos = m_position + dirPos; // Position of the neighbour section
-		const Section* neighbour = (neighbourPos.y < 0 || neighbourPos.y >= p_chunk->getHeight()) ?
-				nullptr : &p_chunkMap->getSection(neighbourPos); // Neighbour section (nullptr if does not exist)
-		const ivec3 order = axeOrder[axe]; // For the current axe, order[i] = j means that the axe i is associated with the value j
 
-		const ivec3 MAXS{ Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE };
-		ivec3 maxsAxe; // Maximum value of each axe by index
+		// Done once per direction because quite costly
+		const Section* neighboringSection = findNeighboringSection(dir);
+		
+		// The order by which the axes are iterated on
+		// order[0] is the first axe on which the iteration occurs
+		// order[2] is the last axe on which the iteration occurs
+		const ivec3 order = AXE_ORDER[axe];
+
+		ivec3 orderedBounds; // Bounds of the section, in the order of the axes
 		for (int i = 0; i < 3; ++i)
-			maxsAxe[i] = MAXS[axeOrder[axe][i]];
+			orderedBounds[i] = SECTION_BOUNDS[order[i]];
 
-		int indexOfLastAxe; // Index of the axe on which we iterate in the last loop (0 = x, 1 = y, 2 = z)
-		for (int i = 0; i < 3; ++i) {
-			if (order[i] == 2)
-				indexOfLastAxe = i;
-		}
-		ivec3 oppositeOfLastAxe{ 0, 0, 0 };
-		oppositeOfLastAxe[indexOfLastAxe] = -1;
-
-		ivec3 abstPos;
-		for (abstPos.x = 0; abstPos.x < maxsAxe.x; ++abstPos) {
-			for (abstPos.y = 0; abstPos.y < maxsAxe.y; ++abstPos.y) {
-				Block lastBlock{ BlockID::AIR }; // Last block we have iterated on
-				int firstBlockPos = -1; // Index of the last axe containing the first block of the iteration
-
-				auto addFace = [&](int currBlockPos, ivec3 localPos) {
-					BlockData::Category category = ResManager::blockDatas().get(lastBlock.id).getCategory();
-					if (category != BlockData::AIR) {
-						int length = currBlockPos - firstBlockPos; // Length of the face
-						const ivec3 firstBlockGlobalPos{ Converter::sectionToGlobal(m_position) + localPos + oppositeOfLastAxe * length };
-						
-						// TO IMPROVE
-						if (category == BlockData::DEFAULT || category == BlockData::SEMI_TRANSPARENT) {
-							GLuint texID = ResManager::blockDatas().get(lastBlock.id).getTexture(dir);
-							for (int vtx = 0; vtx < 4; ++vtx) {
-								vec3 currVtx = CubeData::dirToFace[dir][vtx];
-								currVtx[indexOfLastAxe] *= length;
-								// Multiply coordinate x of the texture (depends on the vertices of the face)
-								vec2 tex = { CubeData::faceCoords[vtx].x * length, CubeData::faceCoords[vtx].y };
-								defaultVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, dirPos, texID });
-							}
-						} else if (category == BlockData::WATER) {
-							for (int vtx = 0; vtx < 4; ++vtx) {
-								vec3 currVtx = CubeData::dirToFace[dir][vtx];
-								currVtx[indexOfLastAxe] *= length;
-								// Multiply coordinate x of the texture (depends on the vertices of the face)
-								vec2 tex = { CubeData::faceCoords[vtx].x * length, CubeData::faceCoords[vtx].y };
-								waterVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, dirPos });
-							}
-							for (int vtx = 0; vtx < 4; ++vtx) {
-								vec3 currVtx = CubeData::dirToFace[oppDir][vtx];
-								currVtx[indexOfLastAxe] *= length;
-								// Multiply coordinate x of the texture (depends on the vertices of the face)
-								vec2 tex = { CubeData::faceCoords[vtx].x * length, CubeData::faceCoords[vtx].y };
-								waterVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, Dir3D::to_ivec3(oppDir) });
-							}
-						}
-					}
-				};
-
-				for (abstPos.z = 0; abstPos.z < maxsAxe.z; ++abstPos.z) {
-					Block currBlock{ BlockID::AIR }; // Current block of which we can see the face
-					// Position in the section with correct x, y and z coordinates
-					const ivec3 localPos{ abstPos[order.x], abstPos[order.y], abstPos[order.z] };
-					const Block block = getBlock(localPos);
-					if (block.id != +BlockID::AIR) { // If the block is air, its face will be air anyway
-						const ivec3 globalPos{ Converter::sectionToGlobal(m_position) + localPos };
-						const ivec3 localFacePos{ localPos + dirPos };
-						const ivec3 globalFacePos = { globalPos + dirPos };
-						Block blockFace{ BlockID::AIR }; // Face of the block in the direction of the face
-						if (globalFacePos.y < 0 || globalFacePos.y >= p_chunk->getHeight() * Const::SECTION_HEIGHT) {
-							blockFace = Block{ BlockID::AIR };
-						} else {
-							// The block can only be in the current section or the neighbour section
- 							blockFace = isInSection(localFacePos) ? this->getBlock(localFacePos)
-								: neighbour->getBlock(Converter::globalToInnerSection(localFacePos));
-						}
-						// The face is visible only if the block in the direction of the face is transparent
-						// and if this block is different than the current block
-						if (!ResManager::blockDatas().get(blockFace.id).isOpaque() && blockFace.id != block.id) { 
-							currBlock = block;
-						}
-					}
-					if (currBlock.id != lastBlock.id) { // We can't extend the last face if the current face is different
-						addFace(abstPos.z, localPos);
-						firstBlockPos = abstPos.z;
-						lastBlock = currBlock;
-					}
-				}
-				const ivec3 localPos{ abstPos[order.x], abstPos[order.y], abstPos[order.z] };
-				// Add the last face if at the end of the section
-				addFace(maxsAxe.z, localPos);
+		ivec3 localPos; // Current position in the section coordinates
+		for (localPos[order[0]] = 0; localPos[order[0]] < orderedBounds[0]; ++localPos[order[0]]) {
+			for (localPos[order[1]] = 0; localPos[order[1]] < orderedBounds[1]; ++localPos[order[1]]) {
+				addVisibleFacesOnLastAxe(defaultVertices, waterVertices, dir, localPos, order[2],
+						orderedBounds[2], neighboringSection);
 			}
 		}
 	}
 	return { defaultVertices, waterVertices };
 }
 
-vec<GLuint> getIndices(int size) {
-	vec<GLuint> indices;
+void Section::addVisibleFacesOnLastAxe(
+	std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
+	Dir3D::Dir dir, ivec3 localPos, int indexOfLastAxe, int sizeOfLastAxe,
+	const Section* neighboringSection) const {
+
+	const ivec3 dirVec = Dir3D::to_ivec3(dir);
+	Block lastBlock{ BlockID::AIR }; // Last block we have iterated on
+	int firstBlockIndex = -1; // Index on the last axe of the first block of the face we are creating
+
+	for (localPos[indexOfLastAxe] = 0; localPos[indexOfLastAxe] < sizeOfLastAxe; ++localPos[indexOfLastAxe]) {
+		Block currBlock{ BlockID::AIR }; // Current block of which we can see the face
+
+		const Block block = this->getBlock(localPos);
+		// We can pass the air block for efficiency because its face will be invisible anyway
+		if (block.id != +BlockID::AIR) {
+			const ivec3 globalPos{ Converter::sectionToGlobal(m_position) + localPos };
+			// The neighboring position in the current direction
+			const ivec3 localNeighPos{ localPos + dirVec };
+			const int globalNeighHeight = globalPos.y + dirVec.y;
+			Block neighBlock{ BlockID::AIR };
+			// The blocks vertically outside the chunk are air block
+			if (0 <= globalNeighHeight && globalNeighHeight < p_chunk->getHeight() * Const::SECTION_HEIGHT) {
+				// The block can only be in the current section or in the neighboring section
+				if (isInSection(localNeighPos)) {
+					neighBlock = this->getBlock(localNeighPos);
+				}
+				else if (neighboringSection != nullptr) {
+					neighBlock = neighboringSection->getBlock(Converter::globalToInnerSection(localNeighPos));
+				}
+			}
+			// The face is visible only if the block in the direction of the face is transparent
+			// and if this block is different from the current block
+			if (!ResManager::blockDatas().get(neighBlock.id).isOpaque() && neighBlock.id != block.id) {
+				currBlock = block;
+			}
+		}
+		// Add the last face because we can't extend it if the current block is different
+		if (currBlock.id != lastBlock.id) {
+			addFace(defaultVertices, waterVertices, dir, localPos, firstBlockIndex, lastBlock, indexOfLastAxe);
+			firstBlockIndex = localPos[indexOfLastAxe];
+			lastBlock = currBlock;
+		}
+	}
+	// Add the last face if at the end of last axe
+	addFace(defaultVertices, waterVertices, dir, localPos, firstBlockIndex, lastBlock, indexOfLastAxe);
+}
+
+void Section::addFace(std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
+	Dir3D::Dir dir, ivec3 localPos, int firstBlockIndex, Block block, int indexOfLastAxe) const {
+
+	BlockData::Category category = ResManager::blockDatas().get(block.id).getCategory();
+	if (category != BlockData::AIR) {
+		ivec3 negativeLastAxe{ 0, 0, 0 };
+		negativeLastAxe[indexOfLastAxe] = -1;
+		int length = localPos[indexOfLastAxe] - firstBlockIndex;
+		ivec3 firstBlockGlobalPos{ Converter::sectionToGlobal(m_position) + localPos + negativeLastAxe * length };
+
+		if (category == BlockData::DEFAULT || category == BlockData::SEMI_TRANSPARENT) {
+			addDefaultFace(defaultVertices, dir, block, indexOfLastAxe, length, firstBlockGlobalPos);
+		}
+		else if (category == BlockData::WATER) {
+			addWaterFace(waterVertices, dir, indexOfLastAxe, length, firstBlockGlobalPos);
+		}
+	}
+}
+
+void Section::addDefaultFace(std::vector<DefaultMesh::Vertex>& defaultVertices, Dir3D::Dir dir, Block block,
+	int indexOfLastAxe, int length, ivec3 firstBlockGlobalPos) const {
+
+	GLuint texID = ResManager::blockDatas().get(block.id).getTexture(dir);
+	for (int vtx = 0; vtx < 4; ++vtx) {
+		vec3 currVtx = CubeData::dirToFace[dir][vtx];
+		currVtx[indexOfLastAxe] *= length;
+
+		vec2 tex = CubeData::faceCoords[vtx];
+		if (indexOfLastAxe == 1) { // Extend the y axe if the last axe is the y axe
+			tex.y *= length;
+		} else {
+			tex.x *= length;
+		}
+		defaultVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, Dir3D::to_ivec3(dir), texID });
+	}
+}
+
+void Section::addWaterFace(std::vector<WaterMesh::Vertex>& waterVertices, Dir3D::Dir dir,
+	int indexOfLastAxe, int length, ivec3 firstBlockGlobalPos) const {
+
+	auto addWaterFace = [&indexOfLastAxe, &length, &waterVertices, &firstBlockGlobalPos](Dir3D::Dir dir) {
+		for (int vtx = 0; vtx < 4; ++vtx) {
+			vec3 currVtx = CubeData::dirToFace[dir][vtx];
+			currVtx[indexOfLastAxe] *= length;
+			waterVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), Dir3D::to_ivec3(dir) });
+		}
+	};
+	addWaterFace(dir);
+	addWaterFace(Dir3D::opp(dir));
+}
+
+std::vector<GLuint> getIndices(int size) {
+	std::vector<GLuint> indices;
 	for (int faceIndex = 0; faceIndex < size; ++faceIndex) // Each face (4 vertices)
 		for (GLuint rectIndex : CubeData::faceElementIndices) // Add the indices with an offset of 4 * faceIndex
 			indices.push_back(4 * faceIndex + rectIndex);
@@ -149,9 +177,9 @@ void Section::loadFaces() {
 	if (empty)
 		return;
 
-	vec<DefaultMesh::Vertex> defaultVertices;
-	vec<WaterMesh::Vertex> waterVertices;
-	tie(defaultVertices, waterVertices) = findFaces();
+	std::vector<DefaultMesh::Vertex> defaultVertices;
+	std::vector<WaterMesh::Vertex> waterVertices;
+	tie(defaultVertices, waterVertices) = findVisibleFaces();
 	nextDefaultMesh.loadBuffers(defaultVertices, getIndices((int)defaultVertices.size() / 4));
 	nextWaterMesh.loadBuffers(waterVertices, getIndices((int)waterVertices.size() / 4));
 
@@ -193,7 +221,8 @@ Block Section::getBlock(ivec3 pos) const {
 	return m_blocks->at(pos);
 }
 
-bool Section::isInSection(ivec3 globalPos) {
-	return 0 <= globalPos.x && globalPos.x < Const::SECTION_SIDE && 0 <= globalPos.y && globalPos.y < Const::SECTION_HEIGHT && 
+bool Section::isInSection(ivec3 globalPos) const {
+	return 0 <= globalPos.x && globalPos.x < Const::SECTION_SIDE && 
+			0 <= globalPos.y && globalPos.y < Const::SECTION_HEIGHT && 
 			0 <= globalPos.z && globalPos.z < Const::SECTION_SIDE;
 }
