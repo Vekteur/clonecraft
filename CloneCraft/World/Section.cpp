@@ -154,15 +154,15 @@ void Section::addDefaultFace(std::vector<DefaultMesh::Vertex>& defaultVertices, 
 void Section::addWaterFace(std::vector<WaterMesh::Vertex>& waterVertices, Dir3D::Dir dir,
 	int indexOfLastAxe, int length, ivec3 firstBlockGlobalPos) const {
 
-	auto addWaterFace = [&indexOfLastAxe, &length, &waterVertices, &firstBlockGlobalPos](Dir3D::Dir dir) {
+	auto addWaterFaceInDir = [&indexOfLastAxe, &length, &waterVertices](Dir3D::Dir dir, ivec3 firstBlockGlobalPos) {
 		for (int vtx = 0; vtx < 4; ++vtx) {
 			vec3 currVtx = CubeData::dirToFace[dir][vtx];
 			currVtx[indexOfLastAxe] *= length;
 			waterVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), Dir3D::to_ivec3(dir) });
 		}
 	};
-	addWaterFace(dir);
-	addWaterFace(Dir3D::opp(dir));
+	addWaterFaceInDir(dir, firstBlockGlobalPos);
+	addWaterFaceInDir(Dir3D::opp(dir), firstBlockGlobalPos + Dir3D::to_ivec3(dir));
 }
 
 std::vector<GLuint> getIndices(int size) {
@@ -174,9 +174,6 @@ std::vector<GLuint> getIndices(int size) {
 }
 
 void Section::loadFaces() {
-	if (empty)
-		return;
-
 	std::vector<DefaultMesh::Vertex> defaultVertices;
 	std::vector<WaterMesh::Vertex> waterVertices;
 	tie(defaultVertices, waterVertices) = findVisibleFaces();
@@ -213,8 +210,6 @@ ivec3 Section::getPosition() const {
 
 void Section::setBlock(ivec3 pos, Block block) {
 	m_blocks->at(pos) = block;
-	if (block.id != +BlockID::AIR)
-		empty = false;
 }
 
 Block Section::getBlock(ivec3 pos) const {

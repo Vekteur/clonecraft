@@ -5,22 +5,20 @@
 #include <memory>
 #include <thread>
 #include <chrono>
-#include <optional>
 #include <memory>
 #include <atomic>
 #include <utility>
 #include <vector>
 
-#include "View/Camera.h"
 #include "ResManager/ResManager.h"
 #include "World/Chunk.h"
 #include "World/ChunkMap.h"
 #include "View/Window.h"
-#include "Maths/LineBlockFinder.h"
 #include "Renderer/DefaultRenderer.h"
 #include "Renderer/WaterRenderer.h"
 #include "Renderer/PostProcessingRenderer.h"
 #include "Commands/Commands.h"
+#include "Player.h"
 
 class Window;
 
@@ -36,38 +34,29 @@ public:
 	void update(sf::Time dt);
 	void render();
 	void runChunkLoadingLoop(sf::Context* const p_context);
-
 	void onChangedSize(ivec2 size);
-
-	Camera& getCamera();
-	ChunkMap& getChunkMap();
-	std::optional<ivec3> getTarget();
-
-private:
 	bool canReloadBlocks();
 	void reloadBlocks(const std::vector<ivec3>& blocks);
+
+	Player& getPlayer();
+	ChunkMap& getChunkMap();
+	Window& getWindow();
+
+private:
 	void clearRenderTarget();
 
 	std::vector<ivec3> explosionBlocks(ivec3 center, int radius);
-	void explode();
-	void teleport();
+	void explode(int radius);
 
-	static const float TARGET_DISTANCE;
+	Player m_player;
 
 	Window* const p_window{ nullptr };
 	sf::Context* const p_context1{ nullptr };
 	sf::Context* const p_context2{ nullptr };
-	Camera m_camera;
 	ChunkMap m_chunkMap;
-	std::optional<ivec3> targetPos;
-	std::optional<ivec3> placePos;
-	std::optional<Block> pickedBlock;
 
 	float moveOffset = 0;
 	std::atomic<bool> updatingThreadFinished{ true };
-
-	sf::Time breakAccumulator = sf::seconds(0.f);
-	sf::Time placeAccumulator = sf::seconds(0.f);
 
 	DefaultRenderer m_defaultRenderer;
 	WaterRenderer m_waterRenderer;

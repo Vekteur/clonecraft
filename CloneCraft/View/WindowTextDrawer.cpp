@@ -15,13 +15,13 @@ WindowTextDrawer::WindowTextDrawer(Window * window) : p_window{ window } {
 void WindowTextDrawer::drawAll(int fps, Game& game) {
 	line = 0;
 	drawFPS(fps);
-	vec3 pos = game.getCamera().getPosition();
+	vec3 pos = game.getPlayer().getPosition();
 	ivec3 blockPos = Converter::globalPosToBlock(pos);
 	drawGlobalPosition(pos);
 	drawLocalPosition(Converter::globalToInnerSection(pos));
 	drawSectionPosition(Converter::globalToSection(blockPos));
-	drawTarget(game.getTarget());
-	drawDirection(game.getCamera().getYaw(), game.getCamera().getPitch());
+	drawTarget(game.getPlayer().getTarget());
+	drawDirection(game.getPlayer().getCamera().getYaw(), game.getPlayer().getCamera().getPitch());
 	drawBiome(g_worldGenerator.biomeMap().getBiomeName(Converter::to2D(blockPos)));
 	drawRenderedChunks(game.getChunkMap().getRenderedChunks());
 	drawBlockChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES));

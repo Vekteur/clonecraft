@@ -33,7 +33,7 @@ void main()
 	vec2 distortion = texture(dudvMap, tex + vec2(moveOffset, 0)).rg;
 	/*distortion *= 0.1f; // Decrease the effect of the first sampling
 	// Resample the dudv map with the distorted texture coordinate and a y offset
-	distortion = texture(dudvMap, tex + distortion + vec2(0, moveOffset)).rg*/;
+	distortion = texture(dudvMap, tex + distortion + vec2(0, moveOffset)).rg;*/
 	distortion = distortion * 2.f - 1.f; // Allow negative distortion
 	distortion = distortion * waveStrength;
 	

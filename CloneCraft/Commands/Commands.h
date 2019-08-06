@@ -14,7 +14,8 @@ enum class Command {
 	RIGHT,
 	UP,
 	DOWN,
-	EXPLODE,
+	EXPLOSION,
+	HUGE_EXPLOSION,
 	TELEPORT,
 	UNKNOWN,
 	SIZE

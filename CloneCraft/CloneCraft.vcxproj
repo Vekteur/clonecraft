@@ -41,6 +41,7 @@
     <ClInclude Include="Generator\Biome\Mountains.h" />
     <ClInclude Include="Generator\Biome\Ocean.h" />
     <ClInclude Include="Generator\Structure\Palm.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="Renderer\PostProcessingRenderer.h" />
     <ClInclude Include="Generator\Structure\Tree.h" />
     <ClInclude Include="Generator\Biome\Snow.h" />
@@ -87,6 +88,7 @@
     <ClCompile Include="Generator\Biome\Mountains.cpp" />
     <ClCompile Include="Generator\Biome\Ocean.cpp" />
     <ClCompile Include="Generator\Structure\Palm.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Renderer\PostProcessingRenderer.cpp" />
     <ClCompile Include="ResManager\TextureArray.cpp" />
     <ClCompile Include="Renderer\DefaultRenderer.cpp" />

@@ -5,6 +5,10 @@
 
 Structure::Structure(ivec3 size) : m_blocks{ size } {}
 
+ivec2 Structure::getSupportPos(ivec2 globalPos) const {
+	return getCenterPos(globalPos);
+}
+
 Block Structure::getBlock(ivec3 pos) const {
 	return m_blocks.at(pos);
 }

@@ -64,6 +64,7 @@ bool ChunkMap::isInLoadDistance(ivec2 pos) const {
 
 void ChunkMap::unloadFarChunks() {
 	m_deleteChunksMutex.lock();
+
 	for (auto it = m_chunks.begin(); it != m_chunks.end();) {
 		if (it->second->getState() == Chunk::TO_REMOVE) {
 			it = m_chunks.erase(it);
@@ -73,25 +74,27 @@ void ChunkMap::unloadFarChunks() {
 		}
 		++it;
 	}
+
 	m_deleteChunksMutex.unlock();
 }
 
 void ChunkMap::update() {
 	m_deleteChunksMutex.lock();
+
 	for (auto& c : m_chunks) {
 		if (c.second->getState() == Chunk::TO_UNLOAD_VAOS) {
 			c.second->unloadVAOs();
 		}
 	}
-	while (!toLoadChunks.empty()) {
-   		getChunk(toLoadChunks.front()).loadVAOs();
-		toLoadChunks.pop();
+	while (!m_chunksToLoad.empty()) {
+   		getChunk(m_chunksToLoad.front()).loadVAOs();
+		m_chunksToLoad.pop();
 	}
 
-	while (!toReloadSections.empty()) {
-		getSection(toReloadSections.front()).unloadVAOs();
-		getSection(toReloadSections.front()).loadVAOs();
-		toReloadSections.pop();
+	while (!m_sectionsToReload.empty()) {
+		getSection(m_sectionsToReload.front()).unloadVAOs();
+		getSection(m_sectionsToReload.front()).loadVAOs();
+		m_sectionsToReload.pop();
 	}
 
 	m_deleteChunksMutex.unlock();
@@ -99,9 +102,9 @@ void ChunkMap::update() {
 
 void ChunkMap::onChangeChunkState(Chunk& chunk, Chunk::State nextState) {
 	if (chunk.getState() != Chunk::STATE_SIZE)
-		--countChunks[chunk.getState()];
+		--m_countChunks[chunk.getState()];
 	if (nextState != Chunk::STATE_SIZE)
-		++countChunks[nextState];
+		++m_countChunks[nextState];
 }
 
 void ChunkMap::loadBlocks(ivec2 pos) {
@@ -116,7 +119,7 @@ void ChunkMap::loadBlocks(ivec2 pos) {
 void ChunkMap::loadFaces(ivec2 pos) {
 	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_FACES) {
 		m_chunks[pos]->loadFaces();
-		toLoadChunks.push(pos);
+		m_chunksToLoad.push(pos);
 	}
 }
 
@@ -139,7 +142,7 @@ void ChunkMap::render(const Frustum& frustum, const DefaultRenderer* defaultRend
 			chunks.push_back({ math::manhattan(chunk->getPosition(), m_center), chunk.get() });
 		}
 	}
-	renderedChunks = chunks.size();
+	m_renderedChunks = chunks.size();
 	std::sort(chunks.begin(), chunks.end(), [](const std::tuple<int, Chunk* >& c1, const std::tuple<int, Chunk* >& c2) {
 		return std::get<0>(c1) < std::get<0>(c2);
 	});
@@ -163,12 +166,16 @@ ivec2 ChunkMap::getCenter() {
 }
 
 void ChunkMap::reloadSection(ivec3 pos) {
-	auto chunkIt = m_chunks.find({ pos.x, pos.z });
-	if (chunkIt != m_chunks.end() && chunkIt->second->getState() >= Chunk::TO_RENDER &&
-		0 <= pos.y && pos.y < chunkIt->second->getHeight()) {
+	m_deleteChunksMutex.lock();
+
+	auto chunkIt = m_chunks.find(Converter::to2D(pos));
+	if (chunkIt != m_chunks.end() && chunkIt->second->getState() == Chunk::TO_RENDER &&
+			0 <= pos.y && pos.y < chunkIt->second->getHeight()) {
 		chunkIt->second->getSection(pos.y).loadFaces();
-		toReloadSections.push(pos);
+		m_sectionsToReload.push(pos);
 	}
+
+	m_deleteChunksMutex.unlock();
 }
 
 void ChunkMap::reloadBlocks(const std::vector<ivec3>& blocks) {
@@ -202,7 +209,8 @@ std::unordered_map<ivec2, std::unique_ptr<Chunk>, ChunkMap::Comp_ivec2, ChunkMap
 ChunkMap::hasBlock(ivec3 globalPos, bool canSurpass) const {
 	auto chunkIt = m_chunks.find(Converter::globalToChunk(globalPos));
 	if (chunkIt != m_chunks.end() && chunkIt->second->getState() > Chunk::TO_LOAD_BLOCKS &&
-		0 <= globalPos.y && (canSurpass || globalPos.y < chunkIt->second->getHeight() * Const::SECTION_HEIGHT))
+			0 <= globalPos.y &&
+			(canSurpass || globalPos.y < chunkIt->second->getHeight() * Const::SECTION_HEIGHT))
 		return chunkIt;
 	else
 		return m_chunks.end();
@@ -234,11 +242,11 @@ const Chunk& ChunkMap::getChunk(ivec2 chunkPos) const { // Must be a valid chunk
 }
 
 Section& ChunkMap::getSection(ivec3 sectionPos) { // Must be a valid section position
-	return getChunk({ sectionPos.x, sectionPos.z }).getSection(sectionPos.y);
+	return getChunk(Converter::to2D(sectionPos)).getSection(sectionPos.y);
 }
 
 const Section& ChunkMap::getSection(ivec3 sectionPos) const { // Must be a valid section position
-	return getChunk({ sectionPos.x, sectionPos.z }).getSection(sectionPos.y);
+	return getChunk(Converter::to2D(sectionPos)).getSection(sectionPos.y);
 }
 
 int ChunkMap::size() {
@@ -246,21 +254,21 @@ int ChunkMap::size() {
 }
 
 void ChunkMap::stop() {
-	mustStop = true;
+	m_mustStop = true;
 }
 
 int ChunkMap::chunksAtLeastInState(Chunk::State minState) {
 	int sum = 0;
 	for (int state = minState; state < Chunk::STATE_SIZE; ++state) {
-		sum += countChunks[state];
+		sum += m_countChunks[state];
 	}
 	return sum;
 }
 
 int ChunkMap::chunksInState(Chunk::State state) {
-	return countChunks[state];
+	return m_countChunks[state];
 }
 
 int ChunkMap::getRenderedChunks() {
-	return renderedChunks;
+	return m_renderedChunks;
 }

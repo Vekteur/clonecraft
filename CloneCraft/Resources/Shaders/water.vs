@@ -26,10 +26,10 @@ void main()
 {
 	vec4 posRelativeToCam = view * vec4(pos, 1.0f);
 	
-	vs_out.distanceFromPlayer = length(posRelativeToCam.xyz);
-	float vDistance = length(posRelativeToCam.xz);
+	float vDistance = length(posRelativeToCam.xyz);
 	vs_out.visibility = exp(-pow((vDistance * density / distance), gradient));
 	vs_out.visibility = clamp(vs_out.visibility, 0.0f, 1.0f);
+	vs_out.distanceFromPlayer = vDistance;
 
 	vs_out.pos = ivec3(pos);
 	vs_out.tex = vec2(pos.x, pos.z) / 32.f;

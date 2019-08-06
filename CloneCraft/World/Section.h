@@ -47,7 +47,6 @@ private:
 	DefaultMesh nextDefaultMesh;
 	WaterMesh activeWaterMesh;
 	WaterMesh nextWaterMesh;
-	bool empty = true;
 
 	bool isInSection(ivec3 globalPos) const;
 	const Section* findNeighboringSection(Dir3D::Dir dir) const;

@@ -22,7 +22,7 @@ void main()
 
 	vec4 posRelativeToCam = view * vec4(pos, 1.0f);
 	
-	float vDistance = length(posRelativeToCam.xz);
+	float vDistance = length(posRelativeToCam.xyz);
 	visibility = exp(-pow((vDistance * density / distance), gradient));
 	visibility = clamp(visibility, 0.0f, 1.0f);
 	

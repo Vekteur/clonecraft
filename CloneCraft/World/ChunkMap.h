@@ -13,15 +13,6 @@
 
 class ChunkMap {
 public:
-	struct Comp_ivec2 {
-		size_t operator()(const ivec2& vec) const {
-			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1);
-		}
-		bool operator()(const ivec2& a, const ivec2& b) const {
-			return a.x == b.x && a.y == b.y;
-		}
-	};
-
 	static const int VIEW_DISTANCE, LOAD_DISTANCE, SIDE, CHUNKS_PER_LOAD;
 
 	ChunkMap(ivec2 center = ivec2{ 0, 0 });
@@ -52,15 +43,24 @@ public:
 	int getRenderedChunks();
 
 private:
+	struct Comp_ivec2 {
+		size_t operator()(const ivec2& vec) const {
+			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1);
+		}
+		bool operator()(const ivec2& a, const ivec2& b) const {
+			return a.x == b.x && a.y == b.y;
+		}
+	};
+
 	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2> m_chunks;
-	std::queue<ivec2> toLoadChunks;
-	std::queue<ivec3> toReloadSections;
+	std::queue<ivec2> m_chunksToLoad;
+	std::queue<ivec3> m_sectionsToReload;
 	ivec2 m_center;
 	mutable std::mutex m_deleteChunksMutex;
-	bool mustStop = false;
+	bool m_mustStop = false;
 
-	int renderedChunks = 0;
-	std::array<int, Chunk::STATE_SIZE> countChunks;
+	int m_renderedChunks = 0;
+	std::array<int, Chunk::STATE_SIZE> m_countChunks{};
 
 	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2>::const_iterator
 		hasBlock(ivec3 globalPos, bool canSurpass = false) const;

@@ -7,10 +7,8 @@
 #include "Util/Logger.h"
 #include "Block/BlockDatas.h"
 
-const float Game::TARGET_DISTANCE{ static_cast<float>(ChunkMap::VIEW_DISTANCE * Const::SECTION_SIDE) };
-
 Game::Game(Window* const window, sf::Context* const context1, sf::Context* const context2)
-	: m_camera{ vec3{0.0f, 80.0f, 0.0f } }, p_window{ window }, p_context1{ context1 }, p_context2{ context2 },
+	: m_player{ this }, p_window{ window }, p_context1{ context1 }, p_context2{ context2 },
 	m_waterRenderer{ { p_window->size() } }, m_postProcessingRenderer{ { p_window->size() } } {
 
 	ResManager::initBlockDatas(std::vector<TextureArray*>{ &m_defaultRenderer.getTextureArray() });
@@ -29,7 +27,7 @@ void Game::runChunkLoadingLoop(sf::Context* const p_context) {
 	p_context->setActive(true);
 
 	while (!m_stopGeneratingThread) {
-		m_chunkMap.load(m_camera.getFrustum());
+		m_chunkMap.load(m_player.getCamera().getFrustum());
 		m_chunkMap.unloadFarChunks();
 	}
 }
@@ -62,26 +60,23 @@ void Game::reloadBlocks(const std::vector<ivec3>& blocks) {
 void Game::processKeyboard(sf::Time dt, Commands& commands) {
 	GLfloat dtSec = dt.asSeconds();
 	if (commands.isActive(Command::FORWARD))
-		m_camera.move(Camera::FORWARD, dtSec);
+		m_player.move(Camera::FORWARD, dtSec);
 	if (commands.isActive(Command::BACKWARD))
-		m_camera.move(Camera::BACKWARD, dtSec);
+		m_player.move(Camera::BACKWARD, dtSec);
 	if (commands.isActive(Command::LEFT))
-		m_camera.move(Camera::LEFT, dtSec);
+		m_player.move(Camera::LEFT, dtSec);
 	if (commands.isActive(Command::RIGHT))
-		m_camera.move(Camera::RIGHT, dtSec);
+		m_player.move(Camera::RIGHT, dtSec);
 	if (commands.isActive(Command::UP))
-		m_camera.move(Camera::UP, dtSec);
+		m_player.move(Camera::UP, dtSec);
 	if (commands.isActive(Command::DOWN))
-		m_camera.move(Camera::DOWN, dtSec);
-	if (commands.isActive(Command::EXPLODE))
-		explode();
+		m_player.move(Camera::DOWN, dtSec);
+	if (commands.isActive(Command::EXPLOSION))
+		explode(15);
+	if (commands.isActive(Command::HUGE_EXPLOSION))
+		explode(100);
 	if (commands.isActive(Command::TELEPORT))
-		teleport();
-}
-
-void Game::teleport() {
-	if (targetPos.has_value())
-		m_camera.setPosition(targetPos.value());
+		m_player.teleport();
 }
 
 std::vector<ivec3> Game::explosionBlocks(ivec3 center, int radius) {
@@ -101,9 +96,9 @@ std::vector<ivec3> Game::explosionBlocks(ivec3 center, int radius) {
 	return blocks;
 }
 
-void Game::explode() {
-	if (canReloadBlocks() && targetPos.has_value()) {
-		std::vector<ivec3> blocks = explosionBlocks(targetPos.value(), 15);
+void Game::explode(int radius) {
+	if (canReloadBlocks() && m_player.getTarget().has_value()) {
+		std::vector<ivec3> blocks = explosionBlocks(m_player.getTarget().value(), radius);
 		for (ivec3 pos : blocks) {
 			m_chunkMap.setBlock(pos, +BlockID::AIR); // Try STONE
 		}
@@ -112,67 +107,29 @@ void Game::explode() {
 }
 
 void Game::processMouseClick(sf::Time dt, Commands& commands) {
-	if (commands.isActive(Command::PICK) && targetPos.has_value()) {
-		pickedBlock = m_chunkMap.getBlock(targetPos.value());
-	}
-	breakAccumulator += dt;
-	if (commands.isActive(Command::BREAK) && breakAccumulator >= sf::seconds(0.1f) && targetPos.has_value()
-		&& canReloadBlocks()) {
-
-		m_chunkMap.setBlock(targetPos.value(), +BlockID::AIR);
-		reloadBlocks({ targetPos.value() });
-		breakAccumulator = sf::seconds(0.f);
-	}
-	placeAccumulator += dt;
-	if (commands.isActive(Command::PLACE) && placeAccumulator >= sf::seconds(0.1f) && placePos.has_value() &&
-		pickedBlock.has_value() && canReloadBlocks()) {
-
-		m_chunkMap.setBlock(placePos.value(), pickedBlock.value());
-		reloadBlocks({ placePos.value() });
-		placeAccumulator = sf::seconds(0.f);
-	}
+	m_player.processMouseClick(dt, commands);
 }
 
 void Game::processMouseMove(sf::Time dt) {
-	sf::Vector2i mousePosTemp{ sf::Mouse::getPosition(*p_window) };
-	ivec2 mousePosition{ mousePosTemp.x, mousePosTemp.y };
-	ivec2 windowCenter{ p_window->getCenter() };
-	ivec2 mouseOffset{ mousePosition - windowCenter };
-	m_camera.processMouse(mouseOffset);
+	m_player.processMouseMove(dt);
 }
 
 void Game::processMouseWheel(sf::Time dt, GLfloat delta) {
-	m_camera.processMouseScroll(delta);
+	m_player.processMouseWheel(dt, delta);
 }
 
 void Game::update(sf::Time dt) {
-	m_camera.update({ p_window->size() });
-	m_defaultRenderer.getShader().use().set("view", m_camera.getViewMatrix());
-	m_defaultRenderer.getShader().use().set("projection", m_camera.getProjMatrix());
+	m_player.update(dt);
+	m_defaultRenderer.getShader().use().set("view", m_player.getCamera().getViewMatrix());
+	m_defaultRenderer.getShader().use().set("projection", m_player.getCamera().getProjMatrix());
 	m_defaultRenderer.getShader().use().set("skyColor", p_window->getClearColor());
-	m_waterRenderer.getShader().use().set("view", m_camera.getViewMatrix());
-	m_waterRenderer.getShader().use().set("projection", m_camera.getProjMatrix());
+	m_waterRenderer.getShader().use().set("view", m_player.getCamera().getViewMatrix());
+	m_waterRenderer.getShader().use().set("projection", m_player.getCamera().getProjMatrix());
 	m_waterRenderer.getShader().use().set("skyColor", p_window->getClearColor());
-	m_waterRenderer.getShader().use().set("cameraPosition", m_camera.getPosition());
+	m_waterRenderer.getShader().use().set("cameraPosition", m_player.getCamera().getPosition());
 
-	m_chunkMap.setCenter(Converter::globalToChunk(m_camera.getPosition()));
+	m_chunkMap.setCenter(Converter::globalToChunk(m_player.getPosition()));
 	m_chunkMap.update();
-
-	LineBlockFinder lineBlockFinder{ m_camera.getPosition(), m_camera.getFront() };
-	placePos = std::nullopt;
-	targetPos = std::nullopt;
-	while (lineBlockFinder.getDistance() <= TARGET_DISTANCE) {
-		ivec3 iterPos = lineBlockFinder.next();
-		Block block = m_chunkMap.getBlock(iterPos);
-		if (ResManager::blockDatas().get(block.id).getCategory() != BlockData::AIR &&
-				ResManager::blockDatas().get(block.id).getCategory() != BlockData::WATER) {
-			targetPos = iterPos;
-			break;
-		}
-		placePos = iterPos;
-	}
-	if (targetPos == std::nullopt)
-		placePos = std::nullopt;
 
 	moveOffset = fmod(moveOffset + 0.02f * dt.asSeconds(), 1.f);
 	m_waterRenderer.getShader().use().set("moveOffset", moveOffset);
@@ -186,13 +143,13 @@ void Game::clearRenderTarget() {
 
 void Game::render() {
 	m_waterRenderer.prepare([this]() {
-		m_chunkMap.render(m_camera.getFrustum(), &m_defaultRenderer);
+		m_chunkMap.render(m_player.getCamera().getFrustum(), &m_defaultRenderer);
 	}, [this]() {
 		clearRenderTarget(); 
-	}, m_defaultRenderer, m_camera, p_window->size());
+	}, m_defaultRenderer, m_player.getCamera(), p_window->size());
 
 	m_postProcessingRenderer.prepare([this]() {
-		m_chunkMap.render(m_camera.getFrustum(), &m_defaultRenderer, &m_waterRenderer);
+		m_chunkMap.render(m_player.getCamera().getFrustum(), &m_defaultRenderer, &m_waterRenderer);
 		
 		// TODO : use the refraction texture both for rendering and in the water shaders
 
@@ -216,14 +173,14 @@ void Game::render() {
 	m_postProcessingRenderer.render();
 }
 
-Camera& Game::getCamera() {
-	return m_camera;
+Player& Game::getPlayer() {
+	return m_player;
 }
 
 ChunkMap & Game::getChunkMap() {
 	return m_chunkMap;
 }
 
-std::optional<ivec3> Game::getTarget() {
-	return targetPos;
+Window& Game::getWindow() {
+	return *p_window;
 }
