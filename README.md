@@ -4,7 +4,7 @@ An implementation of a simple voxel game inspired by Minecraft.
 It is written in C++ 17 and uses OpenGL 3.3 and SFML 2.5.
 The game is written with efficiency and simplicity in mind.
 
-[Screenshot](/Docs/screenshot.png)
+![Screenshot](/Docs/screenshot.png?raw=true)
 
 ### Controls
 
