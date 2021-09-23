@@ -86,7 +86,7 @@ void WorldGenerator::loadStructure(Chunk& chunk, const Structure& structure, flo
 std::optional<ivec2> WorldGenerator::findLocalPos(const Structure& structure, ivec2 zonePos, float freq) const {
 	ivec3 size = structure.size();
 	ivec2 zoneSize = { size.x, size.z };
-	ivec2 bounds = (1.f / sqrt(freq)) * vec2(zoneSize);
+	ivec2 bounds = float(1.f / sqrt(freq)) * vec2(zoneSize);
 
 	int posX = PerlinNoise::perm[PerlinNoise::perm[posMod(zonePos.x, 256)] + posMod(zonePos.y, 256)];
 	int posY = PerlinNoise::perm[PerlinNoise::perm[posMod(zonePos.y, 256)] + posMod(zonePos.x, 256)];

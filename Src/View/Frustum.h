@@ -4,6 +4,7 @@
 
 #include <Maths/Dir3D.h>
 #include <Maths/GlmCommon.h>
+#include <Maths/AABB.h>
 
 struct Plane : vec4 {
 	vec3 norm() const;
@@ -11,11 +12,8 @@ struct Plane : vec4 {
 	void normalize();
 };
 
-struct Box {
-	vec3 pos, size;
-	vec3 firstPointCrossed(vec3 norm);
-	vec3 lastPointCrossed(vec3 norm);
-};
+vec3 firstPointCrossed(const Box& box, vec3 norm);
+vec3 lastPointCrossed(const Box& box, vec3 norm);
 
 class Frustum {
 public:

@@ -1,7 +1,7 @@
 #include "ChunkMap.h"
 
 #include "ResManager/ResManager.h"
-#include "Util/Debug.h"
+#include "Util/DebugGL.h"
 #include "Maths/Dir2D.h"
 #include "Maths/Dir3D.h"
 #include "Util/Array3D.h"
@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <unordered_set>
 
-const int ChunkMap::VIEW_DISTANCE{ 20 };
+const int ChunkMap::VIEW_DISTANCE{ 32 };
 const int ChunkMap::LOAD_DISTANCE{ VIEW_DISTANCE + 1 };
 const int ChunkMap::SIDE{ (2 * VIEW_DISTANCE + 1) * Const::SECTION_SIDE };
 const int ChunkMap::CHUNKS_PER_LOAD{ 8 };

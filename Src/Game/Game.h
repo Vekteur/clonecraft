@@ -18,7 +18,7 @@
 #include "Renderer/WaterRenderer.h"
 #include "Renderer/PostProcessingRenderer.h"
 #include "Commands/Commands.h"
-#include "Player.h"
+#include "Game/Player.h"
 
 class Window;
 

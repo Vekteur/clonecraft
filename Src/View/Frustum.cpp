@@ -14,20 +14,20 @@
 	 *this /= glm::length(norm());
  }
 
- inline vec3 Box::firstPointCrossed(vec3 norm) {
-	 vec3 point = pos;
+ inline vec3 firstPointCrossed(const Box& box, vec3 norm) {
+	 vec3 point = box.pos;
 	 for (int i = 0; i < 3; ++i) {
 		 if (norm[i] < 0.f)
-			 point[i] += size[i];
+			 point[i] += box.size[i];
 	 }
 	 return point;
  }
 
- inline vec3 Box::lastPointCrossed(vec3 norm) {
-	 vec3 point = pos;
+ inline vec3 lastPointCrossed(const Box& box, vec3 norm) {
+	 vec3 point = box.pos;
 	 for (int i = 0; i < 3; ++i) {
 		 if (norm[i] > 0.f)
-			 point[i] += size[i];
+			 point[i] += box.size[i];
 	 }
 	 return point;
  }
@@ -53,8 +53,8 @@ Frustum::Frustum(mat4 projView) {
 bool Frustum::isBoxOutside(Box box) const {
 	for (Dir3D::Dir dir : planeDirs) {
 		const Plane& plane = planes[dir];
-		if (!plane.contains(box.firstPointCrossed(plane.norm()))
-			&& !plane.contains(box.lastPointCrossed(plane.norm()))) {
+		if (!plane.contains(firstPointCrossed(box, plane.norm()))
+			&& !plane.contains(lastPointCrossed(box, plane.norm()))) {
 			return true;
 		}
 	}

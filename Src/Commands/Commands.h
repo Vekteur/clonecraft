@@ -17,6 +17,7 @@ enum class Command {
 	EXPLOSION,
 	HUGE_EXPLOSION,
 	TELEPORT,
+	NEXT_GAMEMODE,
 	UNKNOWN,
 	SIZE
 };

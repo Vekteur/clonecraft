@@ -1,12 +1,12 @@
 #include "Player.h"
 
-#include "Game.h"
-#include "Maths/LineBlockFinder.h"
+#include <Game/Game.h>
+#include <Maths/LineBlockFinder.h>
 
 const float Player::TARGET_DISTANCE{ static_cast<float>(ChunkMap::VIEW_DISTANCE * Const::SECTION_SIDE) };
 
 Player::Player(Game* game)
-	: game{ game }, m_camera { vec3{ 0.0f, 80.0f, 0.0f } } { }
+	: game{ game }, m_camera{ vec3{ 0.0f, 80.0f, 0.0f } }, m_movement{ this } { }
 
 void Player::processMouseClick(sf::Time dt, Commands& commands) {
 	if (commands.isActive(Command::PICK) && targetPos.has_value()) {
@@ -43,6 +43,8 @@ void Player::processMouseWheel(sf::Time dt, GLfloat delta) {
 }
 
 void Player::update(sf::Time dt) {
+	m_movement.update(dt.asSeconds());
+	m_camera.move(m_movement.getMoveAndReset(dt.asSeconds()));
 	m_camera.update({ game->getWindow().size() });
 
 	LineBlockFinder lineBlockFinder{ m_camera.getPosition(), m_camera.getFront() };
@@ -51,8 +53,8 @@ void Player::update(sf::Time dt) {
 	while (lineBlockFinder.getDistance() <= TARGET_DISTANCE) {
 		ivec3 iterPos = lineBlockFinder.next();
 		Block block = game->getChunkMap().getBlock(iterPos);
-		if (ResManager::blockDatas().get(block.id).getCategory() != BlockData::AIR &&
-			ResManager::blockDatas().get(block.id).getCategory() != BlockData::WATER) {
+		BlockData::Category category = ResManager::blockDatas().get(block.id).getCategory();
+		if (category != BlockData::AIR && category != BlockData::WATER) {
 			targetPos = iterPos;
 			break;
 		}
@@ -63,19 +65,39 @@ void Player::update(sf::Time dt) {
 }
 
 void Player::teleport() {
-	if (targetPos.has_value())
-		m_camera.setPosition(targetPos.value());
+	if (targetPos.has_value()) {
+		vec3 pos = targetPos.value();
+		pos += vec3(0.5, 1 + Movement::PLAYER_HEAD_HEIGHT, 0.5);
+		m_camera.setPosition(pos);
+	}
 }
 
-void Player::move(Camera::Direction direction, float deltaTime) {
-	m_camera.move(direction, deltaTime);
+void Player::move(Movement::Direction direction, sf::Time dt) {
+	m_movement.move(direction, dt.asSeconds());
 }
 
-vec3 Player::getPosition() {
+vec3 Player::getPosition() const {
 	return m_camera.getPosition();
 }
 
+void Player::nextGameMode() {
+	int next_int = (static_cast<int>(m_gameMode) + 1) % static_cast<int>(GameMode::SIZE);
+	m_gameMode = static_cast<GameMode>(next_int);
+}
+
+void Player::setGameMode(GameMode gameMode) {
+	m_gameMode = gameMode;
+}
+
+GameMode Player::getGameMode() const {
+	return m_gameMode;
+}
+
 Camera& Player::getCamera() {
+	return m_camera;
+}
+
+const Camera& Player::getCamera() const {
 	return m_camera;
 }
 

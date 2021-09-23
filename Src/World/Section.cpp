@@ -3,7 +3,7 @@
 #include "Generator/Noise/OctavePerlin.h"
 #include "Maths/Converter.h"
 #include "ChunkMap.h"
-#include "Util/Debug.h"
+#include "Util/DebugGL.h"
 #include "ResManager/ResManager.h"
 #include "Util/Logger.h"
 #include "CubeData.h"

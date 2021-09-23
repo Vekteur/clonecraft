@@ -7,7 +7,6 @@
 #include "Maths/Converter.h"
 #include "Util/Logger.h"
 
-const float Camera::SPEED{ 30.f };
 const float Camera::SENSIVITY{ 0.16f };
 const float Camera::SCROLLSPEED{ 3.f / 2 };
 const float Camera::ZOOM{ 45.f };
@@ -34,70 +33,45 @@ void Camera::update(ivec2 screenDim) {
 	m_frustum = Frustum(m_projViewMatrix);
 }
 
-mat4 Camera::getViewMatrix() {
+mat4 Camera::getViewMatrix() const {
 	return m_viewMatrix;
 }
 
-mat4 Camera::getProjMatrix() {
+mat4 Camera::getProjMatrix() const {
 	return m_projMatrix;
 }
 
-mat4 Camera::getProjViewMatrix() {
+mat4 Camera::getProjViewMatrix() const {
 	return m_projViewMatrix;
 }
 
-Frustum Camera::getFrustum() {
+Frustum Camera::getFrustum() const {
 	return m_frustum;
 }
 
-vec3 Camera::getPosition() {
+vec3 Camera::getPosition() const {
 	return m_position;
 }
 
-vec3 Camera::getFront() {
+vec3 Camera::getFront() const {
 	return m_front;
 }
 
-float Camera::getYaw() {
+vec3 Camera::getRight() const {
+	return m_right;
+}
+
+float Camera::getYaw() const {
 	return m_yaw;
 }
 
-float Camera::getPitch() {
+float Camera::getPitch() const {
 	return m_pitch;
 }
 
 void Camera::invertPitch() {
 	m_pitch = -m_pitch;
 	updateFromEuler();
-}
-
-vec3 toHorizontal(vec3 vec) { // There must be a horizontal movement
-	return normalize(vec3{ vec.x, 0.f, vec.z });
-}
-
-void Camera::move(Direction direction, float deltaTime) {
-	float velocity = m_speed * deltaTime;
-
-	switch (direction) {
-	case FORWARD:
-		m_position += toHorizontal(m_front) * velocity;
-		break;
-	case BACKWARD:
-		m_position -= toHorizontal(m_front) * velocity;
-		break;
-	case RIGHT:
-		m_position += toHorizontal(m_right) * velocity;
-		break;
-	case LEFT:
-		m_position -= toHorizontal(m_right) * velocity;
-		break;
-	case UP:
-		m_position += WORLDUP * velocity;
-		break;
-	case DOWN:
-		m_position -= WORLDUP * velocity;
-		break;
-	}
 }
 
 void Camera::move(vec3 offset) {
@@ -125,11 +99,10 @@ void Camera::processMouseScroll(float yOffset) {
 }
 
 void Camera::updateFromEuler() {
-	vec3 front;
-	front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-	front.y = sin(glm::radians(m_pitch));
-	front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-	m_front = normalize(front);
+	m_front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+	m_front.y = sin(glm::radians(m_pitch));
+	m_front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+	m_front = normalize(m_front);
 
 	m_right = normalize(cross(m_front, WORLDUP));
 	m_up = normalize(cross(m_right, m_front));

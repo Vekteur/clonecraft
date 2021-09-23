@@ -5,7 +5,7 @@
 namespace math
 {
 	int manhattan(ivec2 pos1, ivec2 pos2) {
-		return abs(pos2.x - pos1.x) + abs(pos2.y - pos1.y);
+		return std::abs(pos2.x - pos1.x) + std::abs(pos2.y - pos1.y);
 	}
 
 	int euclidianPow2(ivec2 pos1, ivec2 pos2) {

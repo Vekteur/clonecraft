@@ -3,7 +3,7 @@
 #include <random>
 
 #include "Maths/Converter.h"
-#include "Util/Debug.h"
+#include "Util/DebugGL.h"
 #include "Util/Logger.h"
 #include "Block/BlockDatas.h"
 
@@ -58,25 +58,26 @@ void Game::reloadBlocks(const std::vector<ivec3>& blocks) {
 }
 
 void Game::processKeyboard(sf::Time dt, Commands& commands) {
-	GLfloat dtSec = dt.asSeconds();
 	if (commands.isActive(Command::FORWARD))
-		m_player.move(Camera::FORWARD, dtSec);
+		m_player.move(Movement::FORWARD, dt);
 	if (commands.isActive(Command::BACKWARD))
-		m_player.move(Camera::BACKWARD, dtSec);
+		m_player.move(Movement::BACKWARD, dt);
 	if (commands.isActive(Command::LEFT))
-		m_player.move(Camera::LEFT, dtSec);
+		m_player.move(Movement::LEFT, dt);
 	if (commands.isActive(Command::RIGHT))
-		m_player.move(Camera::RIGHT, dtSec);
+		m_player.move(Movement::RIGHT, dt);
 	if (commands.isActive(Command::UP))
-		m_player.move(Camera::UP, dtSec);
+		m_player.move(Movement::UP, dt);
 	if (commands.isActive(Command::DOWN))
-		m_player.move(Camera::DOWN, dtSec);
+		m_player.move(Movement::DOWN, dt);
 	if (commands.isActive(Command::EXPLOSION))
 		explode(15);
 	if (commands.isActive(Command::HUGE_EXPLOSION))
 		explode(100);
 	if (commands.isActive(Command::TELEPORT))
 		m_player.teleport();
+	if (commands.isActive(Command::NEXT_GAMEMODE))
+		m_player.nextGameMode();
 }
 
 std::vector<ivec3> Game::explosionBlocks(ivec3 center, int radius) {
@@ -151,7 +152,8 @@ void Game::render() {
 	m_postProcessingRenderer.prepare([this]() {
 		m_chunkMap.render(m_player.getCamera().getFrustum(), &m_defaultRenderer, &m_waterRenderer);
 		
-		// TODO : use the refraction texture both for rendering and in the water shaders
+		// TODO: use the refraction texture both for rendering and in the water shaders
+		// Still needs some work
 
 		/*glBindFramebuffer(GL_READ_FRAMEBUFFER,
 			m_waterRenderer.getRefractionTexture().getTexture().getNativeHandle());

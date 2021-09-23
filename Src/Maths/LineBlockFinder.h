@@ -1,7 +1,8 @@
 #pragma once
 
-#include <Maths/GlmCommon.h>
 #include <tuple>
+
+#include <Maths/GlmCommon.h>
 
 class LineBlockFinder {
 public:
@@ -11,7 +12,7 @@ public:
 	float getDistance();
 
 private:
-	const float epsilon = static_cast<float>(1e-6f);
+	const float epsilon = 1e-6f;
 	vec3 pos;
 	vec3 dir;
 	float distance = 0.f;

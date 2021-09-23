@@ -14,8 +14,24 @@ target_include_directories(clonecraft PUBLIC Src External)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-find_package(glm CONFIG REQUIRED)
-target_link_libraries(clonecraft PRIVATE glm)
-
 find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
 target_link_libraries(clonecraft PRIVATE sfml-graphics)
+
+if(UNIX)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(clonecraft PRIVATE Threads::Threads)
+endif()
+
+find_package(OpenGL REQUIRED)
+
+target_include_directories(clonecraft PUBLIC
+                           $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+                           $<INSTALL_INTERFACE:include>)
+target_link_libraries(clonecraft PUBLIC OpenGL::GL ${CMAKE_DL_LIBS})
+
+if(MSVC)
+  target_compile_options(clonecraft PRIVATE /W3)
+else()
+  target_compile_options(clonecraft PRIVATE -Wall -Wextra)
+endif()

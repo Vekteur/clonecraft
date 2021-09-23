@@ -4,7 +4,7 @@
 
 #include "Window.h"
 #include "Maths/GlmCommon.h"
-#include "Game.h"
+#include "Game/Game.h"
 
 class WindowTextDrawer
 {
@@ -33,6 +33,7 @@ private:
 	void drawBlockChunks(int blockChunks);
 	void drawFaceChunks(int faceChunks);
 	void drawBlockNumber(int blockNumber);
+	void drawGameMode(GameMode gameMode);
 
 	void draw(std::string message);
 };

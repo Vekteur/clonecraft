@@ -19,9 +19,11 @@ Commands::Commands() {
 Command Commands::findKey(sf::Keyboard::Key key) const {
 	using namespace sf;
 	switch (key) {
-	case Keyboard::E: return Command::EXPLOSION;
-	case Keyboard::H: return Command::HUGE_EXPLOSION;
+	case Keyboard::E:
+		if (Keyboard::isKeyPressed(Keyboard::LAlt)) return Command::HUGE_EXPLOSION;
+		else return Command::EXPLOSION;
 	case Keyboard::T: return Command::TELEPORT;
+	case Keyboard::G: return Command::NEXT_GAMEMODE;
 	default: return Command::UNKNOWN;
 	}
 }

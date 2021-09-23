@@ -1,7 +1,7 @@
 #include "Window.h"
 
 #include "Util/Logger.h"
-#include "Util/Debug.h"
+#include "Util/DebugGL.h"
 
 const vec3 Window::clearColor{ 70.f / 255, 190.f / 255, 240.f / 255 };
 

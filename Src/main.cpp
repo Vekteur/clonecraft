@@ -3,21 +3,16 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "Game.h"
-#include "Util/Debug.h"
+#include "Game/Game.h"
+#include "Util/DebugGL.h"
 #include "View/Window.h"
 #include "Util/Logger.h"
-#include "FPSCounter.h"
+#include "Util/FPSCounter.h"
 #include "World/WorldConstants.h"
 #include "View/WindowTextDrawer.h"
 #include "View/CaptureMouse.h"
 #include "View/Crosshair.h"
 #include "Commands/Commands.h"
-
-// Use NVidia graphics card
-extern "C" {
-	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
-}
 
 int main(int argc, char* argv[]) {
 	LOG.setFileOutputLevel(Level::DEBUG);

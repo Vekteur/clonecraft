@@ -2,6 +2,7 @@
 
 #include "World/WorldConstants.h"
 #include "Util/Logger.h"
+#include "Maths/Converter.h"
 
 int Mountains::getHeight(ivec2 pos) const {
 	double noise = perlin.getNoise(static_cast<dvec2>(pos));
@@ -18,7 +19,7 @@ Block Mountains::getBlock(ivec3 pos, int height) const {
 }
 
 std::vector<StructureInfo> Mountains::getStructures() const {
-	return { { StructureID::TREE, 0.005f } };
+	return { { StructureID::TREE, 0.05f } };
 }
 
 double Mountains::biomeValue(double temperature, double altitude) const {
