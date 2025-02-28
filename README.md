@@ -70,6 +70,7 @@ It has been developed on Windows and Ubuntu.
 #### Ubuntu:
 ```
 git clone https://github.com/Vekteur/clonecraft
+cd clonecraft
 sudo apt install cmake libsfml-dev libglm-dev
 cmake . -B build -DCMAKE_BUILD_TYPE=release
 cmake --build build --config Release --target all -j 12
@@ -88,7 +89,7 @@ vcpkg integrate install
 
 An easy way to compile the code is to open the project with Visual Studio 2019/2022 and select the target `clonecraft.exe`.
 
-### Future additions
+### Potential future additions
 
 * Dynamic lighting
 * Water physics
