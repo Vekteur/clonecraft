@@ -142,38 +142,53 @@ void Game::clearRenderTarget() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+namespace {
+	// SFML does not expose the framebuffer object backing an sf::RenderTexture,
+	// but activating one binds its FBO, so we can recover its handle by reading
+	// the current framebuffer binding.
+	GLuint getFramebufferHandle(sf::RenderTexture& renderTexture) {
+		renderTexture.setActive(true);
+		GLint handle = 0;
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &handle);
+		return static_cast<GLuint>(handle);
+	}
+}
+
 void Game::render() {
+	ivec2 size = p_window->size();
+
 	m_waterRenderer.prepare([this]() {
 		m_chunkMap.render(m_player.getCamera().getFrustum(), &m_defaultRenderer);
 	}, [this]() {
-		clearRenderTarget(); 
-	}, m_defaultRenderer, m_player.getCamera(), p_window->size());
+		clearRenderTarget();
+	}, m_defaultRenderer, m_player.getCamera(), size);
 
-	m_postProcessingRenderer.prepare([this]() {
-		m_chunkMap.render(m_player.getCamera().getFrustum(), &m_defaultRenderer, &m_waterRenderer);
-		
-		// TODO: use the refraction texture both for rendering and in the water shaders
-		// Still needs some work
+	m_postProcessingRenderer.prepare([this, size]() {
+		// The refraction texture already contains the whole scene (color and depth)
+		// rendered from the player's point of view, so we reuse it as the base image
+		// instead of rendering the terrain a second time. We blit it into the
+		// post-processing target (keeping the depth buffer so the water is correctly
+		// occluded) and then only draw the water on top, which samples the refraction
+		// texture in the water shader.
+		GLuint refractionFbo = getFramebufferHandle(m_waterRenderer.getRefractionTexture());
+		GLuint renderFbo = getFramebufferHandle(m_postProcessingRenderer.getRenderTexture());
 
-		/*glBindFramebuffer(GL_READ_FRAMEBUFFER,
-			m_waterRenderer.getRefractionTexture().getTexture().getNativeHandle());
-		Debug::glCheckError();
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER,
-			m_postProcessingRenderer.getRenderTexture().getTexture().getNativeHandle());
-		Debug::glCheckError();
-		glBlitFramebuffer(0, 0, p_window->size().x, p_window->size().y, 0, 0, p_window->size().x, p_window->size().y,
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, refractionFbo);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderFbo);
+		glBlitFramebuffer(0, 0, size.x, size.y, 0, 0, size.x, size.y,
 			GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-		Debug::glCheckError();
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		m_chunkMap.render(m_camera.getFrustum(), nullptr, &m_waterRenderer);*/
+		glBindFramebuffer(GL_FRAMEBUFFER, renderFbo);
+
+		m_chunkMap.render(m_player.getCamera().getFrustum(), nullptr, &m_waterRenderer);
 	}, [this]() {
 		clearRenderTarget();
 	});
-	
+
 	p_window->setActive(true);
 	clearRenderTarget();
 	m_postProcessingRenderer.render();
 }
+
 
 Player& Game::getPlayer() {
 	return m_player;

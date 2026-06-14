@@ -95,4 +95,3 @@ An easy way to compile the code is to open the project with Visual Studio 2019/2
 * Water physics
 * Simple electricity system
 * Ambient occlusion
-* Workaround to stop rendering the refraction texture twice
