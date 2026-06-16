@@ -26,9 +26,9 @@ public:
 	Section(const Section& other) = delete;
 	Section& operator=(const Section& other) = delete;
 
-	void loadFaces();
-	void loadVAOs();
-	void unloadVAOs();
+	void loadMesh();
+	void uploadMesh();
+	void unloadMesh();
 	void render(const DefaultRenderer& shader) const;
 	void render(const WaterRenderer& waterRenderer) const;
 
@@ -47,6 +47,9 @@ private:
 	DefaultMesh nextDefaultMesh;
 	WaterMesh activeWaterMesh;
 	WaterMesh nextWaterMesh;
+	// Built on a worker thread by loadFaces(); uploaded to the GPU on the main thread by loadVAOs().
+	std::vector<DefaultMesh::Vertex> m_nextDefaultVertices;
+	std::vector<WaterMesh::Vertex> m_nextWaterVertices;
 
 	bool isInSection(ivec3 globalPos) const;
 	const Section* findNeighboringSection(Dir3D::Dir dir) const;

@@ -24,7 +24,7 @@ class Window;
 
 class Game {
 public:
-	Game(Window* const window, sf::Context* const context1, sf::Context* const context2);
+	Game(Window* const window);
 	~Game();
 
 	void processKeyboard(sf::Time dt, Commands& commands);
@@ -33,7 +33,7 @@ public:
 	void processMouseWheel(sf::Time dt, GLfloat delta);
 	void update(sf::Time dt);
 	void render();
-	void runChunkLoadingLoop(sf::Context* const p_context);
+	void runChunkLoadingLoop();
 	void onChangedSize(ivec2 size);
 	bool canReloadBlocks();
 	void reloadBlocks(const std::vector<ivec3>& blocks);
@@ -51,8 +51,6 @@ private:
 	Player m_player;
 
 	Window* const p_window{ nullptr };
-	sf::Context* const p_context1{ nullptr };
-	sf::Context* const p_context2{ nullptr };
 	ChunkMap m_chunkMap;
 
 	float moveOffset = 0;

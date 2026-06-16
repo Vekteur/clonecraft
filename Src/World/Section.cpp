@@ -173,27 +173,31 @@ std::vector<GLuint> getIndices(int size) {
 	return indices;
 }
 
-void Section::loadFaces() {
-	std::vector<DefaultMesh::Vertex> defaultVertices;
-	std::vector<WaterMesh::Vertex> waterVertices;
-	tie(defaultVertices, waterVertices) = findVisibleFaces();
-	nextDefaultMesh.loadBuffers(defaultVertices, getIndices((int)defaultVertices.size() / 4));
-	nextWaterMesh.loadBuffers(waterVertices, getIndices((int)waterVertices.size() / 4));
+void Section::loadMesh() {
+	// CPU only: build the vertex data. Runs on a worker thread, so it must not touch OpenGL.
+	tie(m_nextDefaultVertices, m_nextWaterVertices) = findVisibleFaces();
+}
+
+void Section::uploadMesh() {
+	// All OpenGL for the mesh happens here, on the main thread
+	nextDefaultMesh.loadBuffers(m_nextDefaultVertices, getIndices((int)m_nextDefaultVertices.size() / 4));
+	nextWaterMesh.loadBuffers(m_nextWaterVertices, getIndices((int)m_nextWaterVertices.size() / 4));
+	nextDefaultMesh.loadVAOs();
+	nextWaterMesh.loadVAOs();
+
+	activeDefaultMesh = std::move(nextDefaultMesh);
+	activeWaterMesh = std::move(nextWaterMesh);
+
+	// Free memory
+	m_nextDefaultVertices = {};
+	m_nextWaterVertices = {};
 
 	Debug::glCheckError();
 }
 
-void Section::loadVAOs() {
-	nextDefaultMesh.loadVAOs();
-	nextWaterMesh.loadVAOs();
-	
-	activeDefaultMesh = std::move(nextDefaultMesh);
-	activeWaterMesh = std::move(nextWaterMesh);
-}
-
-void Section::unloadVAOs() {
-	activeDefaultMesh.unloadVAOs();
-	activeWaterMesh.unloadVAOs();
+void Section::unloadMesh() {
+	activeDefaultMesh.release();
+	activeWaterMesh.release();
 }
 
 void Section::render(const DefaultRenderer &defaultRenderer) const {

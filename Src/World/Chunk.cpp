@@ -34,20 +34,20 @@ void Chunk::loadBlocks() {
 
 void Chunk::loadFaces() {
 	for (auto& section : m_sections) {
-		section.loadFaces();
+		section.loadMesh();
 	}
 	setState(TO_RENDER);
 }
 
 void Chunk::loadVAOs() {
 	for (auto& section : m_sections) {
-		section.loadVAOs();
+		section.uploadMesh();
 	}
 }
 
 void Chunk::unloadVAOs() {
 	for (auto& section : m_sections) {
-		section.unloadVAOs();
+		section.unloadMesh();
 	}
 	setState(TO_REMOVE);
 }

@@ -56,6 +56,11 @@ public:
 		}
 	}
 
+	void release() {
+		unloadVAOs();
+		clear();
+	}
+
 	void loadBuffers(const std::vector<V>& faces, const std::vector<GLuint>& indices) {
 		indicesNb = indices.size();
 		if (indicesNb != 0) {

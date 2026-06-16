@@ -7,12 +7,12 @@
 #include "Util/Logger.h"
 #include "Block/BlockDatas.h"
 
-Game::Game(Window* const window, sf::Context* const context1, sf::Context* const context2)
-	: m_player{ this }, p_window{ window }, p_context1{ context1 }, p_context2{ context2 },
+Game::Game(Window* const window)
+	: m_player{ this }, p_window{ window },
 	m_waterRenderer{ { p_window->size() } }, m_postProcessingRenderer{ { p_window->size() } } {
 
 	ResManager::initBlockDatas(std::vector<TextureArray*>{ &m_defaultRenderer.getTextureArray() });
-	m_generatingThread = std::thread{ &Game::runChunkLoadingLoop, this, p_context1 };
+	m_generatingThread = std::thread{ &Game::runChunkLoadingLoop, this };
 }
 
 Game::~Game() {
@@ -23,9 +23,8 @@ Game::~Game() {
 		m_updatingThread.join();
 }
 
-void Game::runChunkLoadingLoop(sf::Context* const p_context) {
-	p_context->setActive(true);
-
+void Game::runChunkLoadingLoop() {
+	// CPU-only work (terrain generation and mesh building); no OpenGL context needed here.
 	while (!m_stopGeneratingThread) {
 		m_chunkMap.load(m_player.getCamera().getFrustum());
 		m_chunkMap.unloadFarChunks();
@@ -49,9 +48,9 @@ void Game::reloadBlocks(const std::vector<ivec3>& blocks) {
 		if (m_updatingThread.joinable())
 			m_updatingThread.join();
 		m_updatingThread = std::thread{ [this, blocks]() {
-			p_context2->setActive(true);
+			// CPU-only: rebuilds the affected sections' mesh data; the GPU upload happens
+			// on the main thread in update(). No OpenGL context needed here.
 			m_chunkMap.reloadBlocks(blocks);
-			p_context2->setActive(false);
 			updatingThreadFinished = true;
 		} };
 	}

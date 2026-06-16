@@ -62,7 +62,7 @@ bool ChunkMap::isInLoadDistance(ivec2 pos) const {
 }
 
 void ChunkMap::unloadFarChunks() {
-	m_deleteChunksMutex.lock();
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
 
 	for (auto it = m_chunks.begin(); it != m_chunks.end();) {
 		if (it->second->getState() == Chunk::TO_REMOVE) {
@@ -73,12 +73,10 @@ void ChunkMap::unloadFarChunks() {
 		}
 		++it;
 	}
-
-	m_deleteChunksMutex.unlock();
 }
 
 void ChunkMap::update() {
-	m_deleteChunksMutex.lock();
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
 
 	for (auto& c : m_chunks) {
 		if (c.second->getState() == Chunk::TO_UNLOAD_VAOS) {
@@ -86,17 +84,19 @@ void ChunkMap::update() {
 		}
 	}
 	while (!m_chunksToLoad.empty()) {
-   		getChunk(m_chunksToLoad.front()).loadVAOs();
+		Chunk& chunk = getChunk(m_chunksToLoad.front());
+		// Skip chunks already scheduled for unloading: uploading their VAOs now would leave GPU
+		// resources to be freed on the loading thread when the chunk is erased.
+		if (chunk.getState() == Chunk::TO_RENDER)
+			chunk.loadVAOs();
 		m_chunksToLoad.pop();
 	}
 
 	while (!m_sectionsToReload.empty()) {
-		getSection(m_sectionsToReload.front()).unloadVAOs();
-		getSection(m_sectionsToReload.front()).loadVAOs();
+		getSection(m_sectionsToReload.front()).unloadMesh();
+		getSection(m_sectionsToReload.front()).uploadMesh();
 		m_sectionsToReload.pop();
 	}
-
-	m_deleteChunksMutex.unlock();
 }
 
 void ChunkMap::onChangeChunkState(Chunk& chunk, Chunk::State nextState) {
@@ -107,17 +107,34 @@ void ChunkMap::onChangeChunkState(Chunk& chunk, Chunk::State nextState) {
 }
 
 void ChunkMap::loadBlocks(ivec2 pos) {
-	if (m_chunks.find(pos) == m_chunks.end()) { // Chunk not in the ChunkMap
-		m_chunks.emplace(pos, std::make_unique<Chunk>(this, pos));
+	Chunk* chunk;
+	{
+		// Inserting into the map (possibly rehashing it) must be mutually exclusive
+		// with any other thread accessing it, so hold the lock for this part only.
+		std::lock_guard<std::mutex> lock(m_chunksMutex);
+		auto it = m_chunks.find(pos);
+		if (it == m_chunks.end()) // Chunk not in the ChunkMap
+			it = m_chunks.emplace(pos, std::make_unique<Chunk>(this, pos)).first;
+		chunk = it->second.get();
 	}
-	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_BLOCKS) {
-		m_chunks[pos]->loadBlocks();
+	// Generating the blocks is the expensive part and only mutates the chunk itself,
+	// not the shared map, so it runs without the lock.
+	if (chunk->getState() == Chunk::TO_LOAD_BLOCKS) {
+		chunk->loadBlocks();
 	}
 }
 
 void ChunkMap::loadFaces(ivec2 pos) {
-	if (m_chunks[pos]->getState() == Chunk::TO_LOAD_FACES) {
-		m_chunks[pos]->loadFaces();
+	Chunk* chunk;
+	{
+		std::lock_guard<std::mutex> lock(m_chunksMutex);
+		chunk = m_chunks.at(pos).get(); // Always present: loadBlocks(pos) ran first
+	}
+	if (chunk->getState() == Chunk::TO_LOAD_FACES) {
+		chunk->loadFaces(); // Builds the mesh (reads neighbours); no map mutation
+		// Publishing to the main thread, which uploads the VAOs in update(). Locking
+		// here also ensures the generated mesh is visible to that thread.
+		std::lock_guard<std::mutex> lock(m_chunksMutex);
 		m_chunksToLoad.push(pos);
 	}
 }
@@ -132,7 +149,7 @@ bool ChunkMap::isChunkInFrustum(ivec2 chunkPos, const Frustum& frustum) {
 }
 
 void ChunkMap::render(const Frustum& frustum, const DefaultRenderer* defaultRenderer, const WaterRenderer* waterRenderer) {
-	m_deleteChunksMutex.lock();
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
 
 	std::vector< std::tuple<int, Chunk* > > chunks;
 	for (auto& chunkPos : m_chunks) {
@@ -156,8 +173,6 @@ void ChunkMap::render(const Frustum& frustum, const DefaultRenderer* defaultRend
 			std::get<1>(chunk)->render(*waterRenderer);
 		}
 	}
-
-	m_deleteChunksMutex.unlock();
 }
 
 ivec2 ChunkMap::getCenter() {
@@ -165,16 +180,14 @@ ivec2 ChunkMap::getCenter() {
 }
 
 void ChunkMap::reloadSection(ivec3 pos) {
-	m_deleteChunksMutex.lock();
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
 
 	auto chunkIt = m_chunks.find(Converter::to2D(pos));
 	if (chunkIt != m_chunks.end() && chunkIt->second->getState() == Chunk::TO_RENDER &&
 			0 <= pos.y && pos.y < chunkIt->second->getHeight()) {
-		chunkIt->second->getSection(pos.y).loadFaces();
+		chunkIt->second->getSection(pos.y).loadMesh();
 		m_sectionsToReload.push(pos);
 	}
-
-	m_deleteChunksMutex.unlock();
 }
 
 void ChunkMap::reloadBlocks(const std::vector<ivec3>& blocks) {
@@ -216,14 +229,26 @@ ChunkMap::hasBlock(ivec3 globalPos, bool canSurpass) const {
 }
 
 void ChunkMap::setBlock(ivec3 globalPos, Block block) {
-	auto chunkIt = hasBlock(globalPos, true);
-	if (chunkIt != m_chunks.end()) {
+	Chunk* chunk = nullptr;
+	{
+		// Only the lookup needs the lock (to be safe against the loading thread
+		// inserting/rehashing the map).
+		std::lock_guard<std::mutex> lock(m_chunksMutex);
+		auto chunkIt = hasBlock(globalPos, true);
+		if (chunkIt != m_chunks.end())
+			chunk = chunkIt->second.get();
+	}
+	// The edit must happen without the lock held: Chunk::setBlock may extend the
+	// chunk upwards and call back into reloadSection(), which locks m_chunksMutex
+	// itself. Holding it here would self-deadlock.
+	if (chunk != nullptr) {
 		ivec2 innerChunkPos = Converter::globalToInnerChunk(globalPos);
-		chunkIt->second->setBlock({ innerChunkPos.x, globalPos.y, innerChunkPos.y }, block);
+		chunk->setBlock({ innerChunkPos.x, globalPos.y, innerChunkPos.y }, block);
 	}
 }
 
 Block ChunkMap::getBlock(ivec3 globalPos) const {
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
 	auto chunkIt = hasBlock(globalPos);
 	if (chunkIt != m_chunks.end()) {
 		ivec2 innerChunkPos = Converter::globalToInnerChunk(globalPos);
@@ -233,7 +258,7 @@ Block ChunkMap::getBlock(ivec3 globalPos) const {
 }
 
 Chunk& ChunkMap::getChunk(ivec2 chunkPos) { // Must be a valid chunk position
-	return *m_chunks[chunkPos].get();
+	return *m_chunks.at(chunkPos).get();
 }
 
 const Chunk& ChunkMap::getChunk(ivec2 chunkPos) const { // Must be a valid chunk position
@@ -249,6 +274,7 @@ const Section& ChunkMap::getSection(ivec3 sectionPos) const { // Must be a valid
 }
 
 int ChunkMap::size() {
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
 	return m_chunks.size();
 }
 
