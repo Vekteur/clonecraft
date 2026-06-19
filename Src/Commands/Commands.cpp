@@ -2,13 +2,13 @@
 
 Commands::Commands() {
 	using namespace sf;
-	if (Keyboard::isKeyPressed(Keyboard::W))
+	if (Keyboard::isKeyPressed(Keyboard::Scan::W))
 		onPressedEvent(Command::FORWARD);
-	if (Keyboard::isKeyPressed(Keyboard::S))
+	if (Keyboard::isKeyPressed(Keyboard::Scan::S))
 		onPressedEvent(Command::BACKWARD);
-	if (Keyboard::isKeyPressed(Keyboard::A))
+	if (Keyboard::isKeyPressed(Keyboard::Scan::A))
 		onPressedEvent(Command::LEFT);
-	if (Keyboard::isKeyPressed(Keyboard::D))
+	if (Keyboard::isKeyPressed(Keyboard::Scan::D))
 		onPressedEvent(Command::RIGHT);
 	if (Keyboard::isKeyPressed(Keyboard::Space))
 		onPressedEvent(Command::UP);
@@ -22,6 +22,7 @@ Command Commands::findKey(sf::Keyboard::Key key) const {
 	case Keyboard::E:
 		if (Keyboard::isKeyPressed(Keyboard::LAlt)) return Command::HUGE_EXPLOSION;
 		else return Command::EXPLOSION;
+	case Keyboard::B: return Command::BRUSH;
 	case Keyboard::T: return Command::TELEPORT;
 	case Keyboard::G: return Command::NEXT_GAMEMODE;
 	default: return Command::UNKNOWN;

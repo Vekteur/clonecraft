@@ -11,10 +11,11 @@ file(GLOB_RECURSE data Data/*)
 add_executable(clonecraft ${sources} ${external} ${data})
 
 target_include_directories(clonecraft PUBLIC Src External)
+include_directories(Src External)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
+find_package(SFML 2.6 COMPONENTS graphics REQUIRED)
 target_link_libraries(clonecraft PRIVATE sfml-graphics)
 
 if(UNIX)
