@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 file(GLOB_RECURSE sources Src/*.cpp Src/*.c Src/*.h Src/*.hpp)
 file(GLOB_RECURSE external	External/*.cpp External/*.c External/*.h External/*.hpp)
-file(GLOB_RECURSE data data/*)
+file(GLOB_RECURSE data Data/*)
 
 add_executable(clonecraft ${sources} ${external} ${data})
 

@@ -63,35 +63,20 @@ The block the player is pointing at is found by computing exactly each block in 
 
 ### Installation
 
-Some binaries are available for Windows on GitHub.
-The project can be compiled with CMake.
-It has been developed on Windows and Ubuntu.
+#### 1. Install Dependencies
 
-#### Ubuntu:
-```
-git clone https://github.com/Vekteur/clonecraft
-cd clonecraft
-sudo apt install cmake libsfml-dev libglm-dev
-cmake . -B build -DCMAKE_BUILD_TYPE=release
-cmake --build build --config Release --target all -j 12
-./build/clonecraft
-```
+* **Ubuntu/Debian**: `sudo apt install cmake build-essential libsfml-dev libglm-dev libgl-dev`
+* **Fedora**: `sudo dnf install cmake gcc-c++ SFML-devel glm-devel mesa-libGL-devel`
+* **Arch Linux**: `sudo pacman -S cmake base-devel sfml glm mesa`
+* **Windows**: (using [vcpkg](https://github.com/microsoft/vcpkg)): `vcpkg install sfml glm && vcpkg integrate install`
 
-You can also use, for example, VS Code with [CMake Tools](https://github.com/microsoft/vscode-cmake-tools) to edit and compile the code.
+#### 2. Build the Project
 
-#### Windows:
+Run the following commands in the repository root directory:
 
-Install SFML and GLM using, for example, [vcpkg](https://github.com/microsoft/vcpkg):
-```
-vcpkg install sfml glm
-vcpkg integrate install
+```bash
+cmake . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release -j 12
 ```
 
-An easy way to compile the code is to open the project with Visual Studio 2019/2022 and select the target `clonecraft.exe`.
-
-### Potential future additions
-
-* Dynamic lighting
-* Water physics
-* Simple electricity system
-* Ambient occlusion
+Then run `./build/clonecraft` on Linux or `build\clonecraft.exe` on Windows.
