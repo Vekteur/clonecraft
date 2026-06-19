@@ -30,7 +30,7 @@ void Player::processMouseClick(sf::Time dt, Commands& commands) {
 	}
 }
 
-void Player::processMouseMove(sf::Time dt) {
+void Player::processMouseMove(sf::Time) {
 	sf::Vector2i mousePosTemp{ sf::Mouse::getPosition(game->getWindow()) };
 	ivec2 mousePosition{ mousePosTemp.x, mousePosTemp.y };
 	ivec2 windowCenter{ game->getWindow().getCenter() };
@@ -38,7 +38,7 @@ void Player::processMouseMove(sf::Time dt) {
 	m_camera.processMouse(mouseOffset);
 }
 
-void Player::processMouseWheel(sf::Time dt, GLfloat delta) {
+void Player::processMouseWheel(sf::Time, GLfloat delta) {
 	m_camera.processMouseScroll(delta);
 }
 

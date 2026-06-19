@@ -113,6 +113,7 @@ void WindowTextDrawer::drawGameMode(GameMode gameMode) {
 	case GameMode::CREATIVE: oss << "Creative"; break;
 	case GameMode::SURVIVAL: oss << "Survival"; break;
 	case GameMode::SPECTATOR: oss << "Spectator"; break;
+	default: break;
 	}
 	draw(oss.str());
 }

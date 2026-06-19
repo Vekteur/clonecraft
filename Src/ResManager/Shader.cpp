@@ -18,7 +18,7 @@ const Shader& Shader::use() const {
 
 void Shader::compile(const GLchar* vertexSource, const GLchar* fragmentSource, const GLchar* geometrySource) {
 	m_id = glCreateProgram();
-	GLuint sVertex, sFragment, sGeometry;
+	GLuint sVertex, sFragment, sGeometry = 0;
 	// Vertex Shader
 	sVertex = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(sVertex, 1, &vertexSource, nullptr);
@@ -59,7 +59,7 @@ void Shader::loadFromFile(const GLchar *vShaderFile, const GLchar *fShaderFile, 
 		fragmentCode = ResManager::readFile(fShaderFile);
 		if (gShaderFile != nullptr)
 			geometryCode = ResManager::readFile(gShaderFile);
-	} catch (std::exception e) {
+	} catch (const std::exception& e) {
 		std::cout << "Error : failed to read shader files" << std::endl;
 	}
 	// Create shader object from source code

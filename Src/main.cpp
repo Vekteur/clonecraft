@@ -14,7 +14,7 @@
 #include "View/Crosshair.h"
 #include "Commands/Commands.h"
 
-int main(int argc, char* argv[]) {
+int main(int, char*[]) {
 	LOG.setFileOutputLevel(Level::DEBUG);
 	LOG.setOutputFile("Data/Logs/global.log");
 
@@ -57,6 +57,8 @@ int main(int argc, char* argv[]) {
 				if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
 					game.processMouseWheel(deltaTime, event.mouseWheelScroll.delta);
 				}
+				break;
+			default:
 				break;
 			}
 		}
