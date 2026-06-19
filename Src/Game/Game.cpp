@@ -1,7 +1,9 @@
 #include "Game.h"
 
 #include <random>
+#include <cmath>
 
+#include "Generator/Noise/OctavePerlin.h"
 #include "Maths/Converter.h"
 #include "Util/DebugGL.h"
 #include "Util/Logger.h"
@@ -70,25 +72,56 @@ void Game::processKeyboard(sf::Time dt, Commands& commands) {
 	if (commands.isActive(Command::DOWN))
 		m_player.move(Movement::DOWN, dt);
 	if (commands.isActive(Command::EXPLOSION))
-		explode(15);
+		fillSmoothSphere(15, +BlockID::AIR);
 	if (commands.isActive(Command::HUGE_EXPLOSION))
-		explode(100);
+		fillSmoothSphere(100, +BlockID::AIR);
+	if (commands.isActive(Command::BRUSH))
+		if (m_player.getPickedBlock().has_value())
+			fillSmoothSphere(15, m_player.getPickedBlock().value());
 	if (commands.isActive(Command::TELEPORT))
 		m_player.teleport();
 	if (commands.isActive(Command::NEXT_GAMEMODE))
 		m_player.nextGameMode();
 }
 
-std::vector<ivec3> Game::explosionBlocks(ivec3 center, int radius) {
+std::vector<ivec3> Game::smoothSphere(ivec3 center, int radius) {
 	std::random_device rd;
 	std::mt19937 rng(rd());
-	std::uniform_int_distribution<int> dist(0, radius);
+	std::uniform_real_distribution<float> dist(0.f, 1.f);
+
+	// Random sampling offset so every explosion gets a different irregular shape.
+	const dvec3 noiseOffset{ dist(rng) * 256.0, dist(rng) * 256.0, dist(rng) * 256.0 };
+	// How far the crater radius is allowed to wobble (size of the lobes).
+	const float lobeAmplitude = 0.2f;
+	// Smooth lobes plus a touch of surface roughness
+	OctavePerlin perlin{ 2, 0.5, 0.09 };
+
+	const float innerR = float(radius) * (1.f - lobeAmplitude) - 1.f;
+	const float outerR = float(radius) * (1.f + lobeAmplitude) + 1.f;
+	const int reach = int(std::ceil(outerR));
+
 	std::vector<ivec3> blocks;
-	for (int x = -radius; x <= radius; ++x) {
-		for (int y = -radius; y <= radius; ++y) {
-			for (int z = -radius; z <= radius; ++z) {
-				float randomRadius = float(radius) - float(dist(rng)) / 4.f;
-				if (x * x + y * y + z * z <= randomRadius * randomRadius)
+	for (int x = -reach; x <= reach; ++x) {
+		for (int y = -reach; y <= reach; ++y) {
+			for (int z = -reach; z <= reach; ++z) {
+				float dist3 = std::sqrt(float(x * x + y * y + z * z));
+				if (dist3 <= innerR) { // deep interior: always destroyed
+					blocks.push_back(center + ivec3{ x, y, z });
+					continue;
+				}
+				if (dist3 >= outerR) // beyond the largest possible lobe: never destroyed
+					continue;
+				// Sample coherent noise on the block's 3D position
+				dvec3 p = noiseOffset + dvec3{ x, y, z };
+				double n = (perlin.getNoise({ p.x, p.y })
+				          + perlin.getNoise({ p.y, p.z })
+				          + perlin.getNoise({ p.z, p.x })) / 3.0;
+				float effRadius = float(radius) * (1.f + lobeAmplitude * float(n));
+
+				// Rim with ragged edge: blocks well inside are always cleared, blocks
+				// straddling the boundary are cleared with falling probability.
+				float edge = effRadius - dist3;
+				if (edge >= 1.f || (edge > -1.f && dist(rng) < (edge + 1.f) * 0.5f))
 					blocks.push_back(center + ivec3{ x, y, z });
 			}
 		}
@@ -96,11 +129,11 @@ std::vector<ivec3> Game::explosionBlocks(ivec3 center, int radius) {
 	return blocks;
 }
 
-void Game::explode(int radius) {
+void Game::fillSmoothSphere(int radius, Block block) {
 	if (canReloadBlocks() && m_player.getTarget().has_value()) {
-		std::vector<ivec3> blocks = explosionBlocks(m_player.getTarget().value(), radius);
+		std::vector<ivec3> blocks = smoothSphere(m_player.getTarget().value(), radius);
 		for (ivec3 pos : blocks) {
-			m_chunkMap.setBlock(pos, +BlockID::AIR); // Try STONE
+			m_chunkMap.setBlock(pos, block);
 		}
 		reloadBlocks(blocks);
 	}

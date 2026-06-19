@@ -37,6 +37,7 @@ public:
 	Camera& getCamera();
 	const Camera& getCamera() const;
 	std::optional<ivec3> getTarget();
+	std::optional<Block> getPickedBlock();
 
 	static const float TARGET_DISTANCE;
 

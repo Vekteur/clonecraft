@@ -45,8 +45,8 @@ public:
 private:
 	void clearRenderTarget();
 
-	std::vector<ivec3> explosionBlocks(ivec3 center, int radius);
-	void explode(int radius);
+	std::vector<ivec3> smoothSphere(ivec3 center, int radius);
+	void fillSmoothSphere(int radius, Block block);
 
 	Player m_player;
 

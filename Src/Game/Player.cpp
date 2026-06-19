@@ -104,3 +104,7 @@ const Camera& Player::getCamera() const {
 std::optional<ivec3> Player::getTarget() {
 	return targetPos;
 }
+
+std::optional<Block> Player::getPickedBlock() {
+	return pickedBlock;
+}
