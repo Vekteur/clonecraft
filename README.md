@@ -80,3 +80,8 @@ cmake --build build --config Release -j 12
 ```
 
 Then run `./build/clonecraft` on Linux or `build\clonecraft.exe` on Windows.
+
+#### Build Options
+
+* Use `-DVIEW_DISTANCE=...` (default `32`) to change the view distance.
+* Use `-DLOADING_WORKERS_COUNT=...` (default `4`) to change the number of worker threads used to load chunks.

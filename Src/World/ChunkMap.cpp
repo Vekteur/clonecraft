@@ -15,11 +15,16 @@
 #include <thread>
 #include <chrono>
 
-const int ChunkMap::VIEW_DISTANCE{ 72 };
+#ifndef CC_VIEW_DISTANCE
+#define CC_VIEW_DISTANCE 32
+#endif
+const int ChunkMap::VIEW_DISTANCE{ CC_VIEW_DISTANCE };
 const int ChunkMap::LOAD_DISTANCE{ VIEW_DISTANCE + 1 };
 const int ChunkMap::SIDE{ (2 * VIEW_DISTANCE + 1) * Const::SECTION_SIDE };
-const int ChunkMap::CHUNKS_PER_LOAD{ 8 };
-const int ChunkMap::LOADING_WORKERS_COUNT{ 4 };
+#ifndef CC_LOADING_WORKERS_COUNT
+#define CC_LOADING_WORKERS_COUNT 4
+#endif
+const int ChunkMap::LOADING_WORKERS_COUNT{ CC_LOADING_WORKERS_COUNT };
 
 ChunkMap::ChunkMap(ivec2 center) : m_center{ center } { }
 

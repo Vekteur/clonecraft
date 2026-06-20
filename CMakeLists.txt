@@ -4,6 +4,9 @@ project(CloneCraft)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
+set(VIEW_DISTANCE 32 CACHE STRING "View distance, in sections")
+set(LOADING_WORKERS_COUNT 4 CACHE STRING "Number of worker threads used to load chunks")
+
 file(GLOB_RECURSE sources Src/*.cpp Src/*.c Src/*.h Src/*.hpp)
 file(GLOB_RECURSE external	External/*.cpp External/*.c External/*.h External/*.hpp)
 file(GLOB_RECURSE data Data/*)
@@ -12,6 +15,10 @@ add_executable(clonecraft ${sources} ${external} ${data})
 
 target_include_directories(clonecraft PUBLIC Src External)
 include_directories(Src External)
+
+target_compile_definitions(clonecraft PRIVATE
+                           CC_VIEW_DISTANCE=${VIEW_DISTANCE}
+                           CC_LOADING_WORKERS_COUNT=${LOADING_WORKERS_COUNT})
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Data DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 

@@ -24,7 +24,7 @@
 // claimed for loading with an atomic state CAS so two workers never load the same one.
 class ChunkMap {
 public:
-	static const int VIEW_DISTANCE, LOAD_DISTANCE, SIDE, CHUNKS_PER_LOAD, LOADING_WORKERS_COUNT;
+	static const int VIEW_DISTANCE, LOAD_DISTANCE, SIDE, LOADING_WORKERS_COUNT;
 
 	ChunkMap(ivec2 center = ivec2{ 0, 0 });
 	~ChunkMap();
