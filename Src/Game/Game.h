@@ -45,6 +45,9 @@ public:
 
 private:
 	void clearRenderTarget();
+	// Draws the currently picked block as a small rotated 3D cube in the bottom-left HUD corner.
+	void renderHeldBlock();
+	void buildHeldBlockMesh(Block block);
 
 	std::vector<ivec3> smoothSphere(ivec3 center, int radius);
 	void fillSmoothSphere(int radius, Block block);
@@ -60,6 +63,10 @@ private:
 	DefaultRenderer m_defaultRenderer;
 	WaterRenderer m_waterRenderer;
 	PostProcessingRenderer m_postProcessingRenderer;
+
+	// Cube mesh for the HUD held block, rebuilt only when the picked block changes.
+	DefaultMesh m_heldBlockMesh;
+	std::optional<BlockID> m_heldBlockId;
 
 	std::thread m_orchestratorThread;
 	std::vector<std::thread> m_workerThreads;
