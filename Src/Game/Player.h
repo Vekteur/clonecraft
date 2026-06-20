@@ -7,6 +7,7 @@
 #include <View/Camera.h>
 #include <Game/Movement.h>
 #include <Block/Block.h>
+#include <Block/BlockID.h>
 #include <Commands/Commands.h>
 
 class Game;
@@ -43,12 +44,12 @@ public:
 	static const float TARGET_DISTANCE;
 
 	Game* game;
-	GameMode m_gameMode = GameMode::CREATIVE;
+	GameMode m_gameMode = GameMode::SURVIVAL;
 	Camera m_camera;
 	Movement m_movement;
 	std::optional<ivec3> targetPos;
 	std::optional<ivec3> placePos;
-	std::optional<Block> pickedBlock;
+	std::optional<Block> pickedBlock{ BlockID::DIRT };
 
 	sf::Time breakAccumulator = sf::seconds(0.f);
 	sf::Time placeAccumulator = sf::seconds(0.f);

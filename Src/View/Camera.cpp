@@ -9,7 +9,7 @@
 
 const float Camera::SENSIVITY{ 0.16f };
 const float Camera::SCROLLSPEED{ 3.f / 2 };
-const float Camera::ZOOM{ 45.f };
+const float Camera::ZOOM{ 70.f };
 const float Camera::YAW{ -90.f };
 const float Camera::PITCH{ 0.f };
 

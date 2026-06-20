@@ -5,6 +5,9 @@
 #include "WorldConstants.h"
 
 #include <vector>
+#include <deque>
+#include <atomic>
+#include <mutex>
 
 class Chunk {
 public:
@@ -34,7 +37,6 @@ public:
 	void render(const WaterRenderer& waterRenderer) const;
 	ChunkGenerationInfo& chunkInfo();
 	const ChunkGenerationInfo& chunkInfo() const;
-	std::vector<Section>& getSections();
 
 	bool isInChunk(ivec3 globalPos) const;
 	Section& getSection(int height);
@@ -47,5 +49,10 @@ private:
 
 	State m_state{ STATE_SIZE };
 
-	std::vector<Section> m_sections;
+	// A deque keeps sections at fixed addresses as it grows, so pointers the loading thread holds
+	// while meshing stay valid when the main thread adds sections. m_sectionsMutex guards that
+	// growth; m_height lets the count be read without the lock. Sections are never removed.
+	std::deque<Section> m_sections;
+	std::atomic<int> m_height{ 0 };
+	mutable std::mutex m_sectionsMutex;
 };

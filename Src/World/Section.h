@@ -47,7 +47,7 @@ private:
 	DefaultMesh nextDefaultMesh;
 	WaterMesh activeWaterMesh;
 	WaterMesh nextWaterMesh;
-	// Built on a worker thread by loadMeshes(); uploaded to the GPU on the main thread by uploadMesh().
+	// Built on a worker thread by loadChunkMesh(); uploaded to the GPU on the main thread by uploadMesh().
 	std::vector<DefaultMesh::Vertex> m_nextDefaultVertices;
 	std::vector<WaterMesh::Vertex> m_nextWaterVertices;
 

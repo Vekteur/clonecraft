@@ -75,7 +75,9 @@ private:
 		}
 	};
 
-	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2> m_chunks;
+	// shared_ptr so the main thread can keep a chunk alive while editing it, even if the loading
+	// thread erases it from the map in the meantime.
+	std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2> m_chunks;
 	std::queue<ivec2> m_chunksToUploadMesh;
 	std::queue<ivec3> m_sectionsToLoadMesh;
 	std::queue<ivec3> m_sectionsToReUploadMesh;
@@ -90,12 +92,12 @@ private:
 	std::array<std::atomic<int>, Chunk::STATE_SIZE> m_countChunks{};
 
 	// Caller must already hold m_chunksMutex
-	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2>::const_iterator
+	std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2>::const_iterator
 		hasBlock(ivec3 globalPos, bool canSurpass = false) const;
 	// Called in the loading thread
 	bool isInLoadDistance(ivec2 pos) const;
 	void loadBlocks(ivec2 pos);
-	void loadMeshes(ivec2 pos);
+	void loadChunkMesh(ivec2 pos);
 	// No lock needed
 	bool isChunkInFrustum(ivec2 chunkPos, const Frustum& frustum);
 };

@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <unordered_set>
 
-const int ChunkMap::VIEW_DISTANCE{ 320 };
+const int ChunkMap::VIEW_DISTANCE{ 48 };
 const int ChunkMap::LOAD_DISTANCE{ VIEW_DISTANCE + 1 };
 const int ChunkMap::SIDE{ (2 * VIEW_DISTANCE + 1) * Const::SECTION_SIDE };
 const int ChunkMap::CHUNKS_PER_LOAD{ 8 };
@@ -49,7 +49,7 @@ void ChunkMap::load(const Frustum& frustum) {
 			for (Dir2D::Dir dir : Dir2D::all()) {
 				loadBlocks(pos + Dir2D::to_ivec2(dir));
 			}
-			loadMeshes(pos);
+			loadChunkMesh(pos);
 			++loadedChunks;
 			if (loadedChunks == CHUNKS_PER_LOAD)
 				break;
@@ -115,7 +115,7 @@ void ChunkMap::loadBlocks(ivec2 pos) {
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
 		auto it = m_chunks.find(pos);
 		if (it == m_chunks.end()) // Chunk not in the ChunkMap
-			it = m_chunks.emplace(pos, std::make_unique<Chunk>(this, pos)).first;
+			it = m_chunks.emplace(pos, std::make_shared<Chunk>(this, pos)).first;
 		chunk = it->second.get();
 	}
 	// Generating the blocks is the expensive part and only mutates the chunk itself,
@@ -125,7 +125,7 @@ void ChunkMap::loadBlocks(ivec2 pos) {
 	}
 }
 
-void ChunkMap::loadMeshes(ivec2 pos) {
+void ChunkMap::loadChunkMesh(ivec2 pos) {
 	Chunk* chunk;
 	{
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
@@ -154,7 +154,7 @@ void ChunkMap::render(const Frustum& frustum, const DefaultRenderer* defaultRend
 
 	std::vector< std::tuple<int, Chunk* > > chunks;
 	for (auto& chunkPos : m_chunks) {
-		std::unique_ptr<Chunk>& chunk = chunkPos.second;
+		std::shared_ptr<Chunk>& chunk = chunkPos.second;
 		if (chunk->getState() == Chunk::TO_RENDER && isChunkInFrustum(chunk->getPosition(), frustum)) {
 			chunks.push_back({ math::manhattan(chunk->getPosition(), m_center), chunk.get() });
 		}
@@ -230,7 +230,7 @@ void ChunkMap::setCenter(ivec2 center) {
 	m_center = center;
 }
 
-std::unordered_map<ivec2, std::unique_ptr<Chunk>, ChunkMap::Comp_ivec2, ChunkMap::Comp_ivec2>::const_iterator 
+std::unordered_map<ivec2, std::shared_ptr<Chunk>, ChunkMap::Comp_ivec2, ChunkMap::Comp_ivec2>::const_iterator
 ChunkMap::hasBlock(ivec3 globalPos, bool canSurpass) const {
 	auto chunkIt = m_chunks.find(Converter::globalToChunk(globalPos));
 	if (chunkIt != m_chunks.end() && chunkIt->second->getState() > Chunk::TO_LOAD_BLOCKS &&
@@ -242,14 +242,14 @@ ChunkMap::hasBlock(ivec3 globalPos, bool canSurpass) const {
 }
 
 void ChunkMap::setBlock(ivec3 globalPos, Block block) {
-	Chunk* chunk = nullptr;
+	std::shared_ptr<Chunk> chunk;
 	{
-		// Only the lookup needs the lock (to be safe against the loading thread
-		// inserting/rehashing the map).
+		// Only the lookup needs the lock. Copy the shared_ptr (not a raw pointer) so the chunk
+		// survives even if the loading thread erases it while we edit.
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
 		auto chunkIt = hasBlock(globalPos, true);
 		if (chunkIt != m_chunks.end())
-			chunk = chunkIt->second.get();
+			chunk = chunkIt->second;
 	}
 	// The edit must happen without the lock held: Chunk::setBlock may extend the
 	// chunk upwards and call back into reloadSectionMesh(), which locks m_chunksMutex

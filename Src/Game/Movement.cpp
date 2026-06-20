@@ -3,9 +3,9 @@
 #include <Game/Player.h>
 #include <Game/Game.h>
 
-const float Movement::DEFAULT_HORIZONTAL_SPEED{ 30.f };
-const float Movement::DEFAULT_VERTICAL_SPEED{ 20.f };
-const float Movement::SPRINT_MULTIPLIER{ 10.f };
+const float Movement::DEFAULT_HORIZONTAL_SPEED{ 10.f };
+const float Movement::DEFAULT_VERTICAL_SPEED{ 10.f };
+const float Movement::SPRINT_MULTIPLIER{ 30.f };
 const float Movement::PLAYER_WIDTH{ 0.6f };
 const float Movement::PLAYER_HEIGHT{ 1.8f };
 const float Movement::PLAYER_HEAD_HEIGHT{ 1.65f };
@@ -58,7 +58,7 @@ void Movement::update(float deltaTime) {
 		if (m_inWater)
 			m_verticalSpeed -= 10.f * deltaTime;
 		else
-			m_verticalSpeed -= 30.f * deltaTime;
+			m_verticalSpeed -= 32.f * deltaTime;
 	}
 }
 
