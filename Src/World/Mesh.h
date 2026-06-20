@@ -122,6 +122,7 @@ struct DefaultVertex {
 	vec2 tex;
 	vec3 norm;
 	GLuint texID;
+	GLfloat ao;
 };
 
 struct WaterVertex {
@@ -140,6 +141,7 @@ struct DefaultMesh : Mesh<DefaultVertex, DefaultMesh> {
 		addFloatVertexAttribPointer(1, 2, sizeof(vec3));
 		addFloatVertexAttribPointer(2, 3, sizeof(vec3) + sizeof(vec2));
 		addIntVertexAttribPointer(3, 1, sizeof(vec3) + sizeof(vec2) + sizeof(vec3));
+		addFloatVertexAttribPointer(4, 1, sizeof(vec3) + sizeof(vec2) + sizeof(vec3) + sizeof(GLuint));
 	}
 };
 

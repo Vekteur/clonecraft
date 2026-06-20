@@ -205,7 +205,7 @@ void ChunkMap::processNextTask() {
 }
 
 void ChunkMap::doSelectChunk(ivec2 pos) {
-	// Queue blocks for this chunk and its neighbours (a chunk's mesh needs its neighbours' blocks).
+	// Queue blocks for this chunk and its neighbors (a chunk's mesh needs its neighbors' blocks).
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
 	enqueueBlocksIfNeeded(pos);
 	for (Dir2D::Dir dir : Dir2D::all())
@@ -279,12 +279,12 @@ void ChunkMap::reloadSectionMesh(ivec3 pos) {
 		// In the extreme case where a chunk is edited on the border of the map, neighboring chunks
 		// could be unloaded.
 		if (canChunkBeEdited(pos2D)) {
-			NeighbourChunks neighbours{};
+			NeighborChunks neighbors{};
 			for (Dir2D::Dir dir : Dir2D::all()) {
 				auto it = m_chunks.find(pos2D + Dir2D::to_ivec2(dir));
-				neighbours[dir] = (it != m_chunks.end()) ? it->second.get() : nullptr;
+				neighbors[dir] = (it != m_chunks.end()) ? it->second.get() : nullptr;
 			}
-			chunkIt->second->getSection(pos.y).loadMesh(neighbours);
+			chunkIt->second->getSection(pos.y).loadMesh(neighbors);
 			// If the chunk still owes a full upload, that upload already carries this freshly rebuilt
 			// section; a section upload would run after it and push an already-consumed empty mesh.
 			if (m_chunksPendingUpload.count(pos2D) == 0)
@@ -349,7 +349,7 @@ void ChunkMap::doLoadBlocks(ivec2 pos) {
 	// TO_LOAD_MESH.
 	chunk->loadBlocks();
 	// This chunk's blocks just appeared, which may complete the mesh prerequisites of itself and
-	// of each neighbour it borders, so re-check them all.
+	// of each neighbor it borders, so re-check them all.
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
 	enqueueMeshIfReady(pos);
 	for (Dir2D::Dir dir : Dir2D::all())
@@ -361,9 +361,9 @@ void ChunkMap::enqueueMeshIfReady(ivec2 pos) {
 	if (it == m_chunks.end() || it->second->getState() != Chunk::TO_LOAD_MESH)
 		return; // missing, still loading blocks, or already meshing/meshed
 	for (Dir2D::Dir dir : Dir2D::all()) {
-		auto neighbourIt = m_chunks.find(pos + Dir2D::to_ivec2(dir));
-		if (neighbourIt == m_chunks.end() || neighbourIt->second->getState() < Chunk::TO_LOAD_MESH)
-			return; // a neighbour's blocks are not ready, so this mesh is not either
+		auto neighborIt = m_chunks.find(pos + Dir2D::to_ivec2(dir));
+		if (neighborIt == m_chunks.end() || neighborIt->second->getState() < Chunk::TO_LOAD_MESH)
+			return; // a neighbor's blocks are not ready, so this mesh is not either
 	}
 	if (m_inLoadMeshes.insert(pos).second)
 		m_toLoadMeshes.push(pos);
@@ -371,26 +371,26 @@ void ChunkMap::enqueueMeshIfReady(ivec2 pos) {
 
 void ChunkMap::doLoadMesh(ivec2 pos) {
 	std::shared_ptr<Chunk> chunk;
-	std::array<std::shared_ptr<Chunk>, Dir2D::SIZE> keepAlive; // keep neighbours alive during the build
-	NeighbourChunks neighbours{};
+	std::array<std::shared_ptr<Chunk>, Dir2D::SIZE> keepAlive; // keep neighbors alive during the build
+	NeighborChunks neighbors{};
 	{
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
 		auto it = m_chunks.find(pos);
 		if (it == m_chunks.end())
 			return;
-		// Snapshot the neighbouring chunks so the build below never reads the map.
+		// Snapshot the neighboring chunks so the build below never reads the map.
 		for (Dir2D::Dir dir : Dir2D::all()) {
-			auto neighbourIt = m_chunks.find(pos + Dir2D::to_ivec2(dir));
-			if (neighbourIt != m_chunks.end()) {
-				keepAlive[dir] = neighbourIt->second;
-				neighbours[dir] = neighbourIt->second.get();
+			auto neighborIt = m_chunks.find(pos + Dir2D::to_ivec2(dir));
+			if (neighborIt != m_chunks.end()) {
+				keepAlive[dir] = neighborIt->second;
+				neighbors[dir] = neighborIt->second.get();
 			}
 		}
 		if (!it->second->casState(Chunk::TO_LOAD_MESH, Chunk::LOADING_MESH))
 			return; // gone or already meshing
 		chunk = it->second;
 	}
-	chunk->loadMesh(neighbours); // builds from the snapshot; no map access
+	chunk->loadMesh(neighbors); // builds from the snapshot; no map access
 	chunk->setState(Chunk::TO_RENDER);
 	// Publishing to the main thread, which uploads the VAOs in update().
 	std::lock_guard<std::mutex> lock(m_chunksMutex);

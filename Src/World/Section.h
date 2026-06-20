@@ -19,7 +19,7 @@
 class Chunk;
 
 // Chunks around a section's own chunk, snapshotted so sections never read the chunk map.
-using NeighbourChunks = std::array<const Chunk*, Dir2D::SIZE>;
+using NeighborChunks = std::array<const Chunk*, Dir2D::SIZE>;
 
 class Section {
 public:
@@ -29,7 +29,7 @@ public:
 	Section(const Section& other) = delete;
 	Section& operator=(const Section& other) = delete;
 
-	void loadMesh(const NeighbourChunks& neighbours);
+	void loadMesh(const NeighborChunks& neighbors);
 	void uploadMesh();
 	void releaseMesh();
 	void render(const DefaultRenderer& shader) const;
@@ -49,22 +49,28 @@ private:
 	DefaultMesh nextDefaultMesh;
 	WaterMesh activeWaterMesh;
 	WaterMesh nextWaterMesh;
-	// Built on a worker thread by loadChunkMesh(); uploaded to the GPU on the main thread by uploadMesh().
+	// Built on a worker thread by loadMesh(); uploaded to the GPU on the main thread by uploadMesh().
 	std::vector<DefaultMesh::Vertex> m_nextDefaultVertices;
 	std::vector<WaterMesh::Vertex> m_nextWaterVertices;
 
 	bool isInSection(ivec3 globalPos) const;
-	const Section* findNeighboringSection(Dir3D::Dir dir, const NeighbourChunks& neighbours) const;
-	std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex>> findVisibleFaces(const NeighbourChunks& neighbours) const;
-	void addVisibleFacesOnLastAxe(
+	const Section* findNeighboringSection(Dir3D::Dir dir, const NeighborChunks& neighbors) const;
+	std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex>> findVisibleFaces(const NeighborChunks& neighbors) const;
+	void addVisibleFacesOnLastAxis(
 		std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
-		Dir3D::Dir dir, ivec3 localPos, int indexOfLastAxe, int sizeOfLastAxe,
-		const Section* neighboringSection
+		Dir3D::Dir dir, ivec3 localPos, int indexOfLastAxis, int sizeOfLastAxis,
+		const Section* neighboringSection, const NeighborChunks& neighbors
 	) const;
 	void addFace(std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
-		Dir3D::Dir dir, ivec3 localPos, int length, Block block, int indexOfLastAxe) const;
+		Dir3D::Dir dir, ivec3 localPos, int length, Block block, int indexOfLastAxis,
+		const std::array<GLfloat, 4>& ao) const;
 	void addDefaultFace(std::vector<DefaultMesh::Vertex>& defaultVertices, Dir3D::Dir dir, Block block,
-		int indexOfLastAxe, int length, ivec3 firstBlockGlobalPos) const;
+		int indexOfLastAxis, int length, ivec3 firstBlockGlobalPos, const std::array<GLfloat, 4>& ao) const;
+	// Ambient occlusion: brightness (0..1) for each of a face's 4 corners, darkened by the solid
+	// blocks diagonally around the corner. Computed per unit-block face during meshing.
+	std::array<GLfloat, 4> computeFaceAO(const NeighborChunks& neighbors, Dir3D::Dir dir, ivec3 localPos) const;
+	// Block at a position in this section's local coordinates, resolving across neighboring sections
+	Block getBlockForAO(const NeighborChunks& neighbors, ivec3 localPos) const;
 	void addWaterFace(std::vector<WaterMesh::Vertex>& waterVertices, Dir3D::Dir dir,
-		int indexOfLastAxe, int length, ivec3 firstBlockGlobalPos) const;
+		int indexOfLastAxis, int length, ivec3 firstBlockGlobalPos) const;
 };

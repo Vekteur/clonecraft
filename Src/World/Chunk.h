@@ -30,7 +30,7 @@ public:
 	void setBlock(ivec3 pos, Block block);
 	Block getBlock(ivec3 pos) const;
 	void loadBlocks();
-	void loadMesh(const NeighbourChunks& neighbours);
+	void loadMesh(const NeighborChunks& neighbors);
 	void uploadMesh();
 	void releaseMesh();
 	State getState() const;

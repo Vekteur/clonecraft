@@ -46,7 +46,7 @@ void Chunk::loadBlocks() {
 	setState(TO_LOAD_MESH);
 }
 
-void Chunk::loadMesh(const NeighbourChunks& neighbours) {
+void Chunk::loadMesh(const NeighborChunks& neighbors) {
 	// Grab the section pointers under the lock, then build the meshes without it (the slow part).
 	// Sections added afterwards are meshed by the setBlock() call that created them.
 	std::vector<Section*> sections;
@@ -56,7 +56,7 @@ void Chunk::loadMesh(const NeighbourChunks& neighbours) {
 			sections.push_back(&section);
 	}
 	for (Section* section : sections)
-		section->loadMesh(neighbours);
+		section->loadMesh(neighbors);
 	setState(TO_RENDER);
 }
 

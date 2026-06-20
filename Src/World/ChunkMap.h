@@ -19,7 +19,7 @@
 //   - one orchestrator thread keeps the sorted view list (m_toSelect) fresh and unloads far chunks,
 //   - a pool of worker threads pull from the work pools and generate/mesh chunks,
 //   - a short-lived updating thread rebuilds sections after bulk edits.
-// m_chunksMutex guards m_chunks and every work pool/queue. The mesh build reads neighbours from a
+// m_chunksMutex guards m_chunks and every work pool/queue. The mesh build reads neighbors from a
 // snapshot taken under the lock, so no thread ever reads the map structure lock-free; a chunk is
 // claimed for loading with an atomic state CAS so two workers never load the same one.
 class ChunkMap {
@@ -57,7 +57,7 @@ public:
 	// Locked. Reached from the main thread (block edits via Chunk::setBlock),
 	// the loading thread (generation) and the updating thread (reloadBlocksMeshes).
 	void reloadSectionMesh(ivec3 pos);
-	// No internal locking. The const overloads are the loading thread's lock-free neighbour
+	// No internal locking. The const overloads are the loading thread's lock-free neighbor
 	// reads (safe because only the loading thread changes the map structure); the non-const
 	// overloads are used by the main thread while it already holds m_chunksMutex.
 	Chunk& getChunk(ivec2 pos);

@@ -12,10 +12,13 @@ The game is written with efficiency and simplicity in mind.
 * Left-click to destroy a block
 * Right-click to place a block
 * Middle-click to pick a block
+* Left control to sprint
 * Mouse wheel to zoom
 * T to teleport
 * E to create an explosion
-* Alt + E to create a huge explosion
+* Alt + E to create a huge explosition
+* B to use the brush tool
+* Alt + B to use the huge brush tool
 * G to change gamemode
 
 ### Implementation details
