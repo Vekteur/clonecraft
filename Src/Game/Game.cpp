@@ -14,22 +14,37 @@ Game::Game(Window* const window)
 	m_waterRenderer{ { p_window->size() } }, m_postProcessingRenderer{ { p_window->size() } } {
 
 	ResManager::initBlockDatas(std::vector<TextureArray*>{ &m_defaultRenderer.getTextureArray() });
-	m_generatingThread = std::thread{ &Game::runChunkLoadingLoop, this };
+
+	unsigned int workerCount = ChunkMap::LOADING_WORKERS_COUNT;
+	for (unsigned int i = 0; i < workerCount; ++i)
+		m_workerThreads.emplace_back(&Game::runWorkerLoop, this);
+	m_orchestratorThread = std::thread{ &Game::runOrchestratorLoop, this };
 }
 
 Game::~Game() {
 	m_stopGeneratingThread = true;
 	m_chunkMap.stop();
-	m_generatingThread.join();
+	m_orchestratorThread.join();
+	for (std::thread& worker : m_workerThreads)
+		worker.join();
 	if (m_updatingThread.joinable())
 		m_updatingThread.join();
 }
 
-void Game::runChunkLoadingLoop() {
-	// CPU-only work (terrain generation and mesh building); no OpenGL context needed here.
+void Game::runOrchestratorLoop() {
+	// Keeps the sorted view list fresh and unloads far chunks
+	// CPU-only; no OpenGL context needed here.
 	while (!m_stopGeneratingThread) {
-		m_chunkMap.load(m_player.getCamera().getFrustum());
+		m_chunkMap.refreshSelection(m_player.getCamera().getFrustum());
 		m_chunkMap.unloadFarChunks();
+		std::this_thread::sleep_for(std::chrono::milliseconds(8));
+	}
+}
+
+void Game::runWorkerLoop() {
+	// Pulls and runs load tasks (terrain generation and mesh building); no OpenGL context here.
+	while (!m_stopGeneratingThread) {
+		m_chunkMap.processNextTask();
 	}
 }
 

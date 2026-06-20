@@ -7,6 +7,7 @@
 #include <vector>
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 #include <utility>
 #include <mutex>
@@ -14,16 +15,16 @@
 
 // Threading model
 // ---------------
-// Three threads touch a ChunkMap:
 //   - the main (game-loop) thread renders and edits blocks,
-//   - a dedicated loading thread streams chunks in and out,
-//   - a short-lived updating thread rebuilds sections after bulk edits (explosions).
-// m_chunksMutex serialises everything that touches the structure of m_chunks and
-// the work queues. Only the loading thread ever inserts/erases chunks, which is why
-// some reads on that thread can stay lock-free.
+//   - one orchestrator thread keeps the sorted view list (m_toSelect) fresh and unloads far chunks,
+//   - a pool of worker threads pull from the work pools and generate/mesh chunks,
+//   - a short-lived updating thread rebuilds sections after bulk edits.
+// m_chunksMutex guards m_chunks and every work pool/queue. The mesh build reads neighbours from a
+// snapshot taken under the lock, so no thread ever reads the map structure lock-free; a chunk is
+// claimed for loading with an atomic state CAS so two workers never load the same one.
 class ChunkMap {
 public:
-	static const int VIEW_DISTANCE, LOAD_DISTANCE, SIDE, CHUNKS_PER_LOAD;
+	static const int VIEW_DISTANCE, LOAD_DISTANCE, SIDE, CHUNKS_PER_LOAD, LOADING_WORKERS_COUNT;
 
 	ChunkMap(ivec2 center = ivec2{ 0, 0 });
 	~ChunkMap();
@@ -43,9 +44,10 @@ public:
 	int chunksInState(Chunk::State state);
 	int getRenderedChunks();
 
-	// ---- Loading thread ----
-	void load(const Frustum& frustum);
-	void unloadFarChunks();
+	// ---- Loading threads ----
+	void refreshSelection(const Frustum& frustum); // orchestrator: rebuild the sorted view list
+	void processNextTask();                         // worker: take and run one task
+	void unloadFarChunks();                         // orchestrator
 
 	// ---- Updating thread (post-edit remesh) ----
 	void reloadBlocksMeshes(const std::vector<ivec3>& blocks);
@@ -63,7 +65,7 @@ public:
 	Section& getSection(ivec3 pos);
 	const Section& getSection(ivec3 pos) const;
 	// Called from whatever thread changes a Chunk's state; only updates the advisory counters.
-	void onChangeChunkState(Chunk& chunk, Chunk::State nextState);
+	void onChangeChunkState(Chunk::State previous, Chunk::State next);
 
 private:
 	struct Comp_ivec2 {
@@ -75,29 +77,46 @@ private:
 		}
 	};
 
-	// shared_ptr so the main thread can keep a chunk alive while editing it, even if the loading
+	// shared_ptr so threads can keep a chunk alive while editing it, even if the orchestrator
 	// thread erases it from the map in the meantime.
 	std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2> m_chunks;
 	std::queue<ivec2> m_chunksToUploadMesh;
-	std::queue<ivec3> m_sectionsToLoadMesh;
+	// Membership of m_chunksToUploadMesh: a chunk freshly meshed but not yet uploaded. A post-edit
+	// section rebuild skips its own upload for these, since the pending full upload already carries it.
+	std::unordered_set<ivec2, Comp_ivec2, Comp_ivec2> m_chunksPendingUpload;
 	std::queue<ivec3> m_sectionsToReUploadMesh;
+
+	// Work pools. A worker takes a task from the first non-empty pool in this order: load blocks,
+	// then load mesh, then expand a selected chunk. The m_in* sets keep the queues duplicate-free.
+	// m_toSelect is the orchestrator's sorted view list, consumed through m_selectCursor.
+	std::queue<ivec2> m_toLoadBlocks;
+	std::unordered_set<ivec2, Comp_ivec2, Comp_ivec2> m_inLoadBlocks;
+	std::queue<ivec2> m_toLoadMeshes;
+	std::unordered_set<ivec2, Comp_ivec2, Comp_ivec2> m_inLoadMeshes;
+	std::vector<ivec2> m_toSelect;
+	size_t m_selectCursor = 0;
+
 	ivec2 m_center;
-	mutable std::mutex m_chunksMutex; // guards the structure of m_chunks and the two queues above
+	mutable std::mutex m_chunksMutex; // guards m_chunks, the work pools and the upload queues
 	bool m_mustStop = false;
 
 	int m_renderedChunks = 0; // written and read only on the main thread (render / getRenderedChunks)
 	// Updated from several threads via onChangeChunkState(), some of those calls unlocked, so the
-	// counters are atomic (no lost increments, well-defined reads). A multi-bucket sum is still not
-	// a consistent snapshot - it can be off by the transitions in flight - which is fine for a debug overlay.
+	// counters are atomic (no lost increments, well-defined reads).
 	std::array<std::atomic<int>, Chunk::STATE_SIZE> m_countChunks{};
 
 	// Caller must already hold m_chunksMutex
 	std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2>::const_iterator
 		hasBlock(ivec3 globalPos, bool canSurpass = false) const;
-	// Called in the loading thread
 	bool isInLoadDistance(ivec2 pos) const;
-	void loadBlocks(ivec2 pos);
-	void loadChunkMesh(ivec2 pos);
+	// Worker task handlers
+	void doSelectChunk(ivec2 pos);
+	void doLoadBlocks(ivec2 pos);
+	void doLoadMesh(ivec2 pos);
+	// Caller must already hold m_chunksMutex
+	void enqueueBlocksIfNeeded(ivec2 pos);
+	void enqueueMeshIfReady(ivec2 pos);
 	// No lock needed
-	bool isChunkInFrustum(ivec2 chunkPos, const Frustum& frustum);
+	bool isChunkInFrustum(Chunk* chunk, const Frustum& frustum);
+	bool isChunkInFrustumApprox(ivec2 chunkPos, const Frustum& frustum) const;
 };

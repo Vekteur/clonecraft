@@ -3,22 +3,22 @@
 #include "Maths/GlmCommon.h"
 
 #include <array>
+#include <optional>
 
-class Dir3D {
-public:
-	static const int SIZE = 6;
+namespace Dir2D {
+	enum Dir : int;
+}
+
+namespace Dir3D {
+	const int SIZE = 6;
 	enum Dir { UP = 0, FRONT, RIGHT, DOWN, BACK, LEFT };
 
-	Dir3D() = delete;
-	static std::array<Dir3D::Dir, SIZE> all();
-	static ivec3 to_ivec3(Dir dir);
-	static Dir prev(Dir dir);
-	static Dir next(Dir dir);
-	static Dir opp(Dir dir);
-	static std::array<Dir3D::Dir, 4> all_horizontal();
-
-private:
-	static const std::array<Dir3D::Dir, SIZE> s_all;
-	static const std::array<ivec3, SIZE> s_all_dirs;
+	std::array<Dir3D::Dir, SIZE> all();
+	ivec3 to_ivec3(Dir dir);
+	Dir prev(Dir dir);
+	Dir next(Dir dir);
+	Dir opp(Dir dir);
+	std::array<Dir3D::Dir, 4> all_horizontal();
+	std::optional<Dir2D::Dir> to_2D(Dir dir);
 };
 

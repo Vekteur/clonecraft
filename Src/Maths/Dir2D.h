@@ -4,20 +4,13 @@
 
 #include <array>
 
-class Dir2D {
-public:
-	static const int SIZE = 4;
-	enum Dir {UP = 0, RIGHT, DOWN, LEFT};
+namespace Dir2D {
+	const int SIZE = 4;
+	enum Dir : int {FRONT = 0, RIGHT, BACK, LEFT};
 
-	Dir2D() = delete;
-	static std::array<Dir, SIZE> all();
-	static ivec2 to_ivec2(Dir dir);
-	static Dir prev(Dir dir);
-	static Dir next(Dir dir);
-	static Dir opp(Dir dir);
-
-private:
-	static const std::array<Dir2D::Dir, SIZE> s_all;
-	static const std::array<ivec2, SIZE> s_all_dirs;
+	std::array<Dir, SIZE> all();
+	ivec2 to_ivec2(Dir dir);
+	Dir prev(Dir dir);
+	Dir next(Dir dir);
+	Dir opp(Dir dir);
 };
-

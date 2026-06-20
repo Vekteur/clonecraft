@@ -2,7 +2,7 @@
 
 #include "Generator/Noise/OctavePerlin.h"
 #include "Maths/Converter.h"
-#include "ChunkMap.h"
+#include "Chunk.h"
 #include "Util/DebugGL.h"
 #include "ResManager/ResManager.h"
 #include "Util/Logger.h"
@@ -10,8 +10,8 @@
 
 #include <iostream>
 
-Section::Section(const ChunkMap* chunkMap, const Chunk* chunk, ivec3 position)
-	: p_chunkMap{ chunkMap }, p_chunk{ chunk }, m_position{ position }, 
+Section::Section(const Chunk* chunk, ivec3 position)
+	: p_chunk{ chunk }, m_position{ position },
 	m_blocks{ std::make_unique<BlockArray>() }
 { }
 
@@ -20,16 +20,21 @@ int dirToBin(ivec3 dir) {
 	return dir.x + (dir.y << 2) + (dir.z << 4);
 }
 
-const Section* Section::findNeighboringSection(Dir3D::Dir dir) const {
-	const ivec3 neighbourPos = m_position + Dir3D::to_ivec3(dir); // Position of the neighbour section
-	const Chunk& neighbourChunk = p_chunkMap->getChunk(Converter::to2D(neighbourPos));
-	const Section* neighbourSection = nullptr;
-	if (0 <= neighbourPos.y && neighbourPos.y < neighbourChunk.getHeight())
-		neighbourSection = &neighbourChunk.getSection(neighbourPos.y);
-	return neighbourSection;
+const Section* Section::findNeighboringSection(Dir3D::Dir dir, const NeighbourChunks& neighbours) const {
+	// If the 3D direction is horizontal, it matches one of the neighboring chunks
+	const Chunk* neighbourChunk = p_chunk;
+	auto dirOpt = Dir3D::to_2D(dir);
+	if (dirOpt.has_value())
+		neighbourChunk = neighbours[dirOpt.value()];
+	if (neighbourChunk == nullptr)
+		return nullptr;
+	const int neighbourY = m_position.y + Dir3D::to_ivec3(dir).y;
+	if (0 <= neighbourY && neighbourY < neighbourChunk->getHeight())
+		return &neighbourChunk->getSection(neighbourY);
+	return nullptr;
 }
 
-std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex> > Section::findVisibleFaces() const {
+std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex> > Section::findVisibleFaces(const NeighbourChunks& neighbours) const {
 	std::vector<DefaultMesh::Vertex> defaultVertices;
 	std::vector<WaterMesh::Vertex> waterVertices;
 	
@@ -45,7 +50,7 @@ std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex> > Se
 		const int axe = dir % 3; // Axe of the current direction
 
 		// Done once per direction because quite costly
-		const Section* neighboringSection = findNeighboringSection(dir);
+		const Section* neighboringSection = findNeighboringSection(dir, neighbours);
 		
 		// The order by which the axes are iterated on
 		// order[0] is the first axe on which the iteration occurs
@@ -173,9 +178,9 @@ std::vector<GLuint> getIndices(int size) {
 	return indices;
 }
 
-void Section::loadMesh() {
+void Section::loadMesh(const NeighbourChunks& neighbours) {
 	// CPU only: build the vertex data. Runs on a worker thread, so it must not touch OpenGL.
-	tie(m_nextDefaultVertices, m_nextWaterVertices) = findVisibleFaces();
+	tie(m_nextDefaultVertices, m_nextWaterVertices) = findVisibleFaces(neighbours);
 }
 
 void Section::uploadMesh() {

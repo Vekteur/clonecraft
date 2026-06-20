@@ -23,7 +23,7 @@ void Chunk::setBlock(ivec3 pos, Block block) {
 			std::lock_guard<std::mutex> lock(m_sectionsMutex);
 			firstNewSection = int(m_sections.size());
 			for (int height = firstNewSection; height <= sectionY; ++height) {
-				m_sections.emplace_back(p_chunkMap, this, ivec3{ m_position.x, height, m_position.y });
+				m_sections.emplace_back(this, ivec3{ m_position.x, height, m_position.y });
 				m_height.store(int(m_sections.size()), std::memory_order_release);
 			}
 		}
@@ -46,7 +46,7 @@ void Chunk::loadBlocks() {
 	setState(TO_LOAD_MESH);
 }
 
-void Chunk::loadMesh() {
+void Chunk::loadMesh(const NeighbourChunks& neighbours) {
 	// Grab the section pointers under the lock, then build the meshes without it (the slow part).
 	// Sections added afterwards are meshed by the setBlock() call that created them.
 	std::vector<Section*> sections;
@@ -56,7 +56,7 @@ void Chunk::loadMesh() {
 			sections.push_back(&section);
 	}
 	for (Section* section : sections)
-		section->loadMesh();
+		section->loadMesh(neighbours);
 	setState(TO_RENDER);
 }
 
@@ -74,12 +74,20 @@ void Chunk::releaseMesh() {
 }
 
 Chunk::State Chunk::getState() const {
-	return m_state;
+	return m_state.load(std::memory_order_acquire);
 }
 
 void Chunk::setState(State state) {
-	p_chunkMap->onChangeChunkState(*this, state);
-	m_state = state;
+	State previous = m_state.exchange(state, std::memory_order_acq_rel);
+	p_chunkMap->onChangeChunkState(previous, state);
+}
+
+bool Chunk::casState(State expected, State desired) {
+	if (m_state.compare_exchange_strong(expected, desired, std::memory_order_acq_rel)) {
+		p_chunkMap->onChangeChunkState(expected, desired);
+		return true;
+	}
+	return false;
 }
 
 ivec2 Chunk::getPosition() const {

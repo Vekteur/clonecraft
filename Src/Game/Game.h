@@ -33,7 +33,8 @@ public:
 	void processMouseWheel(sf::Time dt, GLfloat delta);
 	void update(sf::Time dt);
 	void render();
-	void runChunkLoadingLoop();
+	void runOrchestratorLoop();
+	void runWorkerLoop();
 	void onChangedSize(ivec2 size);
 	bool canReloadBlocks();
 	void reloadBlocksMeshes(const std::vector<ivec3>& blocks);
@@ -60,7 +61,8 @@ private:
 	WaterRenderer m_waterRenderer;
 	PostProcessingRenderer m_postProcessingRenderer;
 
-	std::thread m_generatingThread;
+	std::thread m_orchestratorThread;
+	std::vector<std::thread> m_workerThreads;
 	std::thread m_updatingThread;
-	bool m_stopGeneratingThread{ false };
+	std::atomic<bool> m_stopGeneratingThread{ false };
 };

@@ -1,32 +1,46 @@
 #include "Dir3D.h"
 
+#include "Dir2D.h"
 
-std::array<Dir3D::Dir, Dir3D::SIZE> Dir3D::all() {
-	return s_all;
+
+namespace Dir3D {
+	const std::array<Dir, SIZE> s_all
+	{ { UP, FRONT, RIGHT, DOWN, BACK, LEFT } };
+
+	const std::array<ivec3, SIZE> s_all_dirs
+	{ { { 0, 1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 0, -1, 0 }, { -1, 0, 0 }, { 0, 0, -1 } } };
+
+	std::array<Dir, SIZE> all() {
+		return s_all;
+	}
+
+	ivec3 to_ivec3(Dir dir) {
+		return s_all_dirs[dir];
+	}
+
+	Dir prev(Dir dir) {
+		return static_cast<Dir>((dir - 1 + SIZE) % SIZE);
+	}
+
+	Dir next(Dir dir) {
+		return static_cast<Dir>((dir + 1) % SIZE);
+	}
+
+	Dir opp(Dir dir) {
+		return static_cast<Dir>((dir + SIZE / 2) % SIZE);
+	}
+
+	std::array<Dir, 4> all_horizontal() {
+		return { FRONT, RIGHT, BACK, LEFT };
+	}
+
+	std::optional<Dir2D::Dir> to_2D(Dir dir) {
+		switch(dir) {
+			case FRONT: return Dir2D::FRONT;
+			case BACK: return Dir2D::BACK;
+			case LEFT: return Dir2D::LEFT;
+			case RIGHT: return Dir2D::RIGHT;
+			default: return std::nullopt;
+		}
+	}
 }
-
-ivec3 Dir3D::to_ivec3(Dir dir) {
-	return s_all_dirs[dir];
-}
-
-Dir3D::Dir Dir3D::prev(Dir dir) {
-	return static_cast<Dir3D::Dir>((dir - 1 + SIZE) % SIZE);
-}
-
-Dir3D::Dir Dir3D::next(Dir dir) {
-	return static_cast<Dir3D::Dir>((dir + 1) % SIZE);
-}
-
-Dir3D::Dir Dir3D::opp(Dir dir) {
-	return static_cast<Dir3D::Dir>((dir + SIZE / 2) % SIZE);
-}
-
-std::array<Dir3D::Dir, 4> Dir3D::all_horizontal() {
-	return { Dir3D::FRONT, Dir3D::RIGHT, Dir3D::BACK, Dir3D::LEFT };
-}
-
-const std::array<Dir3D::Dir, Dir3D::SIZE> Dir3D::s_all
-{ { Dir3D::UP, Dir3D::FRONT, Dir3D::RIGHT, Dir3D::DOWN, Dir3D::BACK, Dir3D::LEFT } };
- 
-const std::array<ivec3, Dir3D::SIZE> Dir3D::s_all_dirs
-{ { { 0, 1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 0, -1, 0 }, { -1, 0, 0 }, { 0, 0, -1 } } };

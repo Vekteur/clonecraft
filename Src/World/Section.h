@@ -8,6 +8,7 @@
 #include <optional>
 
 #include "Util/Array3D.h"
+#include "Maths/Dir2D.h"
 #include "Maths/Dir3D.h"
 #include "Block/Block.h"
 #include "Mesh.h"
@@ -15,18 +16,20 @@
 #include "Renderer/WaterRenderer.h"
 #include "WorldConstants.h"
 
-class ChunkMap;
 class Chunk;
+
+// Chunks around a section's own chunk, snapshotted so sections never read the chunk map.
+using NeighbourChunks = std::array<const Chunk*, Dir2D::SIZE>;
 
 class Section {
 public:
-	Section(const ChunkMap* chunkMap = nullptr, const Chunk* chunk = nullptr, ivec3 position = ivec3{ 0, 0, 0 });
+	Section(const Chunk* chunk = nullptr, ivec3 position = ivec3{ 0, 0, 0 });
 	Section(Section&& other) = default;
 	Section& operator=(Section&& other) = default;
 	Section(const Section& other) = delete;
 	Section& operator=(const Section& other) = delete;
 
-	void loadMesh();
+	void loadMesh(const NeighbourChunks& neighbours);
 	void uploadMesh();
 	void releaseMesh();
 	void render(const DefaultRenderer& shader) const;
@@ -38,7 +41,6 @@ public:
 
 private:
 	using BlockArray = Array3D<Block, Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE>;
-	const ChunkMap* p_chunkMap{ nullptr };
 	const Chunk* p_chunk{ nullptr };
 	ivec3 m_position;
 
@@ -52,8 +54,8 @@ private:
 	std::vector<WaterMesh::Vertex> m_nextWaterVertices;
 
 	bool isInSection(ivec3 globalPos) const;
-	const Section* findNeighboringSection(Dir3D::Dir dir) const;
-	std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex>> findVisibleFaces() const;
+	const Section* findNeighboringSection(Dir3D::Dir dir, const NeighbourChunks& neighbours) const;
+	std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex>> findVisibleFaces(const NeighbourChunks& neighbours) const;
 	void addVisibleFacesOnLastAxe(
 		std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
 		Dir3D::Dir dir, ivec3 localPos, int indexOfLastAxe, int sizeOfLastAxe,

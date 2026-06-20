@@ -12,11 +12,14 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_set>
+#include <thread>
+#include <chrono>
 
-const int ChunkMap::VIEW_DISTANCE{ 48 };
+const int ChunkMap::VIEW_DISTANCE{ 72 };
 const int ChunkMap::LOAD_DISTANCE{ VIEW_DISTANCE + 1 };
 const int ChunkMap::SIDE{ (2 * VIEW_DISTANCE + 1) * Const::SECTION_SIDE };
 const int ChunkMap::CHUNKS_PER_LOAD{ 8 };
+const int ChunkMap::LOADING_WORKERS_COUNT{ 4 };
 
 ChunkMap::ChunkMap(ivec2 center) : m_center{ center } { }
 
@@ -31,11 +34,13 @@ void ChunkMap::update() {
 		}
 	}
 	while (!m_chunksToUploadMesh.empty()) {
-		Chunk& chunk = getChunk(m_chunksToUploadMesh.front());
+		ivec2 pos = m_chunksToUploadMesh.front();
+		Chunk& chunk = getChunk(pos);
 		// Skip chunks already scheduled for unloading: uploading their VAOs now would leave GPU
 		// resources to be freed on the loading thread when the chunk is erased.
 		if (chunk.getState() == Chunk::TO_RENDER)
 			chunk.uploadMesh();
+		m_chunksPendingUpload.erase(pos);
 		m_chunksToUploadMesh.pop();
 	}
 
@@ -53,7 +58,7 @@ void ChunkMap::render(const Frustum& frustum, const DefaultRenderer* defaultRend
 	std::vector< std::tuple<int, Chunk* > > chunks;
 	for (auto& chunkPos : m_chunks) {
 		std::shared_ptr<Chunk>& chunk = chunkPos.second;
-		if (chunk->getState() == Chunk::TO_RENDER && isChunkInFrustum(chunk->getPosition(), frustum)) {
+		if (chunk->getState() == Chunk::TO_RENDER && isChunkInFrustum(chunk.get(), frustum)) {
 			chunks.push_back({ math::manhattan(chunk->getPosition(), m_center), chunk.get() });
 		}
 	}
@@ -87,7 +92,7 @@ void ChunkMap::setBlock(ivec3 globalPos, Block block) {
 	// The edit must happen without the lock held: Chunk::setBlock may extend the
 	// chunk upwards and call back into reloadSectionMesh(), which locks m_chunksMutex
 	// itself. Holding it here would self-deadlock.
-	if (chunk != nullptr && chunk->getState() > Chunk::TO_LOAD_BLOCKS) {
+	if (chunk != nullptr && chunk->getState() >= Chunk::TO_LOAD_MESH) {
 		ivec2 innerChunkPos = Converter::globalToInnerChunk(globalPos);
 		chunk->setBlock({ innerChunkPos.x, globalPos.y, innerChunkPos.y }, block);
 	}
@@ -104,10 +109,12 @@ Block ChunkMap::getBlock(ivec3 globalPos) const {
 }
 
 void ChunkMap::setCenter(ivec2 center) {
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
 	m_center = center;
 }
 
 ivec2 ChunkMap::getCenter() {
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
 	return m_center;
 }
 
@@ -136,14 +143,21 @@ int ChunkMap::getRenderedChunks() {
 	return m_renderedChunks;
 }
 
-void ChunkMap::load(const Frustum& frustum) {
+void ChunkMap::refreshSelection(const Frustum& frustum) {
+	ivec2 center;
+	{
+		std::lock_guard<std::mutex> lock(m_chunksMutex);
+		center = m_center;
+	}
+	// Built without the lock: just positions, ordered by frustum (visible first) then distance.
+	// The frustum test uses a fixed height so it never touches the map.
 	std::vector<std::tuple<bool, int, ivec2>> viewableChunks;
-	for (int x = m_center.x - VIEW_DISTANCE; x <= m_center.x + VIEW_DISTANCE; ++x) {
-		for (int y = m_center.y - VIEW_DISTANCE; y <= m_center.y + VIEW_DISTANCE; ++y) {
+	for (int x = center.x - VIEW_DISTANCE; x <= center.x + VIEW_DISTANCE; ++x) {
+		for (int y = center.y - VIEW_DISTANCE; y <= center.y + VIEW_DISTANCE; ++y) {
 			ivec2 pos{ x, y };
-			int dist = math::euclidianPow2(pos, m_center);
+			int dist = math::euclidianPow2(pos, center);
 			if (dist <= VIEW_DISTANCE * VIEW_DISTANCE)
-				viewableChunks.push_back({ !isChunkInFrustum(pos, frustum), dist, pos });
+				viewableChunks.push_back({ !isChunkInFrustumApprox(pos, frustum), dist, pos });
 		}
 	}
 	std::sort(viewableChunks.begin(), viewableChunks.end(),
@@ -154,32 +168,66 @@ void ChunkMap::load(const Frustum& frustum) {
 		return std::get<0>(c1) < std::get<0>(c2);
 	});
 
-	int loadedChunks = 0;
-	for (auto& viewableChunk : viewableChunks) {
-		ivec2 pos = std::get<2>(viewableChunk);
-		auto chunkIt = m_chunks.find(pos);
-		if (chunkIt == m_chunks.end() || chunkIt->second->getState() <= Chunk::TO_LOAD_MESH) {
-			loadBlocks(pos);
-			for (Dir2D::Dir dir : Dir2D::all()) {
-				loadBlocks(pos + Dir2D::to_ivec2(dir));
-			}
-			loadChunkMesh(pos);
-			++loadedChunks;
-			if (loadedChunks == CHUNKS_PER_LOAD)
-				break;
+	std::vector<ivec2> selection;
+	selection.reserve(viewableChunks.size());
+	for (auto& viewableChunk : viewableChunks)
+		selection.push_back(std::get<2>(viewableChunk));
+
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
+	m_toSelect = std::move(selection);
+	m_selectCursor = 0;
+}
+
+void ChunkMap::processNextTask() {
+	enum { BLOCK, MESH, SELECT, NONE } type = NONE;
+	ivec2 pos;
+	{
+		std::lock_guard<std::mutex> lock(m_chunksMutex);
+		if (!m_toLoadBlocks.empty()) {
+			pos = m_toLoadBlocks.front(); m_toLoadBlocks.pop(); m_inLoadBlocks.erase(pos); type = BLOCK;
+		} else if (!m_toLoadMeshes.empty()) {
+			pos = m_toLoadMeshes.front(); m_toLoadMeshes.pop(); m_inLoadMeshes.erase(pos); type = MESH;
+		} else if (m_selectCursor < m_toSelect.size()) {
+			pos = m_toSelect[m_selectCursor++]; type = SELECT;
 		}
 	}
+	switch (type) {
+		case BLOCK:  doLoadBlocks(pos); break;
+		case MESH:   doLoadMesh(pos);   break;
+		case SELECT: doSelectChunk(pos); break;
+		case NONE:   std::this_thread::sleep_for(std::chrono::milliseconds(1)); break;
+	}
+}
+
+void ChunkMap::doSelectChunk(ivec2 pos) {
+	// Queue blocks for this chunk and its neighbours (a chunk's mesh needs its neighbours' blocks).
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
+	enqueueBlocksIfNeeded(pos);
+	for (Dir2D::Dir dir : Dir2D::all())
+		enqueueBlocksIfNeeded(pos + Dir2D::to_ivec2(dir));
+}
+
+void ChunkMap::enqueueBlocksIfNeeded(ivec2 pos) {
+	auto it = m_chunks.find(pos);
+	bool needsBlocks = (it == m_chunks.end()) || (it->second->getState() == Chunk::TO_LOAD_BLOCKS);
+	if (needsBlocks && m_inLoadBlocks.insert(pos).second)
+		m_toLoadBlocks.push(pos);
 }
 
 void ChunkMap::unloadFarChunks() {
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
 
 	for (auto it = m_chunks.begin(); it != m_chunks.end();) {
-		if (it->second->getState() == Chunk::TO_REMOVE) {
+		Chunk& chunk = *it->second;
+		if (chunk.getState() == Chunk::TO_REMOVE) {
 			it = m_chunks.erase(it);
 			continue;
-		} else if (!isInLoadDistance(it->second->getPosition())) {
-			it->second->setState(Chunk::TO_RELEASE_MESH);
+		} else if (!isInLoadDistance(chunk.getPosition())) {
+			// CAS from a settled state so we never overwrite a worker's in-flight LOADING_* claim;
+			// such a chunk is caught on the next pass once the worker is done with it.
+			chunk.casState(Chunk::TO_LOAD_BLOCKS, Chunk::TO_RELEASE_MESH) ||
+			chunk.casState(Chunk::TO_LOAD_MESH, Chunk::TO_RELEASE_MESH) ||
+			chunk.casState(Chunk::TO_RENDER, Chunk::TO_RELEASE_MESH);
 		}
 		++it;
 	}
@@ -219,14 +267,23 @@ bool ChunkMap::canChunkBeEdited(ivec2 pos) {
 void ChunkMap::reloadSectionMesh(ivec3 pos) {
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
 
-	auto chunkIt = m_chunks.find(Converter::to2D(pos));
+	ivec2 pos2D = Converter::to2D(pos);
+	auto chunkIt = m_chunks.find(pos2D);
 	if (chunkIt != m_chunks.end() && chunkIt->second->getState() == Chunk::TO_RENDER &&
 			0 <= pos.y && pos.y < chunkIt->second->getHeight()) {
-		// In the extreme case where a chunk is edited near an unloaded chunk, neighboring chunks
+		// In the extreme case where a chunk is edited on the border of the map, neighboring chunks
 		// could be unloaded.
-		if (canChunkBeEdited(Converter::to2D(pos))) {
-			chunkIt->second->getSection(pos.y).loadMesh();
-			m_sectionsToReUploadMesh.push(pos);
+		if (canChunkBeEdited(pos2D)) {
+			NeighbourChunks neighbours{};
+			for (Dir2D::Dir dir : Dir2D::all()) {
+				auto it = m_chunks.find(pos2D + Dir2D::to_ivec2(dir));
+				neighbours[dir] = (it != m_chunks.end()) ? it->second.get() : nullptr;
+			}
+			chunkIt->second->getSection(pos.y).loadMesh(neighbours);
+			// If the chunk still owes a full upload, that upload already carries this freshly rebuilt
+			// section; a section upload would run after it and push an already-consumed empty mesh.
+			if (m_chunksPendingUpload.count(pos2D) == 0)
+				m_sectionsToReUploadMesh.push(pos);
 		}
 	}
 }
@@ -247,17 +304,17 @@ const Section& ChunkMap::getSection(ivec3 sectionPos) const { // Must be a valid
 	return getChunk(Converter::to2D(sectionPos)).getSection(sectionPos.y);
 }
 
-void ChunkMap::onChangeChunkState(Chunk& chunk, Chunk::State nextState) {
-	if (chunk.getState() != Chunk::STATE_SIZE)
-		--m_countChunks[chunk.getState()];
-	if (nextState != Chunk::STATE_SIZE)
-		++m_countChunks[nextState];
+void ChunkMap::onChangeChunkState(Chunk::State previous, Chunk::State next) {
+	if (previous != Chunk::STATE_SIZE)
+		--m_countChunks[previous];
+	if (next != Chunk::STATE_SIZE)
+		++m_countChunks[next];
 }
 
 std::unordered_map<ivec2, std::shared_ptr<Chunk>, ChunkMap::Comp_ivec2, ChunkMap::Comp_ivec2>::const_iterator
 ChunkMap::hasBlock(ivec3 globalPos, bool canSurpass) const {
 	auto chunkIt = m_chunks.find(Converter::globalToChunk(globalPos));
-	if (chunkIt != m_chunks.end() && chunkIt->second->getState() > Chunk::TO_LOAD_BLOCKS &&
+	if (chunkIt != m_chunks.end() && chunkIt->second->getState() >= Chunk::TO_LOAD_MESH &&
 			0 <= globalPos.y &&
 			(canSurpass || globalPos.y < chunkIt->second->getHeight() * Const::SECTION_HEIGHT))
 		return chunkIt;
@@ -269,43 +326,84 @@ bool ChunkMap::isInLoadDistance(ivec2 pos) const {
 	return math::euclidianPow2(pos, m_center) <= LOAD_DISTANCE * LOAD_DISTANCE;
 }
 
-void ChunkMap::loadBlocks(ivec2 pos) {
-	Chunk* chunk;
+void ChunkMap::doLoadBlocks(ivec2 pos) {
+	std::shared_ptr<Chunk> chunk;
 	{
-		// Inserting into the map (possibly rehashing it) must be mutually exclusive
-		// with any other thread accessing it, so hold the lock for this part only.
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
+		if (!isInLoadDistance(pos)) // moved out of range while queued
+			return;
 		auto it = m_chunks.find(pos);
 		if (it == m_chunks.end()) // Chunk not in the ChunkMap
 			it = m_chunks.emplace(pos, std::make_shared<Chunk>(this, pos)).first;
-		chunk = it->second.get();
+		chunk = it->second; // keep alive while we generate, even if it gets erased
 	}
-	// Generating the blocks is the expensive part and only mutates the chunk itself,
-	// not the shared map, so it runs without the lock.
-	if (chunk->getState() == Chunk::TO_LOAD_BLOCKS) {
-		chunk->loadBlocks();
-	}
+	// Claim the chunk; if another worker beat us (or it is already loaded) there is nothing to do.
+	if (!chunk->casState(Chunk::TO_LOAD_BLOCKS, Chunk::LOADING_BLOCKS))
+		return;
+	// Generating only mutates this chunk, so it runs without the lock. loadBlocks() ends at
+	// TO_LOAD_MESH.
+	chunk->loadBlocks();
+	// This chunk's blocks just appeared, which may complete the mesh prerequisites of itself and
+	// of each neighbour it borders, so re-check them all.
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
+	enqueueMeshIfReady(pos);
+	for (Dir2D::Dir dir : Dir2D::all())
+		enqueueMeshIfReady(pos + Dir2D::to_ivec2(dir));
 }
 
-void ChunkMap::loadChunkMesh(ivec2 pos) {
-	Chunk* chunk;
+void ChunkMap::enqueueMeshIfReady(ivec2 pos) {
+	auto it = m_chunks.find(pos);
+	if (it == m_chunks.end() || it->second->getState() != Chunk::TO_LOAD_MESH)
+		return; // missing, still loading blocks, or already meshing/meshed
+	for (Dir2D::Dir dir : Dir2D::all()) {
+		auto neighbourIt = m_chunks.find(pos + Dir2D::to_ivec2(dir));
+		if (neighbourIt == m_chunks.end() || neighbourIt->second->getState() < Chunk::TO_LOAD_MESH)
+			return; // a neighbour's blocks are not ready, so this mesh is not either
+	}
+	if (m_inLoadMeshes.insert(pos).second)
+		m_toLoadMeshes.push(pos);
+}
+
+void ChunkMap::doLoadMesh(ivec2 pos) {
+	std::shared_ptr<Chunk> chunk;
+	std::array<std::shared_ptr<Chunk>, Dir2D::SIZE> keepAlive; // keep neighbours alive during the build
+	NeighbourChunks neighbours{};
 	{
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
-		chunk = m_chunks.at(pos).get(); // Always present: loadBlocks(pos) ran first
+		auto it = m_chunks.find(pos);
+		if (it == m_chunks.end())
+			return;
+		// Snapshot the neighbouring chunks so the build below never reads the map.
+		for (Dir2D::Dir dir : Dir2D::all()) {
+			auto neighbourIt = m_chunks.find(pos + Dir2D::to_ivec2(dir));
+			if (neighbourIt != m_chunks.end()) {
+				keepAlive[dir] = neighbourIt->second;
+				neighbours[dir] = neighbourIt->second.get();
+			}
+		}
+		if (!it->second->casState(Chunk::TO_LOAD_MESH, Chunk::LOADING_MESH))
+			return; // gone or already meshing
+		chunk = it->second;
 	}
-	if (chunk->getState() == Chunk::TO_LOAD_MESH) {
-		chunk->loadMesh(); // Builds the mesh (reads neighbours); no map mutation
-		// Publishing to the main thread, which uploads the VAOs in update(). Locking
-		// here also ensures the generated mesh is visible to that thread.
-		std::lock_guard<std::mutex> lock(m_chunksMutex);
-		m_chunksToUploadMesh.push(pos);
-	}
+	chunk->loadMesh(neighbours); // builds from the snapshot; no map access
+	chunk->setState(Chunk::TO_RENDER);
+	// Publishing to the main thread, which uploads the VAOs in update().
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
+	m_chunksToUploadMesh.push(pos);
+	m_chunksPendingUpload.insert(pos);
 }
 
-bool ChunkMap::isChunkInFrustum(ivec2 chunkPos, const Frustum& frustum) {
-	auto chunkIt = m_chunks.find(chunkPos);
-	int height = ((chunkIt == m_chunks.end()) ?
-		Const::INIT_CHUNK_NB_SECTIONS : chunkIt->second->getHeight()) * Const::SECTION_HEIGHT;
+bool ChunkMap::isChunkInFrustum(Chunk* chunk, const Frustum& frustum) {
+	ivec2 pos = chunk->getPosition();
+	int height = chunk->getHeight() * Const::SECTION_HEIGHT;
+	Box chunkBox = { { pos.x * Const::SECTION_SIDE, 0.f, pos.y * Const::SECTION_SIDE },
+		{ Const::SECTION_SIDE, height, Const::SECTION_SIDE } };
+	return !frustum.isBoxOutside(chunkBox);
+}
+
+bool ChunkMap::isChunkInFrustumApprox(ivec2 chunkPos, const Frustum& frustum) const {
+	// Like isChunkInFrustum but with a fixed height for chunks that are not loaded yet.
+	int height = Const::INIT_CHUNK_NB_SECTIONS * Const::SECTION_HEIGHT;
 	Box chunkBox = { { chunkPos.x * Const::SECTION_SIDE, 0.f, chunkPos.y * Const::SECTION_SIDE },
 		{ Const::SECTION_SIDE, height, Const::SECTION_SIDE } };
 	return !frustum.isBoxOutside(chunkBox);
