@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <unordered_set>
 
-const int ChunkMap::VIEW_DISTANCE{ 32 };
+const int ChunkMap::VIEW_DISTANCE{ 320 };
 const int ChunkMap::LOAD_DISTANCE{ VIEW_DISTANCE + 1 };
 const int ChunkMap::SIDE{ (2 * VIEW_DISTANCE + 1) * Const::SECTION_SIDE };
 const int ChunkMap::CHUNKS_PER_LOAD{ 8 };
@@ -44,12 +44,12 @@ void ChunkMap::load(const Frustum& frustum) {
 	for (auto& viewableChunk : viewableChunks) {
 		ivec2 pos = std::get<2>(viewableChunk);
 		auto chunkIt = m_chunks.find(pos);
-		if (chunkIt == m_chunks.end() || chunkIt->second->getState() <= Chunk::TO_LOAD_FACES) {
+		if (chunkIt == m_chunks.end() || chunkIt->second->getState() <= Chunk::TO_LOAD_MESH) {
 			loadBlocks(pos);
 			for (Dir2D::Dir dir : Dir2D::all()) {
 				loadBlocks(pos + Dir2D::to_ivec2(dir));
 			}
-			loadFaces(pos);
+			loadMeshes(pos);
 			++loadedChunks;
 			if (loadedChunks == CHUNKS_PER_LOAD)
 				break;
@@ -69,7 +69,7 @@ void ChunkMap::unloadFarChunks() {
 			it = m_chunks.erase(it);
 			continue;
 		} else if (!isInLoadDistance(it->second->getPosition())) {
-			it->second->setState(Chunk::TO_UNLOAD_VAOS);
+			it->second->setState(Chunk::TO_RELEASE_MESH);
 		}
 		++it;
 	}
@@ -79,23 +79,24 @@ void ChunkMap::update() {
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
 
 	for (auto& c : m_chunks) {
-		if (c.second->getState() == Chunk::TO_UNLOAD_VAOS) {
-			c.second->unloadVAOs();
+		if (c.second->getState() == Chunk::TO_RELEASE_MESH) {
+			c.second->releaseMesh();
 		}
 	}
-	while (!m_chunksToLoad.empty()) {
-		Chunk& chunk = getChunk(m_chunksToLoad.front());
+	while (!m_chunksToUploadMesh.empty()) {
+		Chunk& chunk = getChunk(m_chunksToUploadMesh.front());
 		// Skip chunks already scheduled for unloading: uploading their VAOs now would leave GPU
 		// resources to be freed on the loading thread when the chunk is erased.
 		if (chunk.getState() == Chunk::TO_RENDER)
-			chunk.loadVAOs();
-		m_chunksToLoad.pop();
+			chunk.uploadMesh();
+		m_chunksToUploadMesh.pop();
 	}
 
-	while (!m_sectionsToReload.empty()) {
-		getSection(m_sectionsToReload.front()).unloadMesh();
-		getSection(m_sectionsToReload.front()).uploadMesh();
-		m_sectionsToReload.pop();
+	while (!m_sectionsToReUploadMesh.empty()) {
+		Section& section = getSection(m_sectionsToReUploadMesh.front());
+		section.releaseMesh();
+		section.uploadMesh();
+		m_sectionsToReUploadMesh.pop();
 	}
 }
 
@@ -124,18 +125,18 @@ void ChunkMap::loadBlocks(ivec2 pos) {
 	}
 }
 
-void ChunkMap::loadFaces(ivec2 pos) {
+void ChunkMap::loadMeshes(ivec2 pos) {
 	Chunk* chunk;
 	{
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
 		chunk = m_chunks.at(pos).get(); // Always present: loadBlocks(pos) ran first
 	}
-	if (chunk->getState() == Chunk::TO_LOAD_FACES) {
-		chunk->loadFaces(); // Builds the mesh (reads neighbours); no map mutation
+	if (chunk->getState() == Chunk::TO_LOAD_MESH) {
+		chunk->loadMesh(); // Builds the mesh (reads neighbours); no map mutation
 		// Publishing to the main thread, which uploads the VAOs in update(). Locking
 		// here also ensures the generated mesh is visible to that thread.
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
-		m_chunksToLoad.push(pos);
+		m_chunksToUploadMesh.push(pos);
 	}
 }
 
@@ -179,18 +180,30 @@ ivec2 ChunkMap::getCenter() {
 	return m_center;
 }
 
-void ChunkMap::reloadSection(ivec3 pos) {
+void ChunkMap::reloadSectionMesh(ivec3 pos) {
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
 
 	auto chunkIt = m_chunks.find(Converter::to2D(pos));
 	if (chunkIt != m_chunks.end() && chunkIt->second->getState() == Chunk::TO_RENDER &&
 			0 <= pos.y && pos.y < chunkIt->second->getHeight()) {
-		chunkIt->second->getSection(pos.y).loadMesh();
-		m_sectionsToReload.push(pos);
+		// In the extreme case where a chunk is edited near an unloaded chunk, neighboring chunks
+		// could be unloaded.
+		if (canChunkBeEdited(Converter::to2D(pos))) {
+			chunkIt->second->getSection(pos.y).loadMesh();
+			m_sectionsToReUploadMesh.push(pos);	
+		}
 	}
 }
 
-void ChunkMap::reloadBlocks(const std::vector<ivec3>& blocks) {
+bool ChunkMap::canChunkBeEdited(ivec2 pos) {
+	for (Dir2D::Dir dir : Dir2D::all()) {
+		if (m_chunks.find(pos + Dir2D::to_ivec2(dir)) == m_chunks.end())
+			return false;
+	}
+	return true;
+}
+
+void ChunkMap::reloadBlocksMeshes(const std::vector<ivec3>& blocks) {
 	struct Comp_ivec3 {
 		size_t operator()(ivec3 vec) const {
 			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1) ^ (std::hash<int>()(vec.z) << 2);
@@ -209,7 +222,7 @@ void ChunkMap::reloadBlocks(const std::vector<ivec3>& blocks) {
 	}
 
 	for (ivec3 section : sectionsToUpdate) {
-		reloadSection(section);
+		reloadSectionMesh(section);
 	}
 }
 
@@ -239,9 +252,9 @@ void ChunkMap::setBlock(ivec3 globalPos, Block block) {
 			chunk = chunkIt->second.get();
 	}
 	// The edit must happen without the lock held: Chunk::setBlock may extend the
-	// chunk upwards and call back into reloadSection(), which locks m_chunksMutex
+	// chunk upwards and call back into reloadSectionMesh(), which locks m_chunksMutex
 	// itself. Holding it here would self-deadlock.
-	if (chunk != nullptr) {
+	if (chunk != nullptr && chunk->getState() > Chunk::TO_LOAD_BLOCKS) {
 		ivec2 innerChunkPos = Converter::globalToInnerChunk(globalPos);
 		chunk->setBlock({ innerChunkPos.x, globalPos.y, innerChunkPos.y }, block);
 	}

@@ -18,7 +18,7 @@ void Chunk::setBlock(ivec3 pos, Block block) {
 	int sectionY = pos.y / Const::SECTION_HEIGHT;
 	for (int height = int(m_sections.size()); height <= sectionY; ++height) {
 		m_sections.emplace_back(p_chunkMap, this, ivec3{ m_position.x, height, m_position.y });
-		p_chunkMap->reloadSection({ m_position.x, height, m_position.y });
+		p_chunkMap->reloadSectionMesh({ m_position.x, height, m_position.y });
 	}
 	getSection(sectionY).setBlock({ pos.x, pos.y % Const::SECTION_HEIGHT, pos.z }, block);
 }
@@ -29,25 +29,25 @@ Block Chunk::getBlock(ivec3 pos) const {
 
 void Chunk::loadBlocks() {
 	g_worldGenerator.loadChunk(*this);
-	setState(TO_LOAD_FACES);
+	setState(TO_LOAD_MESH);
 }
 
-void Chunk::loadFaces() {
+void Chunk::loadMesh() {
 	for (auto& section : m_sections) {
 		section.loadMesh();
 	}
 	setState(TO_RENDER);
 }
 
-void Chunk::loadVAOs() {
+void Chunk::uploadMesh() {
 	for (auto& section : m_sections) {
 		section.uploadMesh();
 	}
 }
 
-void Chunk::unloadVAOs() {
+void Chunk::releaseMesh() {
 	for (auto& section : m_sections) {
-		section.unloadMesh();
+		section.releaseMesh();
 	}
 	setState(TO_REMOVE);
 }

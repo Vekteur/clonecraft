@@ -48,12 +48,13 @@ public:
 	void unloadFarChunks();
 
 	// ---- Updating thread (post-edit remesh) ----
-	void reloadBlocks(const std::vector<ivec3>& blocks);
+	void reloadBlocksMeshes(const std::vector<ivec3>& blocks);
+	bool canChunkBeEdited(ivec2 pos);
 
 	// ---- Called from several threads ----
 	// Locked. Reached from the main thread (block edits via Chunk::setBlock),
-	// the loading thread (generation) and the updating thread (reloadBlocks).
-	void reloadSection(ivec3 pos);
+	// the loading thread (generation) and the updating thread (reloadBlocksMeshes).
+	void reloadSectionMesh(ivec3 pos);
 	// No internal locking. The const overloads are the loading thread's lock-free neighbour
 	// reads (safe because only the loading thread changes the map structure); the non-const
 	// overloads are used by the main thread while it already holds m_chunksMutex.
@@ -75,8 +76,9 @@ private:
 	};
 
 	std::unordered_map<ivec2, std::unique_ptr<Chunk>, Comp_ivec2, Comp_ivec2> m_chunks;
-	std::queue<ivec2> m_chunksToLoad;
-	std::queue<ivec3> m_sectionsToReload;
+	std::queue<ivec2> m_chunksToUploadMesh;
+	std::queue<ivec3> m_sectionsToLoadMesh;
+	std::queue<ivec3> m_sectionsToReUploadMesh;
 	ivec2 m_center;
 	mutable std::mutex m_chunksMutex; // guards the structure of m_chunks and the two queues above
 	bool m_mustStop = false;
@@ -93,7 +95,7 @@ private:
 	// Called in the loading thread
 	bool isInLoadDistance(ivec2 pos) const;
 	void loadBlocks(ivec2 pos);
-	void loadFaces(ivec2 pos);
+	void loadMeshes(ivec2 pos);
 	// No lock needed
 	bool isChunkInFrustum(ivec2 chunkPos, const Frustum& frustum);
 };

@@ -10,9 +10,9 @@ class Chunk {
 public:
 	enum State {
 		TO_LOAD_BLOCKS,
-		TO_LOAD_FACES,
+		TO_LOAD_MESH,
 		TO_RENDER,
-		TO_UNLOAD_VAOS,
+		TO_RELEASE_MESH,
 		TO_REMOVE,
 		STATE_SIZE
 	};
@@ -23,9 +23,9 @@ public:
 	void setBlock(ivec3 pos, Block block);
 	Block getBlock(ivec3 pos) const;
 	void loadBlocks();
-	void loadFaces();
-	void loadVAOs();
-	void unloadVAOs();
+	void loadMesh();
+	void uploadMesh();
+	void releaseMesh();
 	State getState() const;
 	void setState(State state);
 	ivec2 getPosition() const;

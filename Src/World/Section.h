@@ -28,7 +28,7 @@ public:
 
 	void loadMesh();
 	void uploadMesh();
-	void unloadMesh();
+	void releaseMesh();
 	void render(const DefaultRenderer& shader) const;
 	void render(const WaterRenderer& waterRenderer) const;
 
@@ -47,7 +47,7 @@ private:
 	DefaultMesh nextDefaultMesh;
 	WaterMesh activeWaterMesh;
 	WaterMesh nextWaterMesh;
-	// Built on a worker thread by loadFaces(); uploaded to the GPU on the main thread by loadVAOs().
+	// Built on a worker thread by loadMeshes(); uploaded to the GPU on the main thread by uploadMesh().
 	std::vector<DefaultMesh::Vertex> m_nextDefaultVertices;
 	std::vector<WaterMesh::Vertex> m_nextWaterVertices;
 

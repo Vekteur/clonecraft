@@ -36,7 +36,7 @@ public:
 	void runChunkLoadingLoop();
 	void onChangedSize(ivec2 size);
 	bool canReloadBlocks();
-	void reloadBlocks(const std::vector<ivec3>& blocks);
+	void reloadBlocksMeshes(const std::vector<ivec3>& blocks);
 
 	Player& getPlayer();
 	ChunkMap& getChunkMap();

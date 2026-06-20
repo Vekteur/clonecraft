@@ -24,7 +24,7 @@ void WindowTextDrawer::drawAll(int fps, Game& game) {
 	drawDirection(game.getPlayer().getCamera().getYaw(), game.getPlayer().getCamera().getPitch());
 	drawBiome(g_worldGenerator.biomeMap().getBiomeName(Converter::to2D(blockPos)));
 	drawRenderedChunks(game.getChunkMap().getRenderedChunks());
-	drawBlockChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES));
+	drawBlockChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_MESH));
 	drawFaceChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_RENDER));
 	drawGameMode(game.getPlayer().getGameMode());
 	/*drawBlockNumber(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_FACES) *

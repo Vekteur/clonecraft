@@ -44,7 +44,7 @@ bool Game::canReloadBlocks() {
 	return updatingThreadFinished;
 }
 
-void Game::reloadBlocks(const std::vector<ivec3>& blocks) {
+void Game::reloadBlocksMeshes(const std::vector<ivec3>& blocks) {
 	if (updatingThreadFinished) {
 		updatingThreadFinished = false;
 		if (m_updatingThread.joinable())
@@ -52,7 +52,7 @@ void Game::reloadBlocks(const std::vector<ivec3>& blocks) {
 		m_updatingThread = std::thread{ [this, blocks]() {
 			// CPU-only: rebuilds the affected sections' mesh data; the GPU upload happens
 			// on the main thread in update(). No OpenGL context needed here.
-			m_chunkMap.reloadBlocks(blocks);
+			m_chunkMap.reloadBlocksMeshes(blocks);
 			updatingThreadFinished = true;
 		} };
 	}
@@ -135,7 +135,7 @@ void Game::fillSmoothSphere(int radius, Block block) {
 		for (ivec3 pos : blocks) {
 			m_chunkMap.setBlock(pos, block);
 		}
-		reloadBlocks(blocks);
+		reloadBlocksMeshes(blocks);
 	}
 }
 

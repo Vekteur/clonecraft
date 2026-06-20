@@ -195,7 +195,7 @@ void Section::uploadMesh() {
 	Debug::glCheckError();
 }
 
-void Section::unloadMesh() {
+void Section::releaseMesh() {
 	activeDefaultMesh.release();
 	activeWaterMesh.release();
 }
