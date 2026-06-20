@@ -76,6 +76,10 @@ void Player::move(Movement::Direction direction, sf::Time dt) {
 	m_movement.move(direction, dt.asSeconds());
 }
 
+void Player::setSprinting(bool sprinting) {
+	m_movement.setSprinting(sprinting);
+}
+
 vec3 Player::getPosition() const {
 	return m_camera.getPosition();
 }

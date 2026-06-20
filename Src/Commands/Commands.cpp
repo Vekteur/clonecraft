@@ -14,6 +14,8 @@ Commands::Commands() {
 		onPressedEvent(Command::UP);
 	if (Keyboard::isKeyPressed(Keyboard::LShift))
 		onPressedEvent(Command::DOWN);
+	if (Keyboard::isKeyPressed(Keyboard::LControl))
+		onPressedEvent(Command::SPRINT);
 }
 
 Command Commands::findKey(sf::Keyboard::Key key) const {
@@ -22,7 +24,9 @@ Command Commands::findKey(sf::Keyboard::Key key) const {
 	case Keyboard::E:
 		if (Keyboard::isKeyPressed(Keyboard::LAlt)) return Command::HUGE_EXPLOSION;
 		else return Command::EXPLOSION;
-	case Keyboard::B: return Command::BRUSH;
+	case Keyboard::B:
+		if (Keyboard::isKeyPressed(Keyboard::LAlt)) return Command::HUGE_BRUSH;
+		else return Command::BRUSH;
 	case Keyboard::T: return Command::TELEPORT;
 	case Keyboard::G: return Command::NEXT_GAMEMODE;
 	default: return Command::UNKNOWN;

@@ -71,6 +71,8 @@ void Game::processKeyboard(sf::Time dt, Commands& commands) {
 		m_player.move(Movement::UP, dt);
 	if (commands.isActive(Command::DOWN))
 		m_player.move(Movement::DOWN, dt);
+	if (commands.isActive(Command::SPRINT))
+		m_player.setSprinting(true);
 	if (commands.isActive(Command::EXPLOSION))
 		fillSmoothSphere(15, +BlockID::AIR);
 	if (commands.isActive(Command::HUGE_EXPLOSION))
@@ -78,6 +80,9 @@ void Game::processKeyboard(sf::Time dt, Commands& commands) {
 	if (commands.isActive(Command::BRUSH))
 		if (m_player.getPickedBlock().has_value())
 			fillSmoothSphere(15, m_player.getPickedBlock().value());
+	if (commands.isActive(Command::HUGE_BRUSH))
+		if (m_player.getPickedBlock().has_value())
+			fillSmoothSphere(100, m_player.getPickedBlock().value());
 	if (commands.isActive(Command::TELEPORT))
 		m_player.teleport();
 	if (commands.isActive(Command::NEXT_GAMEMODE))

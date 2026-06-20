@@ -3,8 +3,9 @@
 #include <Game/Player.h>
 #include <Game/Game.h>
 
-const float Movement::HORIZONTAL_SPEED{ 30.f };
-const float Movement::VERTICAL_SPEED{ 20.f };
+const float Movement::DEFAULT_HORIZONTAL_SPEED{ 30.f };
+const float Movement::DEFAULT_VERTICAL_SPEED{ 20.f };
+const float Movement::SPRINT_MULTIPLIER{ 10.f };
 const float Movement::PLAYER_WIDTH{ 0.6f };
 const float Movement::PLAYER_HEIGHT{ 1.8f };
 const float Movement::PLAYER_HEAD_HEIGHT{ 1.65f };
@@ -12,6 +13,10 @@ const float Movement::PLAYER_HEAD_HEIGHT{ 1.65f };
 Movement::Movement(const Player* player)
 	: p_player(player)
 { }
+
+void Movement::setSprinting(bool sprinting) {
+	m_sprinting = sprinting;
+}
 
 vec3 toHorizontal(vec3 vec) { // Projects the vector on the XZ plane
 	return normalize(vec3{ vec.x, 0.f, vec.z });
@@ -60,15 +65,21 @@ void Movement::update(float deltaTime) {
 vec3 Movement::getVelocityAndReset() {
 	vec3 horizontal_move{};
 	if (m_horizontalDir != vec3())
-		horizontal_move = normalize(m_horizontalDir) * HORIZONTAL_SPEED;
+		horizontal_move = normalize(m_horizontalDir) * DEFAULT_HORIZONTAL_SPEED;
+	if (m_sprinting)
+		horizontal_move *= SPRINT_MULTIPLIER;
 	if (p_player->getGameMode() == GameMode::SURVIVAL && m_inWater)
 		horizontal_move *= 0.6f;
 	vec3 vertical_move;
-	if (p_player->getGameMode() == GameMode::SURVIVAL)
+	if (p_player->getGameMode() == GameMode::SURVIVAL) {
 		vertical_move = Camera::WORLDUP * m_verticalSpeed;
-	else
-		vertical_move = m_verticalDir * VERTICAL_SPEED;
+	} else {
+		vertical_move = m_verticalDir * DEFAULT_VERTICAL_SPEED;
+		if (m_sprinting)
+			vertical_move *= SPRINT_MULTIPLIER;
+	}
 	m_horizontalDir = m_verticalDir = vec3();
+	m_sprinting = false;
 	return horizontal_move + vertical_move;
 }
 

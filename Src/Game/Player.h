@@ -29,6 +29,7 @@ public:
 	void update(sf::Time dt);
 	void teleport();
 	void move(Movement::Direction direction, sf::Time dt);
+	void setSprinting(bool sprinting);
 	vec3 getPosition() const;
 	void nextGameMode();
 	void setGameMode(GameMode gameMode);
