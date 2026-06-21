@@ -1,14 +1,26 @@
 #include "Movement.h"
 
+#include <cmath>
+
 #include <Game/Player.h>
 #include <Game/Game.h>
 
-const float Movement::DEFAULT_HORIZONTAL_SPEED{ 10.f };
-const float Movement::DEFAULT_VERTICAL_SPEED{ 10.f };
-const float Movement::SPRINT_MULTIPLIER{ 30.f };
+const float Movement::WALK_HORIZONTAL_SPEED{ 5.f };
+const float Movement::FLY_HORIZONTAL_SPEED{ 15.f };
+const float Movement::FLY_VERTICAL_SPEED{ 15.f };
+const float Movement::WALK_SPRINT_MULTIPLIER{ 1.85f };
+const float Movement::FLY_SPRINT_MULTIPLIER{ 20.f };
 const float Movement::PLAYER_WIDTH{ 0.6f };
 const float Movement::PLAYER_HEIGHT{ 1.8f };
 const float Movement::PLAYER_HEAD_HEIGHT{ 1.65f };
+
+const float Movement::JUMP_SPEED{ 10.f };
+const float Movement::GRAVITY{ 32.f };
+const float Movement::WATER_JUMP_SPEED{ 7.f };
+const float Movement::WATER_SWIM_UP_ACCELERATION{ 20.f };
+const float Movement::WATER_GRAVITY{ 10.f };
+const float Movement::WATER_HORIZONTAL_MULTIPLIER{ 0.6f };
+const float Movement::WATER_VERTICAL_DRAG{ 0.07f }; // Fraction of vertical speed kept per second in water
 
 Movement::Movement(const Player* player)
 	: p_player(player)
@@ -39,10 +51,15 @@ void Movement::move(Direction direction, float deltaTime) {
 		break;
 	case UP:
 		if (p_player->getGameMode() == GameMode::SURVIVAL) {
-			if (m_inWater)
-				m_verticalSpeed += 20.f * deltaTime;
-			else if (m_onTheGround)
-				m_verticalSpeed = 10.f;
+			if (m_onTheGround) {
+				if (m_inWater)
+					m_verticalSpeed = WATER_JUMP_SPEED;
+				else
+					m_verticalSpeed = JUMP_SPEED;
+			} else {
+				if (m_inWater)
+					m_verticalSpeed += WATER_SWIM_UP_ACCELERATION * deltaTime;
+			}
 		} else {
 			m_verticalDir += Camera::WORLDUP;
 		}
@@ -55,28 +72,34 @@ void Movement::move(Direction direction, float deltaTime) {
 
 void Movement::update(float deltaTime) {
 	if (p_player->getGameMode() == GameMode::SURVIVAL) {
-		if (m_inWater)
-			m_verticalSpeed -= 10.f * deltaTime;
-		else
-			m_verticalSpeed -= 32.f * deltaTime;
+		if (m_inWater) {
+			m_verticalSpeed -= WATER_GRAVITY * deltaTime;
+			m_verticalSpeed *= std::pow(WATER_VERTICAL_DRAG, deltaTime);
+		} else {
+			m_verticalSpeed -= GRAVITY * deltaTime;
+		}
 	}
 }
 
 vec3 Movement::getVelocityAndReset() {
+	GameMode gameMode = p_player->getGameMode();
+	float horizontal_speed = gameMode == GameMode::SURVIVAL ? WALK_HORIZONTAL_SPEED : FLY_HORIZONTAL_SPEED;
+	float sprint_multiplier = gameMode == GameMode::SURVIVAL ? WALK_SPRINT_MULTIPLIER : FLY_SPRINT_MULTIPLIER;
 	vec3 horizontal_move{};
 	if (m_horizontalDir != vec3())
-		horizontal_move = normalize(m_horizontalDir) * DEFAULT_HORIZONTAL_SPEED;
+		horizontal_move = normalize(m_horizontalDir) * horizontal_speed;
 	if (m_sprinting)
-		horizontal_move *= SPRINT_MULTIPLIER;
-	if (p_player->getGameMode() == GameMode::SURVIVAL && m_inWater)
-		horizontal_move *= 0.6f;
+		horizontal_move *= sprint_multiplier;
+	if (gameMode == GameMode::SURVIVAL && m_inWater)
+		horizontal_move *= WATER_HORIZONTAL_MULTIPLIER;
 	vec3 vertical_move;
-	if (p_player->getGameMode() == GameMode::SURVIVAL) {
+	if (gameMode == GameMode::SURVIVAL) {
 		vertical_move = Camera::WORLDUP * m_verticalSpeed;
 	} else {
-		vertical_move = m_verticalDir * DEFAULT_VERTICAL_SPEED;
+		m_verticalSpeed = 0; // Reset vertical speed
+		vertical_move = m_verticalDir * FLY_VERTICAL_SPEED;
 		if (m_sprinting)
-			vertical_move *= SPRINT_MULTIPLIER;
+			vertical_move *= sprint_multiplier;
 	}
 	m_horizontalDir = m_verticalDir = vec3();
 	m_sprinting = false;

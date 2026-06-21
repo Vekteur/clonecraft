@@ -20,10 +20,16 @@ public:
 		DOWN
 	};
 	
-	// Default values
-	static const float DEFAULT_HORIZONTAL_SPEED, DEFAULT_VERTICAL_SPEED;
-	static const float SPRINT_MULTIPLIER;
+	static const float WALK_HORIZONTAL_SPEED;
+	static const float FLY_HORIZONTAL_SPEED, FLY_VERTICAL_SPEED;
+	static const float WALK_SPRINT_MULTIPLIER, FLY_SPRINT_MULTIPLIER;
 	static const float PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_HEAD_HEIGHT;
+
+	static const float JUMP_SPEED;
+	static const float GRAVITY;
+	static const float WATER_JUMP_SPEED, WATER_SWIM_UP_ACCELERATION;
+	static const float WATER_GRAVITY, WATER_HORIZONTAL_MULTIPLIER;
+	static const float WATER_VERTICAL_DRAG;
 
 	Movement(const Player* player);
 
