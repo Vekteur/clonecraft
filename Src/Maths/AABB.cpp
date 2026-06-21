@@ -6,10 +6,10 @@ bool is_disjoint(Interval i1, Interval i2) {
 
 bool aabb_check(const Box& b1, const Box& b2) {
 	for (int i = 0; i < 3; ++i) {
-		if (!is_disjoint({ b1.pos[i], b1.pos[i] + b1.size[i] }, { b2.pos[i], b2.pos[i] + b2.size[i] }))
-			return true;
+		if (is_disjoint({ b1.pos[i], b1.pos[i] + b1.size[i] }, { b2.pos[i], b2.pos[i] + b2.size[i] }))
+			return false;
 	}
-	return false;
+	return true;
 }
 
 std::ostream& operator<<(std::ostream& out, const Box& b) {

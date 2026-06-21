@@ -24,7 +24,7 @@ void Player::processMouseClick(sf::Time dt, Commands& commands) {
 	}
 	placeAccumulator += dt;
 	if (commands.isActive(Command::PLACE) && placeAccumulator >= sf::seconds(0.1f) && placePos.has_value() &&
-		pickedBlock.has_value() && game->canReloadBlocks()) {
+		pickedBlock.has_value() && !intersectsBlock(placePos.value()) && game->canReloadBlocks()) {
 
 		game->getChunkMap().setBlock(placePos.value(), pickedBlock.value());
 		game->reloadBlocksMeshes({ placePos.value() });
@@ -126,4 +126,8 @@ std::optional<Block> Player::getPickedBlock() const {
 
 bool Player::isInWater() const {
 	return m_movement.isInWater();
+}
+
+bool Player::intersectsBlock(ivec3 blockPos) const {
+	return m_movement.intersectsBlock(blockPos);
 }

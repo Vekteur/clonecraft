@@ -42,6 +42,7 @@ public:
 	std::optional<ivec3> getTarget() const;
 	std::optional<Block> getPickedBlock() const;
 	bool isInWater() const;
+	bool intersectsBlock(ivec3 blockPos) const;
 
 private:
 	static const vec3 INITIAL_POSITION;

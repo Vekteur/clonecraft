@@ -4,6 +4,7 @@
 
 #include <Game/Player.h>
 #include <Game/Game.h>
+#include "Maths/AABB.h"
 
 const float Movement::WALK_HORIZONTAL_SPEED{ 5.f };
 const float Movement::FLY_HORIZONTAL_SPEED{ 15.f };
@@ -150,6 +151,10 @@ bool Movement::isInWater() const {
 	return !getBroadphaseBlocks(makeHitbox(), vec3(), [](Block block) {
 		return ResManager::blockDatas().get(block.id).getCategory() == BlockData::Category::WATER;
 	}).empty();
+}
+
+bool Movement::intersectsBlock(ivec3 blockPos) const {
+	return aabb_check(makeHitbox(), { blockPos, {1, 1, 1} });
 }
 
 std::vector<ivec3> Movement::getBroadphaseBlocks(const Box& hitbox, vec3 shift,

@@ -38,6 +38,7 @@ public:
 	void update(float deltaTime);
 	vec3 getMoveAndReset(float deltaTime);
 	bool isInWater() const;
+	bool intersectsBlock(ivec3 blockPos) const;
 
 private:
 	const Player* p_player{ nullptr };
