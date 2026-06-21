@@ -8,6 +8,7 @@
 #include "Maths/Dir3D.h"
 #include "Util/DebugGL.h"
 #include "Util/Logger.h"
+#include "World/WorldConstants.h"
 
 Game::Game(Window* const window)
 	: m_player{ this }, p_window{ window },
@@ -186,6 +187,10 @@ void Game::update(sf::Time dt) {
 
 	moveOffset = fmod(moveOffset + 0.02f * dt.asSeconds(), 1.f);
 	m_waterRenderer.getShader().use().set("moveOffset", moveOffset);
+
+	bool underwater = m_chunkMap.getBlock(Converter::globalPosToBlock(m_player.getPosition())).id == +BlockID::WATER;
+	m_waterRenderer.getShader().use().set("underwater", underwater);
+	m_postProcessingRenderer.getShader().use().set("underwater", underwater);
 }
 
 void Game::clearRenderTarget() {
@@ -248,6 +253,10 @@ Player& Game::getPlayer() {
 }
 
 ChunkMap & Game::getChunkMap() {
+	return m_chunkMap;
+}
+
+const ChunkMap& Game::getChunkMap() const {
 	return m_chunkMap;
 }
 

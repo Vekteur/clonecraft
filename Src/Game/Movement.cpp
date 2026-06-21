@@ -159,7 +159,7 @@ std::vector<ivec3> Movement::getBroadphaseBlocks(const Box& hitbox, vec3 shift,
 	Box b; ivec3 dirs;
 	std::tie(b, dirs) = getBroadphaseBox(hitbox, shift);
 	ivec3 pos;
-	const ChunkMap& cm = p_player->game->getChunkMap();
+	const ChunkMap& cm = p_player->getGame().getChunkMap();
 	
 	std::function<void(int)> rec = [&rec, &blocks, &b, &dirs, &pos, &cm, &filter](int axis) {
 		if (axis == 3) {

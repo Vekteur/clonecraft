@@ -36,9 +36,8 @@ public:
 	void setSprinting(bool sprinting);
 	void move(Direction direction, float deltaTime);
 	void update(float deltaTime);
-	vec3 getVelocityAndReset();
 	vec3 getMoveAndReset(float deltaTime);
-	vec3 getMoveWithCollisionsAndReset(float deltaTime);
+	bool isInWater() const;
 
 private:
 	const Player* p_player{ nullptr };
@@ -50,8 +49,9 @@ private:
 	bool m_inWater = false;
 	bool m_sprinting = false;
 
+	vec3 getVelocityAndReset();
+	vec3 getMoveWithCollisionsAndReset(float deltaTime);
 	std::vector<ivec3> getBroadphaseBlocks(const Box& hitbox, vec3 shift,
 		std::function<bool(Block)> filter) const;
 	Box makeHitbox() const;
-	bool isInWater() const;
 };

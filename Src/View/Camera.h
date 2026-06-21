@@ -12,7 +12,7 @@ public:
 	static const float NEARPLANE, FARPLANE;
 	static const vec3 POSITION, WORLDUP;
 
-	Camera(vec3 position = vec3{ 0.0f, 0.0f, 0.0f }, float yaw = YAW, float pitch = PITCH);
+	Camera(vec3 position = POSITION, float yaw = YAW, float pitch = PITCH);
 
 	void update(ivec2 screenDim);
 
@@ -33,13 +33,13 @@ public:
 	void processMouseScroll(float yOffset);
 
 private:
-	vec3 m_position{ POSITION };
+	vec3 m_position;
 	vec3 m_front;
 	vec3 m_up;
 	vec3 m_right;
 
-	float m_yaw{ YAW };
-	float m_pitch{ PITCH };
+	float m_yaw;
+	float m_pitch;
 
 	float m_sensitivity{ SENSIVITY };
 	float m_zoom{ ZOOM };

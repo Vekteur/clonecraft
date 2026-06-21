@@ -42,6 +42,7 @@ public:
 
 	Player& getPlayer();
 	ChunkMap& getChunkMap();
+	const ChunkMap& getChunkMap() const;
 	Window& getWindow();
 
 private:

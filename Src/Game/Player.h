@@ -21,7 +21,6 @@ enum class GameMode {
 
 class Player {
 public:
-
 	Player(Game* game);
 
 	void processMouseClick(sf::Time dt, Commands& commands);
@@ -36,11 +35,16 @@ public:
 	void setGameMode(GameMode gameMode);
 	GameMode getGameMode() const;
 
+	Game& getGame();
+	const Game& getGame() const;
 	Camera& getCamera();
 	const Camera& getCamera() const;
-	std::optional<ivec3> getTarget();
-	std::optional<Block> getPickedBlock();
+	std::optional<ivec3> getTarget() const;
+	std::optional<Block> getPickedBlock() const;
+	bool isInWater() const;
 
+private:
+	static const vec3 INITIAL_POSITION;
 	static const float TARGET_DISTANCE;
 
 	Game* game;
@@ -49,7 +53,7 @@ public:
 	Movement m_movement;
 	std::optional<ivec3> targetPos;
 	std::optional<ivec3> placePos;
-	std::optional<Block> pickedBlock{ BlockID::DIRT };
+	std::optional<Block> pickedBlock{ BlockID::WATER };
 
 	sf::Time breakAccumulator = sf::seconds(0.f);
 	sf::Time placeAccumulator = sf::seconds(0.f);

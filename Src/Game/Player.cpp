@@ -3,10 +3,11 @@
 #include <Game/Game.h>
 #include <Maths/LineBlockFinder.h>
 
+const vec3 Player::INITIAL_POSITION{ vec3{ 0.f, 80.f, 0.f } };
 const float Player::TARGET_DISTANCE{ static_cast<float>(ChunkMap::VIEW_DISTANCE * Const::SECTION_SIDE) };
 
 Player::Player(Game* game)
-	: game{ game }, m_camera{ vec3{ 0.0f, 80.0f, 0.0f } }, m_movement{ this } { }
+	: game{ game }, m_camera{ INITIAL_POSITION }, m_movement{ this } { }
 
 void Player::processMouseClick(sf::Time dt, Commands& commands) {
 	if (commands.isActive(Command::PICK) && targetPos.has_value()) {
@@ -97,6 +98,14 @@ GameMode Player::getGameMode() const {
 	return m_gameMode;
 }
 
+Game& Player::getGame() {
+	return *game;
+}
+
+const Game& Player::getGame() const {
+	return *game;
+}
+
 Camera& Player::getCamera() {
 	return m_camera;
 }
@@ -105,10 +114,14 @@ const Camera& Player::getCamera() const {
 	return m_camera;
 }
 
-std::optional<ivec3> Player::getTarget() {
+std::optional<ivec3> Player::getTarget() const {
 	return targetPos;
 }
 
-std::optional<Block> Player::getPickedBlock() {
+std::optional<Block> Player::getPickedBlock() const {
 	return pickedBlock;
+}
+
+bool Player::isInWater() const {
+	return m_movement.isInWater();
 }
