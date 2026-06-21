@@ -14,6 +14,7 @@
 #include "World/Chunk.h"
 #include "World/ChunkMap.h"
 #include "View/Window.h"
+#include "View/PickedBlockDrawer.h"
 #include "Renderer/DefaultRenderer.h"
 #include "Renderer/WaterRenderer.h"
 #include "Renderer/PostProcessingRenderer.h"
@@ -45,8 +46,6 @@ public:
 
 private:
 	void clearRenderTarget();
-	// Draws the currently picked block as a small rotated 3D cube in the bottom-left HUD corner.
-	void renderHeldBlock();
 	void buildHeldBlockMesh(Block block);
 
 	std::vector<ivec3> smoothSphere(ivec3 center, int radius);
@@ -64,9 +63,7 @@ private:
 	WaterRenderer m_waterRenderer;
 	PostProcessingRenderer m_postProcessingRenderer;
 
-	// Cube mesh for the HUD held block, rebuilt only when the picked block changes.
-	DefaultMesh m_heldBlockMesh;
-	std::optional<BlockID> m_heldBlockId;
+	PickedBlockDrawer m_pickedBlockDrawer;
 
 	std::thread m_orchestratorThread;
 	std::vector<std::thread> m_workerThreads;
