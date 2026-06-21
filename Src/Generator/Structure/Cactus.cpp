@@ -10,5 +10,5 @@ Cactus::Cactus() : Structure({ 1, 5, 1 }) {
 bool Cactus::isValidPos(ivec3 centerPos, BiomeID biomeID) const {
 	const Biome& biome = g_worldGenerator.biomeMap().getBiome(biomeID);
 	return centerPos.y >= Const::SEA_LEVEL &&
-		biome.getBlock(centerPos + Dir3D::to_ivec3(Dir3D::DOWN), centerPos.y).id == +BlockID::SAND;
+		biome.getBlock(centerPos + Dir3D::to_ivec3(Dir3D::DOWN), 0).id == +BlockID::SAND;
 }

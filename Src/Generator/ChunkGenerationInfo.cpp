@@ -15,3 +15,11 @@ BiomeID ChunkGenerationInfo::biome(ivec2 pos) const {
 BiomeID& ChunkGenerationInfo::biome(ivec2 pos) {
 	return m_biome[pos.x][pos.y];
 }
+
+double ChunkGenerationInfo::ruggedness(ivec2 pos) const {
+	return m_ruggedness[pos.x][pos.y];
+}
+
+double& ChunkGenerationInfo::ruggedness(ivec2 pos) {
+	return m_ruggedness[pos.x][pos.y];
+}

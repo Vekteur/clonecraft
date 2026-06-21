@@ -8,19 +8,8 @@ int Snow::getHeight(ivec2 pos) const {
 	return Const::SEA_LEVEL + 8 + static_cast<int>(noise * 8);
 }
 
-Block Snow::getBlock(ivec3 pos, int height) const {
-	if (pos.y < height - 4)
-		return { BlockID::STONE };
-	if (pos.y < height - 3)
-		return { BlockID::DIRT };
-	if (pos.y <= height - 1)
-		return { BlockID::SNOW };
-	if (pos.y < Const::SEA_LEVEL - 1)
-		return { BlockID::WATER };
-	if (pos.y < Const::SEA_LEVEL)
-		return { BlockID::ICE };
-
-	return { BlockID::AIR };
+Block Snow::getBlock(ivec3 pos, int depth) const {
+	return layeredGround(pos, depth, BlockID::SNOW, BlockID::DIRT);
 }
 
 std::vector<StructureInfo> Snow::getStructures() const {

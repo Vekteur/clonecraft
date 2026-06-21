@@ -1,10 +1,13 @@
 #include "WorldGenerator.h"
 
 #include "Maths/Converter.h"
+#include "Maths/MiscMath.h"
 #include "Generator/Noise/PerlinNoise.h"
+#include "Util/DynamicArray3D.h"
 #include "Util/Logger.h"
 
 #include <algorithm>
+#include <cmath>
 
 void WorldGenerator::loadChunk(Chunk& chunk) const {
 	loadHeights(chunk);
@@ -21,24 +24,75 @@ void WorldGenerator::loadHeights(Chunk& chunk) const {
 		for (int z = 0; z < Const::SECTION_SIDE; ++z) {
 			ivec2 innerPos{ x, z };
 			ivec2 pos = innerPos + chunk.getPosition() * Const::SECTION_SIDE;
-			BiomeID biomeID = m_biomeMap.getBiomeID(pos);
-			int height = m_biomeMap.getHeight(pos);
-			chunk.chunkInfo().biome(innerPos) = biomeID;
-			chunk.chunkInfo().height(innerPos) = height;
+			ColumnInfo col = m_biomeMap.getColumn(pos);
+			chunk.chunkInfo().biome(innerPos) = col.biome;
+			chunk.chunkInfo().height(innerPos) = col.height;
+			chunk.chunkInfo().ruggedness(innerPos) = col.ruggedness;
 		}
 }
 
 void WorldGenerator::loadBlocks(Chunk& chunk) const {
+	const ChunkGenerationInfo& info = chunk.chunkInfo();
+	ivec3 origin = Converter::chunkToGlobal(chunk.getPosition());
+
+	// Highest block we might place: tallest column plus how far its overhangs can reach up.
+	int topY = Const::SEA_LEVEL;
 	for (int x = 0; x < Const::SECTION_SIDE; ++x)
 		for (int z = 0; z < Const::SECTION_SIDE; ++z) {
-			ivec2 pos2D{ x, z };
-			const Biome& biome = m_biomeMap.getBiome(chunk.chunkInfo().biome(pos2D));
-			int height = chunk.chunkInfo().height(pos2D);
-			for (int y = 0; y < std::max(Const::SEA_LEVEL, height); ++y) {
-				ivec3 localPos{ x, y, z };
-				ivec3 globalPos = Converter::chunkToGlobal(chunk.getPosition()) + localPos;
-				Block block = biome.getBlock(globalPos, height);
-				chunk.setBlock(localPos, block);
+			ivec2 c{ x, z };
+			topY = std::max(topY, info.height(c) + static_cast<int>(ceil(info.ruggedness(c))));
+		}
+	topY += 1;
+
+	// Sample the 3D noise on a coarse lattice, then trilinearly interpolate it per block below.
+	const int LXZ = DENSITY_LATTICE_XZ, LY = DENSITY_LATTICE_Y;
+	int nx = Const::SECTION_SIDE / LXZ + 1, nz = Const::SECTION_SIDE / LXZ + 1, ny = topY / LY + 2;
+	DynamicArray3D<double> grid({ nx, ny, nz });
+	auto at = [&](int i, int j, int k) -> double& { return grid.at({ i, j, k }); };
+	for (int i = 0; i < nx; ++i)
+		for (int k = 0; k < nz; ++k)
+			for (int j = 0; j < ny; ++j) {
+				dvec3 p{ origin.x + i * LXZ, j * LY * DENSITY_VERTICAL_SCALE, origin.z + k * LXZ };
+				at(i, j, k) = m_terrainNoise.getNoise(p);
+			}
+
+	CaveCarver::Grid caveGrid = m_caveCarver.sample(origin, topY);
+
+	auto sampleNoise = [&](int bx, int by, int bz) {
+		ivec3 cell{ bx / LXZ, by / LY, bz / LXZ };
+		dvec3 frac{ (bx % LXZ) / double(LXZ), (by % LY) / double(LY), (bz % LXZ) / double(LXZ) };
+		return math::trilerp(grid, cell, frac);
+	};
+
+	for (int x = 0; x < Const::SECTION_SIDE; ++x)
+		for (int z = 0; z < Const::SECTION_SIDE; ++z) {
+			ivec2 c{ x, z };
+			const Biome& biome = m_biomeMap.getBiome(info.biome(c));
+			int height = info.height(c);
+			double rugged = info.ruggedness(c);
+			CaveCarver::Column caveCol = m_caveCarver.column({ origin.x + x, origin.z + z }, height);
+
+			// Walk the column top to bottom. The surface sits where density crosses zero; the noise
+			// term lets it fold back over itself into cliffs and overhangs.
+			int depth = 0; // solid blocks already placed above this one in the column
+			for (int y = topY; y >= 0; --y) {
+				double density = (height - y) + sampleNoise(x, y, z) * rugged;
+				ivec3 local{ x, y, z };
+				if (density > 0.) {
+					// Carved blocks stay air but still count as depth, so caves keep stone walls.
+					if (!m_caveCarver.isCarved(caveGrid, caveCol, local, origin + local, depth))
+						chunk.setBlock(local, biome.getBlock(origin + local, depth));
+					++depth;
+				}
+				else {
+					depth = 0;
+					if (y < Const::SEA_LEVEL) {
+						BlockID fluid = BlockID::WATER;
+						if (y == Const::SEA_LEVEL - 1)
+							fluid = biome.surfaceFluid();
+						chunk.setBlock(local, { fluid });
+					}
+				}
 			}
 		}
 }

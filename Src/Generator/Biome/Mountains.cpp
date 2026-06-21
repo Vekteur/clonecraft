@@ -5,17 +5,18 @@
 #include "Maths/Converter.h"
 
 int Mountains::getHeight(ivec2 pos) const {
-	double noise = perlin.getNoise(static_cast<dvec2>(pos));
-	return Const::SEA_LEVEL + 40 + static_cast<int>(noise * 16);
+	dvec2 p = static_cast<dvec2>(pos);
+	// Warp the lookup so ridges meander instead of looking grid-aligned
+	dvec2 offset{ warp.getNoise(p), warp.getNoise(p + 137.5) };
+	double ridge = perlin.getRidgedNoise(p + offset * 60.);
+	return Const::SEA_LEVEL + 24 + static_cast<int>(ridge * 72);
 }
 
-Block Mountains::getBlock(ivec3 pos, int height) const {
-	if (pos.y <= height - 1)
-		return { BlockID::STONE };
-	if (pos.y < Const::SEA_LEVEL)
-		return { BlockID::WATER };
-
-	return { BlockID::AIR };
+Block Mountains::getBlock(ivec3 pos, int depth) const {
+	// Green lower slopes, bare rock higher up
+	if (pos.y < Const::SEA_LEVEL + 48)
+		return layeredGround(pos, depth, BlockID::GRASS, BlockID::DIRT);
+	return { BlockID::STONE };
 }
 
 std::vector<StructureInfo> Mountains::getStructures() const {

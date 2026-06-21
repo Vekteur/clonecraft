@@ -8,15 +8,8 @@ int Desert::getHeight(ivec2 pos) const {
 	return Const::SEA_LEVEL + 6 + static_cast<int>(noise * 8);
 }
 
-Block Desert::getBlock(ivec3 pos, int height) const {
-	if (pos.y < height - 4)
-		return { BlockID::STONE };
-	if (pos.y <= height - 1)
-		return { BlockID::SAND };
-	if (pos.y < Const::SEA_LEVEL)
-		return { BlockID::WATER };
-
-	return { BlockID::AIR };
+Block Desert::getBlock(ivec3 pos, int depth) const {
+	return layeredGround(pos, depth, BlockID::SAND, BlockID::SAND);
 }
 
 std::vector<StructureInfo> Desert::getStructures() const {

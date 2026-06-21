@@ -8,11 +8,14 @@ class PerlinNoise {
 public:
 	static double getNoise(dvec2 pos);
 	static double getNoise(dvec2 pos, double frequency);
+	static double getNoise(dvec3 pos);
+	static double getNoise(dvec3 pos, double frequency);
 	static std::array<int, 512> perm;
 
 private:
 	static double lerp(double amount, double left, double right);
 	static double fade(double t);
 	static double grad(int hash, double x, double y);
+	static double grad(int hash, double x, double y, double z);
 };
 

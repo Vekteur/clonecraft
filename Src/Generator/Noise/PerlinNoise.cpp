@@ -36,6 +36,46 @@ double PerlinNoise::getNoise(dvec2 pos, double frequency) {
 	return getNoise(pos * frequency);
 }
 
+// p has coordinates in [0, 1[
+double PerlinNoise::getNoise(dvec3 p) {
+	// Cube that contains p, modulo 256
+	ivec3 pi{ int(floor(p.x)) & 255, int(floor(p.y)) & 255, int(floor(p.z)) & 255 };
+
+	// Hash the 8 corners of the cube
+	int a = perm[pi.x] + pi.y;
+	int aa = perm[a] + pi.z, ab = perm[a + 1] + pi.z;
+	int b = perm[pi.x + 1] + pi.y;
+	int ba = perm[b] + pi.z, bb = perm[b + 1] + pi.z;
+
+	// Coordinates of p inside the cube
+	dvec3 pf{ p.x - floor(p.x), p.y - floor(p.y), p.z - floor(p.z) };
+
+	// Dot product of pf with a random gradient at each corner
+	double d000 = grad(perm[aa], pf.x, pf.y, pf.z);
+	double d100 = grad(perm[ba], pf.x - 1, pf.y, pf.z);
+	double d010 = grad(perm[ab], pf.x, pf.y - 1, pf.z);
+	double d110 = grad(perm[bb], pf.x - 1, pf.y - 1, pf.z);
+	double d001 = grad(perm[aa + 1], pf.x, pf.y, pf.z - 1);
+	double d101 = grad(perm[ba + 1], pf.x - 1, pf.y, pf.z - 1);
+	double d011 = grad(perm[ab + 1], pf.x, pf.y - 1, pf.z - 1);
+	double d111 = grad(perm[bb + 1], pf.x - 1, pf.y - 1, pf.z - 1);
+
+	dvec3 f{ fade(pf.x), fade(pf.y), fade(pf.z) };
+
+	// Trilinear interpolation
+	double x00 = lerp(f.x, d000, d100);
+	double x10 = lerp(f.x, d010, d110);
+	double x01 = lerp(f.x, d001, d101);
+	double x11 = lerp(f.x, d011, d111);
+	double y0 = lerp(f.y, x00, x10);
+	double y1 = lerp(f.y, x01, x11);
+	return lerp(f.z, y0, y1);
+}
+
+double PerlinNoise::getNoise(dvec3 pos, double frequency) {
+	return getNoise(pos * frequency);
+}
+
 // Linear interpolation
 double PerlinNoise::lerp(double amount, double left, double right) {
 	return left + amount * (right - left);
@@ -53,6 +93,25 @@ double PerlinNoise::grad(int hash, double x, double y) {
 	case 1: return -x + y;
 	case 2: return x - y;
 	case 3: return -x - y;
+	default: return 0;
+	}
+}
+
+// Dot product with one of the 12 gradient directions of a cube's edges
+double PerlinNoise::grad(int hash, double x, double y, double z) {
+	switch (hash & 15) {
+	case 0: case 12: return x + y;
+	case 1: case 14: return -x + y;
+	case 2: return x - y;
+	case 3: return -x - y;
+	case 4: return x + z;
+	case 5: return -x + z;
+	case 6: return x - z;
+	case 7: return -x - z;
+	case 8: return y + z;
+	case 9: case 13: return -y + z;
+	case 10: return y - z;
+	case 11: case 15: return -y - z;
 	default: return 0;
 	}
 }

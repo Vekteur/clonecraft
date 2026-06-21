@@ -38,18 +38,7 @@ BiomeMap::BiomeMap() {
 }
 
 BiomeID BiomeMap::getBiomeID(ivec2 pos) const {
-	double maxValue = 0.;
-	BiomeID chosenbiomeID = BiomeID::SIZE;
-	for (int biomeID = 0; biomeID < static_cast<int>(BiomeID::SIZE); ++biomeID) {
-		double value = m_biomes[biomeID]->biomeValue(getTemperature(pos), getAltitude(pos));
-		if (value > maxValue) {
-			maxValue = value;
-			chosenbiomeID = static_cast<BiomeID>(biomeID);
-		}
-	}
-	if (chosenbiomeID == BiomeID::SIZE)
-		throw "Biome not found";
-	return chosenbiomeID;
+	return getColumn(pos).biome;
 }
 
 const Biome& BiomeMap::getBiome(ivec2 pos) const {
@@ -61,22 +50,38 @@ const Biome& BiomeMap::getBiome(BiomeID biomeID) const {
 }
 
 int BiomeMap::getHeight(ivec2 pos) const {
-	double sumValues = 0.;
-	std::vector<std::tuple<BiomeID, double>> values;
-	for (int biomeID = 0; biomeID < static_cast<int>(BiomeID::SIZE); ++biomeID) {
-		double value = m_biomes[biomeID]->biomeValue(getTemperature(pos), getAltitude(pos));
-		sumValues += value;
-		if (value != 0.)
-			values.push_back({ static_cast<BiomeID>(biomeID), value });
-	}
+	return getColumn(pos).height;
+}
 
-	double height = 0.;
-	for (auto& p : values) {
-		BiomeID biomeID; double value;
-		std::tie(biomeID, value) = p;
-		height += (value / sumValues) * getBiome(biomeID).getHeight(pos);
+ColumnInfo BiomeMap::getColumn(ivec2 pos) const {
+	double temperature = getTemperature(pos), altitude = getAltitude(pos);
+
+	// One pass over biomes: pick the dominant one and gather weights to blend with.
+	std::array<double, static_cast<int>(BiomeID::SIZE)> weights;
+	double sumValues = 0., maxValue = 0.;
+	BiomeID dominant = BiomeID::SIZE;
+	for (int i = 0; i < static_cast<int>(BiomeID::SIZE); ++i) {
+		double value = m_biomes[i]->biomeValue(temperature, altitude);
+		weights[i] = value;
+		sumValues += value;
+		if (value > maxValue) {
+			maxValue = value;
+			dominant = static_cast<BiomeID>(i);
+		}
 	}
-	return static_cast<int>(height);
+	if (dominant == BiomeID::SIZE)
+		throw "Biome not found";
+
+	// Blend height and ruggedness by each biome's share of the total weight.
+	double height = 0., ruggedness = 0.;
+	for (int i = 0; i < static_cast<int>(BiomeID::SIZE); ++i) {
+		if (weights[i] == 0.)
+			continue;
+		double share = weights[i] / sumValues;
+		height += share * m_biomes[i]->getHeight(pos);
+		ruggedness += share * m_biomes[i]->ruggedness();
+	}
+	return { dominant, static_cast<int>(height), ruggedness };
 }
 
 std::string BiomeMap::getBiomeName(ivec2 pos) const {
@@ -97,14 +102,9 @@ void BiomeMap::addStructure(std::unique_ptr<Structure> structure, StructureID st
 }
 
 double BiomeMap::getTemperature(ivec2 pos) const {
-	OctavePerlin perlin{ 4, 0.5, 1. / 1024. };
-	return perlin.getNoise(static_cast<dvec2>(pos));
-	//return PerlinNoise::getNoise(static_cast<dvec2>(pos), 1. / 512.);
+	return m_temperatureNoise.getNoise(static_cast<dvec2>(pos));
 }
 
 double BiomeMap::getAltitude(ivec2 pos) const {
-	// TODO : Make a different perlin noise
-	OctavePerlin perlin{ 4, 0.7, 1. / 1353. };
-	return perlin.getNoise(static_cast<dvec2>(pos + 173));
-	//return PerlinNoise::getNoise(static_cast<dvec2>(pos + 173), 1. / 683.);
+	return m_altitudeNoise.getNoise(static_cast<dvec2>(pos + 173));
 }

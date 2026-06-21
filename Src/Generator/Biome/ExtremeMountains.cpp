@@ -6,21 +6,19 @@
 #include "Util/Logger.h"
 
 int ExtremeMountains::getHeight(ivec2 pos) const {
-	double noise = perlin.getNoise(static_cast<dvec2>(pos));
-	return Const::SEA_LEVEL + 100 + static_cast<int>(noise * 64);
+	dvec2 p = static_cast<dvec2>(pos);
+	// Warp the lookup so ridges meander instead of looking grid-aligned
+	dvec2 offset{ warp.getNoise(p), warp.getNoise(p + 137.5) };
+	double ridge = perlin.getRidgedNoise(p + offset * 80.);
+	return Const::SEA_LEVEL + 48 + static_cast<int>(ridge * 200);
 }
 
-Block ExtremeMountains::getBlock(ivec3 pos, int height) const {
-	// Mean snow level in y = 162 with noise
-	if (height - 4 <= pos.y && pos.y <= height - 1 &&
-			162 + snowPerlin.getNoise(Converter::to2D(pos)) * 30 < height)
+Block ExtremeMountains::getBlock(ivec3 pos, int depth) const {
+	// Snow caps the surface above a noisy snow line, rock everywhere below
+	double snowLine = 170 + snowPerlin.getNoise(Converter::to2D(pos)) * 30;
+	if (pos.y > snowLine && depth <= 3)
 		return { BlockID::SNOW };
-	if (pos.y < height - 1)
-		return { BlockID::STONE };
-	if (pos.y < Const::SEA_LEVEL)
-		return { BlockID::WATER };
-
-	return { BlockID::AIR };
+	return { BlockID::STONE };
 }
 
 std::vector<StructureInfo> ExtremeMountains::getStructures() const {

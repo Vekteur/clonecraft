@@ -11,6 +11,6 @@ Tree::Tree() : Structure({ 5, 7, 5 }) {
 
 bool Tree::isValidPos(ivec3 centerPos, BiomeID biomeID) const {
 	const Biome& biome = g_worldGenerator.biomeMap().getBiome(biomeID);
-	BlockID blockID = biome.getBlock(centerPos + Dir3D::to_ivec3(Dir3D::DOWN), centerPos.y).id;
+	BlockID blockID = biome.getBlock(centerPos + Dir3D::to_ivec3(Dir3D::DOWN), 0).id;
 	return centerPos.y >= Const::SEA_LEVEL && (blockID == +BlockID::GRASS || blockID == +BlockID::DIRT);
 }

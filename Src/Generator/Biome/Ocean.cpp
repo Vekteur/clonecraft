@@ -5,18 +5,11 @@
 
 int Ocean::getHeight(ivec2 pos) const {
 	double noise = perlin.getNoise(static_cast<dvec2>(pos));
-	return Const::SEA_LEVEL - 40 + static_cast<int>(noise * 8);
+	return Const::SEA_LEVEL - 40 + static_cast<int>(noise * 20);
 }
 
-Block Ocean::getBlock(ivec3 pos, int height) const {
-	if (pos.y < height - 3)
-		return { BlockID::STONE };
-	if (pos.y < height)
-		return { BlockID::SAND };
-	if (pos.y < Const::SEA_LEVEL)
-		return { BlockID::WATER };
-
-	return { BlockID::AIR };
+Block Ocean::getBlock(ivec3 pos, int depth) const {
+	return layeredGround(pos, depth, BlockID::SAND, BlockID::SAND);
 }
 
 std::vector<StructureInfo> Ocean::getStructures() const {

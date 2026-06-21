@@ -7,19 +7,8 @@ int Islands::getHeight(ivec2 pos) const {
 	return Const::SEA_LEVEL - 1 + static_cast<int>(noise * 32);
 }
 
-Block Islands::getBlock(ivec3 pos, int height) const {
-	if (pos.y < height - 4)
-		return { BlockID::STONE };
-	if (pos.y < Const::SEA_LEVEL + 1 && height - 3 <= pos.y && pos.y <= height - 1)
-		return { BlockID::SAND };
-	if (pos.y < height - 1)
-		return { BlockID::DIRT };
-	if (pos.y == height - 1)
-		return { BlockID::GRASS };
-	if (pos.y < Const::SEA_LEVEL)
-		return { BlockID::WATER };
-
-	return { BlockID::AIR };
+Block Islands::getBlock(ivec3 pos, int depth) const {
+	return layeredGround(pos, depth, BlockID::GRASS, BlockID::DIRT);
 }
 
 std::vector<StructureInfo> Islands::getStructures() const {

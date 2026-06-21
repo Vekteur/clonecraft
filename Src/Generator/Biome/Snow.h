@@ -5,7 +5,8 @@
 
 class Snow : public Biome {
 	virtual int getHeight(ivec2 pos) const override;
-	virtual Block getBlock(ivec3 pos, int height) const override;
+	virtual Block getBlock(ivec3 pos, int depth) const override;
+	virtual BlockID surfaceFluid() const override { return BlockID::ICE; }
 	virtual std::vector<StructureInfo> getStructures() const override;
 	virtual double biomeValue(double temperature, double altitude) const override;
 

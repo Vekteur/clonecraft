@@ -13,6 +13,8 @@ public:
 	int& height(ivec2 pos);
 	BiomeID biome(ivec2 pos) const;
 	BiomeID& biome(ivec2 pos);
+	double ruggedness(ivec2 pos) const;
+	double& ruggedness(ivec2 pos);
 
 private:
 	template<typename T, int S>
@@ -20,4 +22,5 @@ private:
 
 	array2D<int, Const::SECTION_SIDE> m_height;
 	array2D<BiomeID, Const::SECTION_SIDE> m_biome;
+	array2D<double, Const::SECTION_SIDE> m_ruggedness;
 };
