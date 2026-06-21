@@ -13,8 +13,8 @@
 class Game;
 
 enum class GameMode {
-	CREATIVE,
 	SURVIVAL,
+	CREATIVE,
 	SPECTATOR,
 	SIZE
 };
@@ -45,7 +45,7 @@ public:
 
 private:
 	static const vec3 INITIAL_POSITION;
-	static const float TARGET_DISTANCE;
+	static const float DEFAULT_TARGET_DISTANCE, CREATIVE_TARGET_DISTANCE;
 
 	Game* game;
 	GameMode m_gameMode = GameMode::SURVIVAL;

@@ -15,6 +15,7 @@
 #include "World/ChunkMap.h"
 #include "View/Window.h"
 #include "View/PickedBlockDrawer.h"
+#include "View/BlockContourDrawer.h"
 #include "Renderer/DefaultRenderer.h"
 #include "Renderer/WaterRenderer.h"
 #include "Renderer/PostProcessingRenderer.h"
@@ -65,6 +66,7 @@ private:
 	PostProcessingRenderer m_postProcessingRenderer;
 
 	PickedBlockDrawer m_pickedBlockDrawer;
+	BlockContourDrawer m_blockContourDrawer;
 
 	std::thread m_orchestratorThread;
 	std::vector<std::thread> m_workerThreads;

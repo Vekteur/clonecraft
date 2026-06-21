@@ -4,7 +4,8 @@
 #include <Maths/LineBlockFinder.h>
 
 const vec3 Player::INITIAL_POSITION{ vec3{ 0.f, 80.f, 0.f } };
-const float Player::TARGET_DISTANCE{ static_cast<float>(ChunkMap::VIEW_DISTANCE * Const::SECTION_SIDE) };
+const float Player::DEFAULT_TARGET_DISTANCE{ 6. };
+const float Player::CREATIVE_TARGET_DISTANCE{ static_cast<float>(ChunkMap::VIEW_DISTANCE * Const::SECTION_SIDE) };
 
 Player::Player(Game* game)
 	: game{ game }, m_camera{ INITIAL_POSITION }, m_movement{ this } { }
@@ -51,7 +52,8 @@ void Player::update(sf::Time dt) {
 	LineBlockFinder lineBlockFinder{ m_camera.getPosition(), m_camera.getFront() };
 	placePos = std::nullopt;
 	targetPos = std::nullopt;
-	while (lineBlockFinder.getDistance() <= TARGET_DISTANCE) {
+	float targetDistance = m_gameMode == GameMode::CREATIVE ? CREATIVE_TARGET_DISTANCE : DEFAULT_TARGET_DISTANCE;
+	while (lineBlockFinder.getDistance() <= targetDistance) {
 		ivec3 iterPos = lineBlockFinder.next();
 		Block block = game->getChunkMap().getBlock(iterPos);
 		BlockData::Category category = ResManager::blockDatas().get(block.id).getCategory();

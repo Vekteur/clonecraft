@@ -237,6 +237,10 @@ void Game::render() {
 		glBindFramebuffer(GL_FRAMEBUFFER, renderFbo);
 
 		m_chunkMap.render(m_player.getCamera().getFrustum(), nullptr, &m_waterRenderer);
+
+		// Drawn into the post-processing FBO which still holds the world depth.
+		m_blockContourDrawer.render(m_player.getTarget(),
+			m_player.getCamera().getViewMatrix(), m_player.getCamera().getProjMatrix());
 	}, [this]() {
 		clearRenderTarget();
 	});
