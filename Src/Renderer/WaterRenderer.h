@@ -14,7 +14,7 @@ class WaterRenderer {
 public:
 	WaterRenderer(ivec2 windowSize);
 
-	void prepare(std::function<void()> renderFunc, std::function<void()> clearFunc,
+	void prepare(std::function<void(bool refractionPass)> renderFunc, std::function<void()> clearFunc,
 		const DefaultRenderer& defaultRenderer, Camera& camera, ivec2 windowSize);
 	void render(const WaterMesh& mesh) const;
 	void onChangedSize(ivec2 windowSize);

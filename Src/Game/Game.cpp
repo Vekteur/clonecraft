@@ -50,14 +50,18 @@ void Game::onChangedSize(ivec2 size) {
 	m_postProcessingRenderer.onChangedSize(p_window->size());
 }
 
-void Game::submitSphereEdit(int radius, Block block) {
-	if (m_player.getTarget().has_value()) {
-		ivec3 center = m_player.getTarget().value();
-		// Block if one request if one is already in flight.
-		m_chunkMap.submitBulkEdit([center, radius, block]() {
-			return BulkEdit::smoothSphere(center, radius, block);
-		});
-	}
+void Game::submitSphereEdit(int radius, Block block, bool explosive) {
+	if (!m_player.getTarget().has_value())
+		return;
+	ivec3 center = m_player.getTarget().value();
+	// Dropped if a bulk edit is already in flight (at most one at a time).
+	bool accepted = m_chunkMap.submitBulkEdit([center, radius, block]() {
+		return BulkEdit::smoothSphere(center, radius, block);
+	});
+	// Kick off the visual on the main thread the moment the edit is accepted, so the fireball
+	// plays over the block center while the worker thread computes and applies the changes.
+	if (accepted && explosive)
+		m_explosionDrawer.spawn(vec3(center) + vec3(0.5f), float(radius));
 }
 
 void Game::processKeyboard(sf::Time dt, Commands& commands) {
@@ -76,15 +80,17 @@ void Game::processKeyboard(sf::Time dt, Commands& commands) {
 	if (commands.isActive(Command::SPRINT))
 		m_player.setSprinting(true);
 	if (commands.isActive(Command::EXPLOSION))
-		submitSphereEdit(15, +BlockID::AIR);
+		submitSphereEdit(15, +BlockID::AIR, true);
 	if (commands.isActive(Command::HUGE_EXPLOSION))
-		submitSphereEdit(100, +BlockID::AIR);
+		submitSphereEdit(100, +BlockID::AIR, true);
 	if (commands.isActive(Command::BRUSH))
 		if (m_player.getPickedBlock().has_value())
 			submitSphereEdit(15, m_player.getPickedBlock().value());
 	if (commands.isActive(Command::HUGE_BRUSH))
 		if (m_player.getPickedBlock().has_value())
 			submitSphereEdit(100, m_player.getPickedBlock().value());
+	if (commands.isActive(Command::PLACE_BELOW))
+		m_player.placeBlockBelow();
 	if (commands.isActive(Command::TELEPORT))
 		m_player.teleport();
 	if (commands.isActive(Command::NEXT_GAMEMODE))
@@ -122,6 +128,8 @@ void Game::update(sf::Time dt) {
 	bool underwater = m_chunkMap.getBlock(Converter::globalPosToBlock(m_player.getPosition())).id == +BlockID::WATER;
 	m_waterRenderer.getShader().use().set("underwater", underwater);
 	m_postProcessingRenderer.getShader().use().set("underwater", underwater);
+
+	m_explosionDrawer.update(dt.asSeconds());
 }
 
 void Game::clearRenderTarget() {
@@ -145,8 +153,16 @@ namespace {
 void Game::render() {
 	ivec2 size = p_window->size();
 
-	m_waterRenderer.prepare([this]() {
+	m_waterRenderer.prepare([this](bool refractionPass) {
 		m_chunkMap.render(m_player.getCamera().getFrustum(), &m_defaultRenderer);
+		// Drawn into the scene textures rather than over the final image, so the water shader (which
+		// composites the scene from the refraction texture) shows the fireball through and underneath
+		// the water. In the reflection pass we clip it at the sea level, the same plane the terrain
+		// uses, so an underwater blast is not mirrored as a phantom explosion above the surface.
+		vec4 clipPlane = refractionPass ? vec4(0.f, -1.f, 0.f, 10000.f)
+		                                : vec4(0.f, 1.f, 0.f, -float(Const::SEA_LEVEL));
+		m_explosionDrawer.render(m_player.getCamera().getViewMatrix(),
+			m_player.getCamera().getProjMatrix(), clipPlane, p_window->getClearColor());
 	}, [this]() {
 		clearRenderTarget();
 	}, m_defaultRenderer, m_player.getCamera(), size);

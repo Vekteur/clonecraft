@@ -150,12 +150,13 @@ void ChunkMap::applyEdits(const std::vector<BlockEdit>& edits) {
 	remeshSections({ sectionsToUpdate.begin(), sectionsToUpdate.end() });
 }
 
-void ChunkMap::submitBulkEdit(EditGenerator generator) {
+bool ChunkMap::submitBulkEdit(EditGenerator generator) {
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
 	// Keep at most one bulk edit pending or running, so two never remesh the same section at once.
 	if (m_bulkEditRunning || !m_bulkEdits.empty())
-		return;
+		return false;
 	m_bulkEdits.push(std::move(generator));
+	return true;
 }
 
 Block ChunkMap::getBlock(ivec3 globalPos) const {

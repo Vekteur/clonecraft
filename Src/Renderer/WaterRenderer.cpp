@@ -34,7 +34,7 @@ void WaterRenderer::reflectCamera(const DefaultRenderer& defaultRenderer, Camera
 	getShader().use().set("reflectionTexture", 0);
 }
 
-void WaterRenderer::prepare(std::function<void()> renderFunc, std::function<void()> clearFunc,
+void WaterRenderer::prepare(std::function<void(bool refractionPass)> renderFunc, std::function<void()> clearFunc,
 	const DefaultRenderer& defaultRenderer, Camera& camera, ivec2 windowSize) {
 	if (!simple) {
 		reflectCamera(defaultRenderer, camera, windowSize);
@@ -42,7 +42,7 @@ void WaterRenderer::prepare(std::function<void()> renderFunc, std::function<void
 		defaultRenderer.getShader().use().set("clipPlane", vec4(0, 1, 0, -Const::SEA_LEVEL));
 		reflectionTexture.setActive(true);
 		clearFunc();
-		renderFunc();
+		renderFunc(false);
 		reflectionTexture.display();
 
 		reflectCamera(defaultRenderer, camera, windowSize);
@@ -51,7 +51,7 @@ void WaterRenderer::prepare(std::function<void()> renderFunc, std::function<void
 	defaultRenderer.getShader().use().set("clipPlane", vec4(0, -1, 0, 10000));
 	refractionTexture.setActive(true);
 	clearFunc();
-	renderFunc();
+	renderFunc(true);
 	refractionTexture.display();
 }
 

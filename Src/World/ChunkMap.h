@@ -43,7 +43,8 @@ public:
 		const WaterRenderer* waterRenderer = nullptr);
 	void setBlock(ivec3 globalPos, Block block);
 	void applyEdits(const std::vector<BlockEdit>& edits);
-	void submitBulkEdit(EditGenerator generator);
+	// Returns true if the edit was queued, false if it was dropped because one is already in flight.
+	bool submitBulkEdit(EditGenerator generator);
 	Block getBlock(ivec3 globalPos) const;
 	void setCenter(ivec2 center);
 	ivec2 getCenter();

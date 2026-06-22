@@ -16,6 +16,7 @@
 #include "View/Window.h"
 #include "View/PickedBlockDrawer.h"
 #include "View/BlockContourDrawer.h"
+#include "View/ExplosionDrawer.h"
 #include "Renderer/DefaultRenderer.h"
 #include "Renderer/WaterRenderer.h"
 #include "Renderer/PostProcessingRenderer.h"
@@ -47,7 +48,8 @@ public:
 private:
 	void clearRenderTarget();
 	void buildHeldBlockMesh(Block block);
-	void submitSphereEdit(int radius, Block block);
+	// explosive: also play the visual explosion effect if the edit is accepted.
+	void submitSphereEdit(int radius, Block block, bool explosive = false);
 
 	Player m_player;
 
@@ -62,6 +64,7 @@ private:
 
 	PickedBlockDrawer m_pickedBlockDrawer;
 	BlockContourDrawer m_blockContourDrawer;
+	ExplosionDrawer m_explosionDrawer;
 
 	std::thread m_orchestratorThread;
 	std::vector<std::thread> m_workerThreads;
