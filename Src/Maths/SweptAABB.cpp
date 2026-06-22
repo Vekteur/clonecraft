@@ -69,8 +69,7 @@ float sweptAABB(const Box& b, const vec3& v, const Box& b2, float time, vec3& ne
 	float entryTime = max(entryTimes);
 	float exitTime = min(exitTimes);
 
-	// Set `|| 0.f <= entryTime` to allow moving during suffocation
-	if (disjoint || entryTime > exitTime || time <= entryTime) {
+	if (disjoint || entryTime > exitTime || time <= entryTime || exitTime <= 0.f) {
 		next_v = vec3();
 		return time;
 	}
@@ -112,6 +111,12 @@ ivec3 sign(vec3 v) {
 }
 
 vec3 repeatedSweptAABB(Box b, vec3 v, const std::vector<Box>& bs, float time) {
+	// Shrink the swept box by a small skin so collision tolerates the small overlaps that
+	// floating-point produces, avoiding freezing the player.
+	const float SKIN = 1e-4f;
+	b.pos += vec3(SKIN);
+	b.size -= vec3(2.f * SKIN);
+
 	// After each step, the velocity is projected onto another plan
 	// Thus, there can be at most 3 steps in 3D
 	vec3 total_shift{};

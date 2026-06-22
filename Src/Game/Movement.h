@@ -30,6 +30,7 @@ public:
 	static const float WATER_JUMP_SPEED, WATER_SWIM_UP_ACCELERATION;
 	static const float WATER_GRAVITY, WATER_HORIZONTAL_MULTIPLIER;
 	static const float WATER_VERTICAL_DRAG;
+	static const float PUSH_OUT_SPEED;
 
 	Movement(const Player* player);
 
@@ -52,6 +53,7 @@ private:
 
 	vec3 getVelocityAndReset();
 	vec3 getMoveWithCollisionsAndReset(float deltaTime);
+	vec3 getUnstuckShift(float deltaTime) const;
 	std::vector<ivec3> getBroadphaseBlocks(const Box& hitbox, vec3 shift,
 		std::function<bool(Block)> filter) const;
 	Box makeHitbox() const;

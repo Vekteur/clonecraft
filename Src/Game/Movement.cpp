@@ -22,6 +22,7 @@ const float Movement::WATER_SWIM_UP_ACCELERATION{ 20.f };
 const float Movement::WATER_GRAVITY{ 10.f };
 const float Movement::WATER_HORIZONTAL_MULTIPLIER{ 0.6f };
 const float Movement::WATER_VERTICAL_DRAG{ 0.07f }; // Fraction of vertical speed kept per second in water
+const float Movement::PUSH_OUT_SPEED{ 8.f }; // Blocks per second the player is ejected when stuck inside a block
 
 Movement::Movement(const Player* player)
 	: p_player(player)
@@ -137,14 +138,70 @@ vec3 Movement::getMoveWithCollisionsAndReset(float deltaTime) {
 	vec3 shift = repeatedSweptAABB(hitbox, velocity, bs, deltaTime);
 
 	if (p_player->getGameMode() == GameMode::SURVIVAL) {
-		// If the player is falling but does not move, it is against the ground
-		m_onTheGround = velocity.y != 0.f && std::abs(shift.y) < 2e-6;
-		if (m_onTheGround)
+		// Vertical motion is blocked when the player moved less far vertically than its velocity asked
+		// for. Comparing against the requested displacement (rather than testing |shift.y| ~ 0) is robust.
+		bool verticalBlocked = velocity.y != 0.f && std::abs(shift.y - velocity.y * deltaTime) > 1e-6f;
+		// Grounded only when blocked while moving down
+		m_onTheGround = velocity.y < 0.f && verticalBlocked;
+		// Cancel vertical speed on landing or on hitting a ceiling
+		if (verticalBlocked)
 			m_verticalSpeed = 0.f;
 		m_inWater = isInWater();
 	}
-	
+
+	// Push the player out of any block it ends up embedded in (placed/generated inside it, etc.)
+	shift += getUnstuckShift(deltaTime);
+
 	return shift;
+}
+
+vec3 Movement::getUnstuckShift(float deltaTime) const {
+	Box hitbox = makeHitbox();
+	std::vector<ivec3> blocks = getBroadphaseBlocks(hitbox, vec3(), [](Block block) {
+		return ResManager::blockDatas().get(block.id).isObstacle();
+	});
+
+	// Only treat a block as penetrating past this depth, so merely touching a floor or wall
+	// (the usual case while standing or walking) never produces a push
+	const float epsilon = 1e-4f;
+
+	// Push out of each overlapping block along its own axis of least penetration. Resolving each
+	// block on its shallowest axis lets a corner escape diagonally instead of oscillating between
+	// the two perpendicular walls.
+	vec3 push{};
+	for (ivec3 bp : blocks) {
+		vec3 overlap, dir;
+		bool penetrating = true;
+		for (int i = 0; i < 3; ++i) {
+			float hmin = hitbox.pos[i], hmax = hmin + hitbox.size[i];
+			float bmin = float(bp[i]), bmax = bmin + 1.f;
+			float penPos = bmax - hmin; // depth to exit towards +i
+			float penNeg = hmax - bmin; // depth to exit towards -i
+			overlap[i] = std::min(penPos, penNeg);
+			dir[i] = penPos < penNeg ? 1.f : -1.f;
+			if (overlap[i] <= epsilon)
+				penetrating = false;
+		}
+		if (!penetrating)
+			continue;
+
+		int axis = 0;
+		for (int i = 1; i < 3; ++i)
+			if (overlap[i] < overlap[axis])
+				axis = i;
+
+		// Blocks sharing an axis don't stack: keep the deepest push needed on each axis
+		float p = dir[axis] * overlap[axis];
+		if (std::abs(p) > std::abs(push[axis]))
+			push[axis] = p;
+	}
+
+	float dist = length(push);
+	if (dist <= epsilon)
+		return vec3(); // Not penetrating anything
+
+	// Eject smoothly, capped per frame so the player is pushed out rather than teleported
+	return push * (std::min(dist, PUSH_OUT_SPEED * deltaTime) / dist);
 }
 
 bool Movement::isInWater() const {
