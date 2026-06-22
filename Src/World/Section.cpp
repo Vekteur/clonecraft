@@ -28,10 +28,8 @@ const Section* Section::findNeighboringSection(Dir3D::Dir dir, const NeighborChu
 		neighborChunk = neighbors[dirOpt.value()];
 	if (neighborChunk == nullptr)
 		return nullptr;
-	const int neighborY = m_position.y + Dir3D::to_ivec3(dir).y;
-	if (0 <= neighborY && neighborY < neighborChunk->getHeight())
-		return &neighborChunk->getSection(neighborY);
-	return nullptr;
+	// A missing section (above/below the populated range, or a sparse gap) reads as air.
+	return neighborChunk->tryGetSection(m_position.y + Dir3D::to_ivec3(dir).y);
 }
 
 std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex> > Section::findVisibleFaces(const NeighborChunks& neighbors) const {
@@ -90,20 +88,16 @@ void Section::addVisibleFacesOnLastAxis(
 		const Block block = this->getBlock(localPos);
 		// We can pass the air block for efficiency because its face will be invisible anyway
 		if (block.id != +BlockID::AIR) {
-			const ivec3 globalPos{ Converter::sectionToGlobal(m_position) + localPos };
 			// The neighboring position in the current direction
 			const ivec3 localNeighPos{ localPos + dirVec };
-			const int globalNeighHeight = globalPos.y + dirVec.y;
 			Block neighBlock{ BlockID::AIR };
-			// The blocks vertically outside the chunk are air block
-			if (0 <= globalNeighHeight && globalNeighHeight < p_chunk->getHeight() * Const::SECTION_HEIGHT) {
-				// The block can only be in the current section or in the neighboring section
-				if (isInSection(localNeighPos)) {
-					neighBlock = this->getBlock(localNeighPos);
-				}
-				else if (neighboringSection != nullptr) {
-					neighBlock = neighboringSection->getBlock(Converter::globalToInnerSection(localNeighPos));
-				}
+			// The block can only be in the current section or in the neighboring section; a missing
+			// neighboring section is air, so faces on the world's vertical edges stay visible.
+			if (isInSection(localNeighPos)) {
+				neighBlock = this->getBlock(localNeighPos);
+			}
+			else if (neighboringSection != nullptr) {
+				neighBlock = neighboringSection->getBlock(Converter::globalToInnerSection(localNeighPos));
 			}
 			// The face is visible only if the block in the direction of the face is transparent
 			// and if this block is different from the current block
@@ -232,10 +226,9 @@ Block Section::getBlockForAO(const NeighborChunks& neighbors, ivec3 localPos) co
 		localPos.z = (localPos.z + Const::SECTION_SIDE) % Const::SECTION_SIDE;
 	}
 
-	// Vertical crossing into another stacked section of the resolved chunk.
+	// Vertical crossing into another stacked section of the resolved chunk. A position outside the
+	// populated range (or in a sparse gap) resolves to air inside getBlock().
 	const int globalY = m_position.y * Const::SECTION_HEIGHT + localPos.y;
-	if (globalY < 0 || globalY >= chunk->getHeight() * Const::SECTION_HEIGHT)
-		return air;
 	return chunk->getBlock({ localPos.x, globalY, localPos.z });
 }
 
@@ -248,12 +241,17 @@ std::vector<GLuint> getIndices(int size) {
 }
 
 void Section::loadMesh(const NeighborChunks& neighbors) {
-	// CPU only: build the vertex data. Runs on a worker thread, so it must not touch OpenGL.
-	tie(m_nextDefaultVertices, m_nextWaterVertices) = findVisibleFaces(neighbors);
+	// CPU only: build the vertex data. Runs on a worker thread, so it must not touch OpenGL. The
+	// heavy face search runs lock-free; only the handoff into the shared "next" buffers is guarded.
+	auto [defaultVertices, waterVertices] = findVisibleFaces(neighbors);
+	std::lock_guard<std::mutex> lock(m_meshMutex);
+	m_nextDefaultVertices = std::move(defaultVertices);
+	m_nextWaterVertices = std::move(waterVertices);
 }
 
 void Section::uploadMesh() {
 	// All OpenGL for the mesh happens here, on the main thread
+	std::lock_guard<std::mutex> lock(m_meshMutex);
 	nextDefaultMesh.loadBuffers(m_nextDefaultVertices, getIndices((int)m_nextDefaultVertices.size() / 4));
 	nextWaterMesh.loadBuffers(m_nextWaterVertices, getIndices((int)m_nextWaterVertices.size() / 4));
 	nextDefaultMesh.loadVAOs();

@@ -1,11 +1,7 @@
 #include "Game.h"
 
-#include <random>
-#include <cmath>
-
-#include "Generator/Noise/OctavePerlin.h"
+#include "Game/BulkEdit.h"
 #include "Maths/Converter.h"
-#include "Maths/Dir3D.h"
 #include "Util/DebugGL.h"
 #include "Util/Logger.h"
 #include "World/WorldConstants.h"
@@ -28,8 +24,6 @@ Game::~Game() {
 	m_orchestratorThread.join();
 	for (std::thread& worker : m_workerThreads)
 		worker.join();
-	if (m_updatingThread.joinable())
-		m_updatingThread.join();
 }
 
 void Game::runOrchestratorLoop() {
@@ -56,21 +50,13 @@ void Game::onChangedSize(ivec2 size) {
 	m_postProcessingRenderer.onChangedSize(p_window->size());
 }
 
-bool Game::canReloadBlocks() {
-	return updatingThreadFinished;
-}
-
-void Game::reloadBlocksMeshes(const std::vector<ivec3>& blocks) {
-	if (updatingThreadFinished) {
-		updatingThreadFinished = false;
-		if (m_updatingThread.joinable())
-			m_updatingThread.join();
-		m_updatingThread = std::thread{ [this, blocks]() {
-			// CPU-only: rebuilds the affected sections' mesh data; the GPU upload happens
-			// on the main thread in update(). No OpenGL context needed here.
-			m_chunkMap.reloadBlocksMeshes(blocks);
-			updatingThreadFinished = true;
-		} };
+void Game::submitSphereEdit(int radius, Block block) {
+	if (m_player.getTarget().has_value()) {
+		ivec3 center = m_player.getTarget().value();
+		// Block if one request if one is already in flight.
+		m_chunkMap.submitBulkEdit([center, radius, block]() {
+			return BulkEdit::smoothSphere(center, radius, block);
+		});
 	}
 }
 
@@ -90,74 +76,19 @@ void Game::processKeyboard(sf::Time dt, Commands& commands) {
 	if (commands.isActive(Command::SPRINT))
 		m_player.setSprinting(true);
 	if (commands.isActive(Command::EXPLOSION))
-		fillSmoothSphere(15, +BlockID::AIR);
+		submitSphereEdit(15, +BlockID::AIR);
 	if (commands.isActive(Command::HUGE_EXPLOSION))
-		fillSmoothSphere(100, +BlockID::AIR);
+		submitSphereEdit(100, +BlockID::AIR);
 	if (commands.isActive(Command::BRUSH))
 		if (m_player.getPickedBlock().has_value())
-			fillSmoothSphere(15, m_player.getPickedBlock().value());
+			submitSphereEdit(15, m_player.getPickedBlock().value());
 	if (commands.isActive(Command::HUGE_BRUSH))
 		if (m_player.getPickedBlock().has_value())
-			fillSmoothSphere(100, m_player.getPickedBlock().value());
+			submitSphereEdit(100, m_player.getPickedBlock().value());
 	if (commands.isActive(Command::TELEPORT))
 		m_player.teleport();
 	if (commands.isActive(Command::NEXT_GAMEMODE))
 		m_player.nextGameMode();
-}
-
-std::vector<ivec3> Game::smoothSphere(ivec3 center, int radius) {
-	std::random_device rd;
-	std::mt19937 rng(rd());
-	std::uniform_real_distribution<float> dist(0.f, 1.f);
-
-	// Random sampling offset so every explosion gets a different irregular shape.
-	const dvec3 noiseOffset{ dist(rng) * 256.0, dist(rng) * 256.0, dist(rng) * 256.0 };
-	// How far the crater radius is allowed to wobble (size of the lobes).
-	const float lobeAmplitude = 0.2f;
-	// Smooth lobes plus a touch of surface roughness
-	OctavePerlin perlin{ 2, 0.5, 0.09 };
-
-	const float innerR = float(radius) * (1.f - lobeAmplitude) - 1.f;
-	const float outerR = float(radius) * (1.f + lobeAmplitude) + 1.f;
-	const int reach = int(std::ceil(outerR));
-
-	std::vector<ivec3> blocks;
-	for (int x = -reach; x <= reach; ++x) {
-		for (int y = -reach; y <= reach; ++y) {
-			for (int z = -reach; z <= reach; ++z) {
-				float dist3 = std::sqrt(float(x * x + y * y + z * z));
-				if (dist3 <= innerR) { // deep interior: always destroyed
-					blocks.push_back(center + ivec3{ x, y, z });
-					continue;
-				}
-				if (dist3 >= outerR) // beyond the largest possible lobe: never destroyed
-					continue;
-				// Sample coherent noise on the block's 3D position
-				dvec3 p = noiseOffset + dvec3{ x, y, z };
-				double n = (perlin.getNoise({ p.x, p.y })
-				          + perlin.getNoise({ p.y, p.z })
-				          + perlin.getNoise({ p.z, p.x })) / 3.0;
-				float effRadius = float(radius) * (1.f + lobeAmplitude * float(n));
-
-				// Rim with ragged edge: blocks well inside are always cleared, blocks
-				// straddling the boundary are cleared with falling probability.
-				float edge = effRadius - dist3;
-				if (edge >= 1.f || (edge > -1.f && dist(rng) < (edge + 1.f) * 0.5f))
-					blocks.push_back(center + ivec3{ x, y, z });
-			}
-		}
-	}
-	return blocks;
-}
-
-void Game::fillSmoothSphere(int radius, Block block) {
-	if (canReloadBlocks() && m_player.getTarget().has_value()) {
-		std::vector<ivec3> blocks = smoothSphere(m_player.getTarget().value(), radius);
-		for (ivec3 pos : blocks) {
-			m_chunkMap.setBlock(pos, block);
-		}
-		reloadBlocksMeshes(blocks);
-	}
 }
 
 void Game::processMouseClick(sf::Time dt, Commands& commands) {

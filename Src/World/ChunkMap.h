@@ -2,6 +2,7 @@
 
 #include "World/Chunk.h"
 #include "World/WorldConstants.h"
+#include "World/BlockEdit.h"
 #include "View/Frustum.h"
 
 #include <vector>
@@ -12,19 +13,26 @@
 #include <utility>
 #include <mutex>
 #include <atomic>
+#include <functional>
 
 // Threading model
 // ---------------
-//   - the main (game-loop) thread renders and edits blocks,
+//   - the main (game-loop) thread renders and applies single-block edits (visible next frame),
 //   - one orchestrator thread keeps the sorted view list (m_toSelect) fresh and unloads far chunks,
-//   - a pool of worker threads pull from the work pools and generate/mesh chunks,
-//   - a short-lived updating thread rebuilds sections after bulk edits.
+//   - a pool of worker threads pull from the work pools and generate/mesh chunks, and also run bulk
+//     edits (compute + apply + remesh) the same way.
 // m_chunksMutex guards m_chunks and every work pool/queue. The mesh build reads neighbors from a
 // snapshot taken under the lock, so no thread ever reads the map structure lock-free; a chunk is
-// claimed for loading with an atomic state CAS so two workers never load the same one.
+// claimed for loading with an atomic state CAS so two workers never load the same one. Touched
+// chunks are kept alive with shared_ptr across the unlocked work so the orchestrator can erase them
+// from the map without freeing them under a worker.
 class ChunkMap {
 public:
 	static const int VIEW_DISTANCE, LOAD_DISTANCE, SIDE, LOADING_WORKERS_COUNT;
+
+	// A bulk edit produces its block changes lazily on a worker thread (so the heavy computation never
+	// stutters the frame). The function is the generator; it must not touch the ChunkMap.
+	using EditGenerator = std::function<std::vector<BlockEdit>()>;
 
 	ChunkMap(ivec2 center = ivec2{ 0, 0 });
 	~ChunkMap();
@@ -34,6 +42,8 @@ public:
 	void render(const Frustum& frustum, const DefaultRenderer* defaultRenderer = nullptr,
 		const WaterRenderer* waterRenderer = nullptr);
 	void setBlock(ivec3 globalPos, Block block);
+	void applyEdits(const std::vector<BlockEdit>& edits);
+	void submitBulkEdit(EditGenerator generator);
 	Block getBlock(ivec3 globalPos) const;
 	void setCenter(ivec2 center);
 	ivec2 getCenter();
@@ -44,19 +54,11 @@ public:
 	int chunksInState(Chunk::State state);
 	int getRenderedChunks();
 
-	// ---- Loading threads ----
+	// ---- Worker threads ----
 	void refreshSelection(const Frustum& frustum); // orchestrator: rebuild the sorted view list
 	void processNextTask();                         // worker: take and run one task
 	void unloadFarChunks();                         // orchestrator
 
-	// ---- Updating thread (post-edit remesh) ----
-	void reloadBlocksMeshes(const std::vector<ivec3>& blocks);
-	bool canChunkBeEdited(ivec2 pos);
-
-	// ---- Called from several threads ----
-	// Locked. Reached from the main thread (block edits via Chunk::setBlock),
-	// the loading thread (generation) and the updating thread (reloadBlocksMeshes).
-	void reloadSectionMesh(ivec3 pos);
 	// No internal locking. The const overloads are the loading thread's lock-free neighbor
 	// reads (safe because only the loading thread changes the map structure); the non-const
 	// overloads are used by the main thread while it already holds m_chunksMutex.
@@ -96,6 +98,11 @@ private:
 	std::vector<ivec2> m_toSelect;
 	size_t m_selectCursor = 0;
 
+	// Pending bulk-edit generators. Kept to at most one in flight: m_bulkEditRunning is set while a
+	// worker owns one, so concurrent bulk edits can never remesh the same section at once.
+	std::queue<EditGenerator> m_bulkEdits;
+	bool m_bulkEditRunning = false;
+
 	ivec2 m_center;
 	mutable std::mutex m_chunksMutex; // guards m_chunks, the work pools and the upload queues
 	bool m_mustStop = false;
@@ -105,14 +112,18 @@ private:
 	// counters are atomic (no lost increments, well-defined reads).
 	std::array<std::atomic<int>, Chunk::STATE_SIZE> m_countChunks{};
 
-	// Caller must already hold m_chunksMutex
+	// Iterator to the chunk owning globalPos if it has its blocks loaded, else end(). Caller must
+	// already hold m_chunksMutex.
 	std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2>::const_iterator
-		hasBlock(ivec3 globalPos, bool canSurpass = false) const;
+		findLoadedChunk(ivec3 globalPos) const;
 	bool isInLoadDistance(ivec2 pos) const;
 	// Worker task handlers
 	void doSelectChunk(ivec2 pos);
 	void doLoadBlocks(ivec2 pos);
 	void doLoadMesh(ivec2 pos);
+	void doBulkEdit(EditGenerator generator);
+	void remeshSections(const std::vector<ivec3>& sections);
+	bool canChunkBeEdited(ivec2 pos) const;
 	// Caller must already hold m_chunksMutex
 	void enqueueBlocksIfNeeded(ivec2 pos);
 	void enqueueMeshIfReady(ivec2 pos);

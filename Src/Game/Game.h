@@ -38,8 +38,6 @@ public:
 	void runOrchestratorLoop();
 	void runWorkerLoop();
 	void onChangedSize(ivec2 size);
-	bool canReloadBlocks();
-	void reloadBlocksMeshes(const std::vector<ivec3>& blocks);
 
 	Player& getPlayer();
 	ChunkMap& getChunkMap();
@@ -49,9 +47,7 @@ public:
 private:
 	void clearRenderTarget();
 	void buildHeldBlockMesh(Block block);
-
-	std::vector<ivec3> smoothSphere(ivec3 center, int radius);
-	void fillSmoothSphere(int radius, Block block);
+	void submitSphereEdit(int radius, Block block);
 
 	Player m_player;
 
@@ -59,7 +55,6 @@ private:
 	ChunkMap m_chunkMap;
 
 	float moveOffset = 0;
-	std::atomic<bool> updatingThreadFinished{ true };
 
 	DefaultRenderer m_defaultRenderer;
 	WaterRenderer m_waterRenderer;
@@ -70,6 +65,5 @@ private:
 
 	std::thread m_orchestratorThread;
 	std::vector<std::thread> m_workerThreads;
-	std::thread m_updatingThread;
 	std::atomic<bool> m_stopGeneratingThread{ false };
 };

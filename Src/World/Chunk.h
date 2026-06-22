@@ -5,7 +5,7 @@
 #include "WorldConstants.h"
 
 #include <vector>
-#include <deque>
+#include <map>
 #include <atomic>
 #include <mutex>
 
@@ -39,15 +39,20 @@ public:
 	// it to claim a chunk so two of them never load the same one.
 	bool casState(State expected, State desired);
 	ivec2 getPosition() const;
-	int getHeight() const;
 	void render(const DefaultRenderer& defaultRenderer) const;
 	void render(const WaterRenderer& waterRenderer) const;
 	ChunkGenerationInfo& chunkInfo();
 	const ChunkGenerationInfo& chunkInfo() const;
 
-	bool isInChunk(ivec3 globalPos) const;
-	Section& getSection(int height);
-	const Section& getSection(int height) const;
+	// Sections are sparse: only existing ones are stored, keyed by their vertical index (which may be
+	// negative). A missing section reads as air. Every one of these locks m_sectionsMutex.
+	bool hasSection(int sectionY) const;
+	Section& getSection(int sectionY);             // section must exist
+	const Section& getSection(int sectionY) const; // section must exist
+	const Section* tryGetSection(int sectionY) const; // nullptr if it does not exist
+	Section& getOrCreateSection(int sectionY);
+	int minSectionY() const; // 0 if the chunk has no sections
+	int maxSectionY() const; // 0 if the chunk has no sections
 
 private:
 	ChunkMap* const p_chunkMap{ nullptr };
@@ -56,10 +61,10 @@ private:
 
 	std::atomic<State> m_state{ STATE_SIZE };
 
-	// A deque keeps sections at fixed addresses as it grows, so pointers the loading thread holds
-	// while meshing stay valid when the main thread adds sections. m_sectionsMutex guards that
-	// growth; m_height lets the count be read without the lock. Sections are never removed.
-	std::deque<Section> m_sections;
-	std::atomic<int> m_height{ 0 };
+	// std::map is node-based, so a Section keeps a fixed address once inserted: pointers the loading
+	// thread holds while meshing stay valid when another thread adds sections. m_sectionsMutex guards
+	// every access to the map (find/insert/iterate); the keys may be sparse and negative. Sections
+	// are never removed, so once hasSection() is true it stays true.
+	std::map<int, Section> m_sections;
 	mutable std::mutex m_sectionsMutex;
 };

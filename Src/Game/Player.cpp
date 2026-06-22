@@ -15,19 +15,14 @@ void Player::processMouseClick(sf::Time dt, Commands& commands) {
 		pickedBlock = game->getChunkMap().getBlock(targetPos.value());
 	}
 	breakAccumulator += dt;
-	if (commands.isActive(Command::BREAK) && breakAccumulator >= sf::seconds(0.1f) && targetPos.has_value()
-		&& game->canReloadBlocks()) {
-
+	if (commands.isActive(Command::BREAK) && breakAccumulator >= sf::seconds(0.1f) && targetPos.has_value()) {
 		game->getChunkMap().setBlock(targetPos.value(), +BlockID::AIR);
-		game->reloadBlocksMeshes({ targetPos.value() });
 		breakAccumulator = sf::seconds(0.f);
 	}
 	placeAccumulator += dt;
 	if (commands.isActive(Command::PLACE) && placeAccumulator >= sf::seconds(0.1f) && placePos.has_value() &&
-		pickedBlock.has_value() && !intersectsBlock(placePos.value()) && game->canReloadBlocks()) {
-
+		pickedBlock.has_value() && !intersectsBlock(placePos.value())) {
 		game->getChunkMap().setBlock(placePos.value(), pickedBlock.value());
-		game->reloadBlocksMeshes({ placePos.value() });
 		placeAccumulator = sf::seconds(0.f);
 	}
 }

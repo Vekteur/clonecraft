@@ -6,6 +6,7 @@
 #include <array>
 #include <vector>
 #include <optional>
+#include <mutex>
 
 #include "Util/Array3D.h"
 #include "Maths/Dir2D.h"
@@ -24,8 +25,8 @@ using NeighborChunks = std::array<const Chunk*, Dir2D::SIZE>;
 class Section {
 public:
 	Section(const Chunk* chunk = nullptr, ivec3 position = ivec3{ 0, 0, 0 });
-	Section(Section&& other) = default;
-	Section& operator=(Section&& other) = default;
+	// Non-copyable and non-movable: a Section lives in place inside Chunk's section map (inserted with
+	// try_emplace, never relocated) and holds a mutex, so neither copy nor move would be valid.
 	Section(const Section& other) = delete;
 	Section& operator=(const Section& other) = delete;
 
@@ -52,6 +53,10 @@ private:
 	// Built on a worker thread by loadMesh(); uploaded to the GPU on the main thread by uploadMesh().
 	std::vector<DefaultMesh::Vertex> m_nextDefaultVertices;
 	std::vector<WaterMesh::Vertex> m_nextWaterVertices;
+	// Serializes producers/consumer of the "next" vertex buffers above. A single block edit (main
+	// thread) and a bulk edit (worker) can remesh the same section at once, and the main thread
+	// uploads it; this guards those vectors from concurrent build/build and build/upload.
+	mutable std::mutex m_meshMutex;
 
 	bool isInSection(ivec3 globalPos) const;
 	const Section* findNeighboringSection(Dir3D::Dir dir, const NeighborChunks& neighbors) const;

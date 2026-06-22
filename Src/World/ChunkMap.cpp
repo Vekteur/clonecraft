@@ -50,10 +50,16 @@ void ChunkMap::update() {
 	}
 
 	while (!m_sectionsToReUploadMesh.empty()) {
-		Section& section = getSection(m_sectionsToReUploadMesh.front());
-		section.releaseMesh();
-		section.uploadMesh();
+		ivec3 sectionPos = m_sectionsToReUploadMesh.front();
 		m_sectionsToReUploadMesh.pop();
+		// The chunk may have been unloaded between the remesh and now, so re-check before touching it.
+		auto it = m_chunks.find(Converter::to2D(sectionPos));
+		if (it != m_chunks.end() && it->second->getState() == Chunk::TO_RENDER &&
+				it->second->hasSection(sectionPos.y)) {
+			Section& section = it->second->getSection(sectionPos.y);
+			section.releaseMesh();
+			section.uploadMesh();
+		}
 	}
 }
 
@@ -85,27 +91,76 @@ void ChunkMap::render(const Frustum& frustum, const DefaultRenderer* defaultRend
 }
 
 void ChunkMap::setBlock(ivec3 globalPos, Block block) {
-	std::shared_ptr<Chunk> chunk;
+	applyEdits({ { globalPos, block } });
+}
+
+void ChunkMap::applyEdits(const std::vector<BlockEdit>& edits) {
+	if (edits.empty())
+		return;
+
+	// Group the edits by chunk, then resolve those chunks once under the lock, keeping each alive
+	// with a shared_ptr for the duration of the write (the orchestrator may unload it meanwhile).
+	std::unordered_map<ivec2, std::vector<const BlockEdit*>, Comp_ivec2, Comp_ivec2> editsByChunk;
+	for (const BlockEdit& edit : edits)
+		editsByChunk[Converter::globalToChunk(edit.pos)].push_back(&edit);
+
+	std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2> chunks;
 	{
-		// Only the lookup needs the lock. Copy the shared_ptr (not a raw pointer) so the chunk
-		// survives even if the loading thread erases it while we edit.
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
-		auto chunkIt = hasBlock(globalPos, true);
-		if (chunkIt != m_chunks.end())
-			chunk = chunkIt->second;
+		for (auto& [chunkPos, _] : editsByChunk) {
+			auto it = m_chunks.find(chunkPos);
+			if (it != m_chunks.end() && it->second->getState() >= Chunk::TO_LOAD_MESH)
+				chunks.emplace(chunkPos, it->second);
+		}
 	}
-	// The edit must happen without the lock held: Chunk::setBlock may extend the
-	// chunk upwards and call back into reloadSectionMesh(), which locks m_chunksMutex
-	// itself. Holding it here would self-deadlock.
-	if (chunk != nullptr && chunk->getState() >= Chunk::TO_LOAD_MESH) {
-		ivec2 innerChunkPos = Converter::globalToInnerChunk(globalPos);
-		chunk->setBlock({ innerChunkPos.x, globalPos.y, innerChunkPos.y }, block);
+
+	// Write the block data without the global lock. Group by section so each is created/looked up
+	// once; the array writes themselves need no lock (see Chunk::setBlock).
+	for (auto& [chunkPos, chunkEdits] : editsByChunk) {
+		auto chunkIt = chunks.find(chunkPos);
+		if (chunkIt == chunks.end())
+			continue; // chunk not loaded (edge of the map, or unloaded) — skip its edits
+		Chunk& chunk = *chunkIt->second;
+		std::unordered_map<int, std::vector<const BlockEdit*>> editsBySection;
+		for (const BlockEdit* edit : chunkEdits)
+			editsBySection[floorDiv(edit->pos.y, Const::SECTION_HEIGHT)].push_back(edit);
+		for (auto& [sectionY, sectionEdits] : editsBySection) {
+			Section& section = chunk.getOrCreateSection(sectionY);
+			for (const BlockEdit* edit : sectionEdits) {
+				ivec2 inner = Converter::globalToInnerChunk(edit->pos);
+				section.setBlock({ inner.x, posMod(edit->pos.y, Const::SECTION_HEIGHT), inner.y }, edit->block);
+			}
+		}
 	}
+
+	// Remesh every section a changed block can affect: its own section and its six face neighbors,
+	// since a face is culled against the block on the other side.
+	struct Comp_ivec3 {
+		size_t operator()(ivec3 vec) const {
+			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1) ^ (std::hash<int>()(vec.z) << 2);
+		}
+		bool operator()(ivec3 a, ivec3 b) const { return a.x == b.x && a.y == b.y && a.z == b.z; }
+	};
+	std::unordered_set<ivec3, Comp_ivec3, Comp_ivec3> sectionsToUpdate;
+	for (const BlockEdit& edit : edits) {
+		sectionsToUpdate.insert(Converter::globalToSection(edit.pos));
+		for (Dir3D::Dir dir : Dir3D::all())
+			sectionsToUpdate.insert(Converter::globalToSection(edit.pos + Dir3D::to_ivec3(dir)));
+	}
+	remeshSections({ sectionsToUpdate.begin(), sectionsToUpdate.end() });
+}
+
+void ChunkMap::submitBulkEdit(EditGenerator generator) {
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
+	// Keep at most one bulk edit pending or running, so two never remesh the same section at once.
+	if (m_bulkEditRunning || !m_bulkEdits.empty())
+		return;
+	m_bulkEdits.push(std::move(generator));
 }
 
 Block ChunkMap::getBlock(ivec3 globalPos) const {
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
-	auto chunkIt = hasBlock(globalPos);
+	auto chunkIt = findLoadedChunk(globalPos);
 	if (chunkIt != m_chunks.end()) {
 		ivec2 innerChunkPos = Converter::globalToInnerChunk(globalPos);
 		return chunkIt->second->getBlock({ innerChunkPos.x, globalPos.y, innerChunkPos.y });
@@ -184,11 +239,18 @@ void ChunkMap::refreshSelection(const Frustum& frustum) {
 }
 
 void ChunkMap::processNextTask() {
-	enum { BLOCK, MESH, SELECT, NONE } type = NONE;
+	enum { BULK, BLOCK, MESH, SELECT, NONE } type = NONE;
 	ivec2 pos;
+	EditGenerator bulkGenerator;
 	{
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
-		if (!m_toLoadBlocks.empty()) {
+		if (!m_bulkEdits.empty()) {
+			// Bulk edits run first: they are user-initiated and the player wants to see the result. Max 1 worker.
+			bulkGenerator = std::move(m_bulkEdits.front()); m_bulkEdits.pop();
+			m_bulkEditRunning = true; type = BULK;
+		} else if (!m_toLoadBlocks.empty()) {
+			// Block loading runs next: these tasks have been added only when mesh tasks were not available,
+			// so they should not starve them.
 			pos = m_toLoadBlocks.front(); m_toLoadBlocks.pop(); m_inLoadBlocks.erase(pos); type = BLOCK;
 		} else if (!m_toLoadMeshes.empty()) {
 			pos = m_toLoadMeshes.front(); m_toLoadMeshes.pop(); m_inLoadMeshes.erase(pos); type = MESH;
@@ -197,26 +259,12 @@ void ChunkMap::processNextTask() {
 		}
 	}
 	switch (type) {
+		case BULK:   doBulkEdit(std::move(bulkGenerator)); break;
 		case BLOCK:  doLoadBlocks(pos); break;
 		case MESH:   doLoadMesh(pos);   break;
 		case SELECT: doSelectChunk(pos); break;
 		case NONE:   std::this_thread::sleep_for(std::chrono::milliseconds(1)); break;
 	}
-}
-
-void ChunkMap::doSelectChunk(ivec2 pos) {
-	// Queue blocks for this chunk and its neighbors (a chunk's mesh needs its neighbors' blocks).
-	std::lock_guard<std::mutex> lock(m_chunksMutex);
-	enqueueBlocksIfNeeded(pos);
-	for (Dir2D::Dir dir : Dir2D::all())
-		enqueueBlocksIfNeeded(pos + Dir2D::to_ivec2(dir));
-}
-
-void ChunkMap::enqueueBlocksIfNeeded(ivec2 pos) {
-	auto it = m_chunks.find(pos);
-	bool needsBlocks = (it == m_chunks.end()) || (it->second->getState() == Chunk::TO_LOAD_BLOCKS);
-	if (needsBlocks && m_inLoadBlocks.insert(pos).second)
-		m_toLoadBlocks.push(pos);
 }
 
 void ChunkMap::unloadFarChunks() {
@@ -235,61 +283,6 @@ void ChunkMap::unloadFarChunks() {
 			chunk.casState(Chunk::TO_RENDER, Chunk::TO_RELEASE_MESH);
 		}
 		++it;
-	}
-}
-
-void ChunkMap::reloadBlocksMeshes(const std::vector<ivec3>& blocks) {
-	struct Comp_ivec3 {
-		size_t operator()(ivec3 vec) const {
-			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1) ^ (std::hash<int>()(vec.z) << 2);
-		}
-		bool operator()(ivec3 a, ivec3 b) const {
-			return a.x == b.x && a.y == b.y && a.z == b.z;
-		}
-	};
-
-	std::unordered_set<ivec3, Comp_ivec3> sectionsToUpdate;
-	for (ivec3 block : blocks) {
-		sectionsToUpdate.insert(Converter::globalToSection(block));
-		for (Dir3D::Dir dir : Dir3D::all()) {
-			sectionsToUpdate.insert(Converter::globalToSection(block + Dir3D::to_ivec3(dir)));
-		}
-	}
-
-	for (ivec3 section : sectionsToUpdate) {
-		reloadSectionMesh(section);
-	}
-}
-
-bool ChunkMap::canChunkBeEdited(ivec2 pos) {
-	for (Dir2D::Dir dir : Dir2D::all()) {
-		if (m_chunks.find(pos + Dir2D::to_ivec2(dir)) == m_chunks.end())
-			return false;
-	}
-	return true;
-}
-
-void ChunkMap::reloadSectionMesh(ivec3 pos) {
-	std::lock_guard<std::mutex> lock(m_chunksMutex);
-
-	ivec2 pos2D = Converter::to2D(pos);
-	auto chunkIt = m_chunks.find(pos2D);
-	if (chunkIt != m_chunks.end() && chunkIt->second->getState() == Chunk::TO_RENDER &&
-			0 <= pos.y && pos.y < chunkIt->second->getHeight()) {
-		// In the extreme case where a chunk is edited on the border of the map, neighboring chunks
-		// could be unloaded.
-		if (canChunkBeEdited(pos2D)) {
-			NeighborChunks neighbors{};
-			for (Dir2D::Dir dir : Dir2D::all()) {
-				auto it = m_chunks.find(pos2D + Dir2D::to_ivec2(dir));
-				neighbors[dir] = (it != m_chunks.end()) ? it->second.get() : nullptr;
-			}
-			chunkIt->second->getSection(pos.y).loadMesh(neighbors);
-			// If the chunk still owes a full upload, that upload already carries this freshly rebuilt
-			// section; a section upload would run after it and push an already-consumed empty mesh.
-			if (m_chunksPendingUpload.count(pos2D) == 0)
-				m_sectionsToReUploadMesh.push(pos);
-		}
 	}
 }
 
@@ -317,11 +310,9 @@ void ChunkMap::onChangeChunkState(Chunk::State previous, Chunk::State next) {
 }
 
 std::unordered_map<ivec2, std::shared_ptr<Chunk>, ChunkMap::Comp_ivec2, ChunkMap::Comp_ivec2>::const_iterator
-ChunkMap::hasBlock(ivec3 globalPos, bool canSurpass) const {
+ChunkMap::findLoadedChunk(ivec3 globalPos) const {
 	auto chunkIt = m_chunks.find(Converter::globalToChunk(globalPos));
-	if (chunkIt != m_chunks.end() && chunkIt->second->getState() >= Chunk::TO_LOAD_MESH &&
-			0 <= globalPos.y &&
-			(canSurpass || globalPos.y < chunkIt->second->getHeight() * Const::SECTION_HEIGHT))
+	if (chunkIt != m_chunks.end() && chunkIt->second->getState() >= Chunk::TO_LOAD_MESH)
 		return chunkIt;
 	else
 		return m_chunks.end();
@@ -329,6 +320,14 @@ ChunkMap::hasBlock(ivec3 globalPos, bool canSurpass) const {
 
 bool ChunkMap::isInLoadDistance(ivec2 pos) const {
 	return math::euclidianPow2(pos, m_center) <= LOAD_DISTANCE * LOAD_DISTANCE;
+}
+
+void ChunkMap::doSelectChunk(ivec2 pos) {
+	// Queue blocks for this chunk and its neighbors (a chunk's mesh needs its neighbors' blocks).
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
+	enqueueBlocksIfNeeded(pos);
+	for (Dir2D::Dir dir : Dir2D::all())
+		enqueueBlocksIfNeeded(pos + Dir2D::to_ivec2(dir));
 }
 
 void ChunkMap::doLoadBlocks(ivec2 pos) {
@@ -354,19 +353,6 @@ void ChunkMap::doLoadBlocks(ivec2 pos) {
 	enqueueMeshIfReady(pos);
 	for (Dir2D::Dir dir : Dir2D::all())
 		enqueueMeshIfReady(pos + Dir2D::to_ivec2(dir));
-}
-
-void ChunkMap::enqueueMeshIfReady(ivec2 pos) {
-	auto it = m_chunks.find(pos);
-	if (it == m_chunks.end() || it->second->getState() != Chunk::TO_LOAD_MESH)
-		return; // missing, still loading blocks, or already meshing/meshed
-	for (Dir2D::Dir dir : Dir2D::all()) {
-		auto neighborIt = m_chunks.find(pos + Dir2D::to_ivec2(dir));
-		if (neighborIt == m_chunks.end() || neighborIt->second->getState() < Chunk::TO_LOAD_MESH)
-			return; // a neighbor's blocks are not ready, so this mesh is not either
-	}
-	if (m_inLoadMeshes.insert(pos).second)
-		m_toLoadMeshes.push(pos);
 }
 
 void ChunkMap::doLoadMesh(ivec2 pos) {
@@ -398,10 +384,98 @@ void ChunkMap::doLoadMesh(ivec2 pos) {
 	m_chunksPendingUpload.insert(pos);
 }
 
+void ChunkMap::doBulkEdit(EditGenerator generator) {
+	// Compute the block changes off the lock, then apply + remesh through the same path a single edit uses.
+	std::vector<BlockEdit> edits = generator();
+	applyEdits(edits);
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
+	m_bulkEditRunning = false;
+}
+
+void ChunkMap::remeshSections(const std::vector<ivec3>& sections) {
+	// One section to rebuild, with everything it needs kept alive for the unlocked build below.
+	struct MeshJob {
+		ivec3 pos;
+		std::shared_ptr<Chunk> chunk;
+		std::array<std::shared_ptr<Chunk>, Dir2D::SIZE> keepAlive;
+		NeighborChunks neighbors{};
+	};
+
+	// Snapshot under the lock: which sections still exist on a rendered chunk, and the
+	// neighbor chunks their border faces read from.
+	std::vector<MeshJob> jobs;
+	{
+		std::lock_guard<std::mutex> lock(m_chunksMutex);
+		for (ivec3 sectionPos : sections) {
+			ivec2 pos2D = Converter::to2D(sectionPos);
+			auto chunkIt = m_chunks.find(pos2D);
+			if (chunkIt == m_chunks.end() || chunkIt->second->getState() != Chunk::TO_RENDER ||
+					!chunkIt->second->hasSection(sectionPos.y))
+				continue;
+			if (!canChunkBeEdited(pos2D))
+				continue;
+			MeshJob job;
+			job.pos = sectionPos;
+			job.chunk = chunkIt->second;
+			for (Dir2D::Dir dir : Dir2D::all()) {
+				auto it = m_chunks.find(pos2D + Dir2D::to_ivec2(dir));
+				if (it != m_chunks.end()) {
+					job.keepAlive[dir] = it->second;
+					job.neighbors[dir] = it->second.get();
+				}
+			}
+			jobs.push_back(std::move(job));
+		}
+	}
+
+	// Build the meshes without the lock.
+	for (MeshJob& job : jobs)
+		job.chunk->getSection(job.pos.y).loadMesh(job.neighbors);
+
+	// Publish the GPU uploads to the main thread under the lock.
+	std::lock_guard<std::mutex> lock(m_chunksMutex);
+	for (MeshJob& job : jobs) {
+		// If the chunk still owes a full upload, that upload already carries this freshly rebuilt
+		// section; a section upload would run after it and push an already-consumed empty mesh.
+		if (m_chunksPendingUpload.count(Converter::to2D(job.pos)) == 0)
+			m_sectionsToReUploadMesh.push(job.pos);
+	}
+}
+
+bool ChunkMap::canChunkBeEdited(ivec2 pos) const {
+	for (Dir2D::Dir dir : Dir2D::all()) {
+		if (m_chunks.find(pos + Dir2D::to_ivec2(dir)) == m_chunks.end())
+			return false;
+	}
+	return true;
+}
+
+void ChunkMap::enqueueBlocksIfNeeded(ivec2 pos) {
+	auto it = m_chunks.find(pos);
+	bool needsBlocks = (it == m_chunks.end()) || (it->second->getState() == Chunk::TO_LOAD_BLOCKS);
+	if (needsBlocks && m_inLoadBlocks.insert(pos).second)
+		m_toLoadBlocks.push(pos);
+}
+
+void ChunkMap::enqueueMeshIfReady(ivec2 pos) {
+	auto it = m_chunks.find(pos);
+	if (it == m_chunks.end() || it->second->getState() != Chunk::TO_LOAD_MESH)
+		return; // missing, still loading blocks, or already meshing/meshed
+	for (Dir2D::Dir dir : Dir2D::all()) {
+		auto neighborIt = m_chunks.find(pos + Dir2D::to_ivec2(dir));
+		if (neighborIt == m_chunks.end() || neighborIt->second->getState() < Chunk::TO_LOAD_MESH)
+			return; // a neighbor's blocks are not ready, so this mesh is not either
+	}
+	if (m_inLoadMeshes.insert(pos).second)
+		m_toLoadMeshes.push(pos);
+}
+
 bool ChunkMap::isChunkInFrustum(Chunk* chunk, const Frustum& frustum) {
 	ivec2 pos = chunk->getPosition();
-	int height = chunk->getHeight() * Const::SECTION_HEIGHT;
-	Box chunkBox = { { pos.x * Const::SECTION_SIDE, 0.f, pos.y * Const::SECTION_SIDE },
+	// Sparse sections span [minSectionY, maxSectionY]; the box covers that vertical range.
+	int bottom = chunk->minSectionY() * Const::SECTION_HEIGHT;
+	int height = (chunk->maxSectionY() + 1) * Const::SECTION_HEIGHT - bottom;
+	Box chunkBox = { { pos.x * Const::SECTION_SIDE, float(bottom), pos.y * Const::SECTION_SIDE },
 		{ Const::SECTION_SIDE, height, Const::SECTION_SIDE } };
 	return !frustum.isBoxOutside(chunkBox);
 }
