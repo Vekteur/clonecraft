@@ -28,6 +28,7 @@ public:
 	void processMouseWheel(sf::Time dt, GLfloat delta);
 	void update(sf::Time dt);
 	void teleport();
+	void placeBlockBelow();
 	void move(Movement::Direction direction, sf::Time dt);
 	void setSprinting(bool sprinting);
 	vec3 getPosition() const;

@@ -1,5 +1,7 @@
 #include "Player.h"
 
+#include "Maths/Converter.h"
+
 #include <Game/Game.h>
 #include <Maths/LineBlockFinder.h>
 
@@ -67,6 +69,14 @@ void Player::teleport() {
 		vec3 pos = targetPos.value();
 		pos += vec3(0.5, 1 + Movement::PLAYER_HEAD_HEIGHT, 0.5);
 		m_camera.setPosition(pos);
+	}
+}
+
+void Player::placeBlockBelow() {
+	if (pickedBlock.has_value()) {
+		vec3 pos = getPosition();
+		pos.y -= 1.f + Movement::PLAYER_HEAD_HEIGHT;
+		game->getChunkMap().setBlock(Converter::globalPosToBlock(pos), pickedBlock.value());
 	}
 }
 

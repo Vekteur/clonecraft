@@ -27,6 +27,7 @@ Command Commands::findKey(sf::Keyboard::Key key) const {
 	case Keyboard::B:
 		if (Keyboard::isKeyPressed(Keyboard::LAlt)) return Command::HUGE_BRUSH;
 		else return Command::BRUSH;
+	case Keyboard::P: return Command::PLACE_BELOW;
 	case Keyboard::T: return Command::TELEPORT;
 	case Keyboard::G: return Command::NEXT_GAMEMODE;
 	default: return Command::UNKNOWN;
