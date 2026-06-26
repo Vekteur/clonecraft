@@ -3,6 +3,7 @@
 #include "Maths/GlmCommon.h"
 #include "Maths/Converter.h"
 #include "ChunkMap.h"
+#include "LightEngine.h"
 #include "Generator/WorldGenerator.h"
 
 Chunk::Chunk(ChunkMap* const chunkMap, ivec2 position)
@@ -16,8 +17,16 @@ Chunk::~Chunk() {
 
 void Chunk::setBlock(ivec3 pos, Block block) {
 	int sectionY = floorDiv(pos.y, Const::SECTION_HEIGHT);
-	Section& section = getOrCreateSection(sectionY);
-	section.setBlock({ pos.x, posMod(pos.y, Const::SECTION_HEIGHT), pos.z }, block);
+	Section* section = nullptr;
+	if (block.id == +BlockID::AIR) { // Avoid creating a section just to store air
+		section = tryGetSection(sectionY);
+		if (section == nullptr)
+			return;
+	} else {
+		// Create the section if it doesn't exist yet
+		section = &getOrCreateSection(sectionY);
+	}
+	section->setBlock({ pos.x, posMod(pos.y, Const::SECTION_HEIGHT), pos.z }, block);
 }
 
 Block Chunk::getBlock(ivec3 pos) const {
@@ -30,6 +39,9 @@ Block Chunk::getBlock(ivec3 pos) const {
 
 void Chunk::loadBlocks() {
 	g_worldGenerator.loadChunk(*this);
+	// Light this chunk on its own now, while we still own it.
+	// Light that crosses chunk borders is added later, at mesh time.
+	LightEngine::computeChunkLight(*this);
 	setState(TO_LOAD_MESH);
 }
 
@@ -117,6 +129,16 @@ Section& Chunk::getSection(int sectionY) {
 const Section& Chunk::getSection(int sectionY) const {
 	std::lock_guard<std::mutex> lock(m_sectionsMutex);
 	return m_sections.at(sectionY);
+}
+
+std::map<int, Section>& Chunk::getSections() {
+	return m_sections;
+}
+
+Section* Chunk::tryGetSection(int sectionY) {
+	std::lock_guard<std::mutex> lock(m_sectionsMutex);
+	auto it = m_sections.find(sectionY);
+	return it == m_sections.end() ? nullptr : &it->second;
 }
 
 const Section* Chunk::tryGetSection(int sectionY) const {

@@ -4,11 +4,13 @@ layout (location = 1) in vec2 tex;
 layout (location = 2) in vec3 norm;
 layout (location = 3) in uint texID;
 layout (location = 4) in float ao;
+layout (location = 5) in vec2 light;
 
 out vec3 fragTex;
 out vec3 normal;
 out float visibility;
 out float ambientOcclusion;
+out vec2 lightLevel;
 
 uniform mat4 view;
 uniform mat4 projection;
@@ -31,6 +33,7 @@ void main()
 	fragTex = vec3(tex, texID);
 	normal = norm;
 	ambientOcclusion = ao;
+	lightLevel = light;
 
 	gl_Position = projection * posRelativeToCam;
 }

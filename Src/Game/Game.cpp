@@ -6,6 +6,8 @@
 #include "Util/Logger.h"
 #include "World/WorldConstants.h"
 
+#include <cmath>
+
 Game::Game(Window* const window)
 	: m_player{ this }, p_window{ window },
 	m_waterRenderer{ { p_window->size() } }, m_postProcessingRenderer{ { p_window->size() } } {
@@ -111,12 +113,15 @@ void Game::processMouseWheel(sf::Time dt, GLfloat delta) {
 
 void Game::update(sf::Time dt) {
 	m_player.update(dt);
+	m_dayCycle.update(dt);
+	m_defaultRenderer.getShader().use().set("dayFactor", m_dayCycle.getDayFactor());
+
 	m_defaultRenderer.getShader().use().set("view", m_player.getCamera().getViewMatrix());
 	m_defaultRenderer.getShader().use().set("projection", m_player.getCamera().getProjMatrix());
-	m_defaultRenderer.getShader().use().set("skyColor", p_window->getClearColor());
+	m_defaultRenderer.getShader().use().set("skyColor", m_dayCycle.getSkyColor());
 	m_waterRenderer.getShader().use().set("view", m_player.getCamera().getViewMatrix());
 	m_waterRenderer.getShader().use().set("projection", m_player.getCamera().getProjMatrix());
-	m_waterRenderer.getShader().use().set("skyColor", p_window->getClearColor());
+	m_waterRenderer.getShader().use().set("skyColor", m_dayCycle.getSkyColor());
 	m_waterRenderer.getShader().use().set("cameraPosition", m_player.getCamera().getPosition());
 
 	m_chunkMap.setCenter(Converter::globalToChunk(m_player.getPosition()));
@@ -133,8 +138,9 @@ void Game::update(sf::Time dt) {
 }
 
 void Game::clearRenderTarget() {
-	vec3 clearColor = p_window->getClearColor();
-	glClearColor(clearColor.x, clearColor.y, clearColor.z, 1.0f);
+	// Dimmed by the day/night cycle (set in update) so the sky and fog darken with the terrain.
+	vec3 skyColor = m_dayCycle.getSkyColor();
+	glClearColor(skyColor.x, skyColor.y, skyColor.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -162,7 +168,7 @@ void Game::render() {
 		vec4 clipPlane = refractionPass ? vec4(0.f, -1.f, 0.f, 10000.f)
 		                                : vec4(0.f, 1.f, 0.f, -float(Const::SEA_LEVEL));
 		m_explosionDrawer.render(m_player.getCamera().getViewMatrix(),
-			m_player.getCamera().getProjMatrix(), clipPlane, p_window->getClearColor());
+			m_player.getCamera().getProjMatrix(), clipPlane, m_dayCycle.getSkyColor());
 	}, [this]() {
 		clearRenderTarget();
 	}, m_defaultRenderer, m_player.getCamera(), size);
@@ -213,4 +219,8 @@ const ChunkMap& Game::getChunkMap() const {
 
 Window& Game::getWindow() {
 	return *p_window;
+}
+
+float Game::getTimeOfDay() const {
+	return m_dayCycle.getTimeOfDay();
 }

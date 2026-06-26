@@ -6,7 +6,7 @@ Tree::Tree() : Structure({ 5, 7, 5 }) {
 	ivec2 center = getCenterPos();
 	fill({ center.x - 2, 3, center.y - 2 }, { center.x + 2, 4, center.y + 2 }, +BlockID::LEAVES);
 	fill({ center.x - 1, 5, center.y - 1 }, { center.x + 1, 6, center.y + 1 }, +BlockID::LEAVES);
-	fill({ center.x, 0, center.y }, { center.x, 4, center.y }, +BlockID::LOG);
+	fill({ center.x, 0, center.y }, { center.x, 4, center.y }, +BlockID::LIGHT);
 }
 
 bool Tree::isValidPos(ivec3 centerPos, BiomeID biomeID) const {

@@ -21,7 +21,8 @@ DefaultMesh PickedBlockDrawer::buildHeldBlockMesh(Block block) {
 			// Centre the cube on the origin so it rotates around its middle in the HUD view.
 			const vec3 pos = CubeData::dirToFace[dir][vtx] - vec3(0.5f);
 			const vec2 tex = CubeData::faceCoords[vtx];
-			vertices.push_back({ pos, tex, normal, texID, 1.f });
+			// Full block light so the HUD preview stays bright regardless of the day/night cycle.
+			vertices.push_back({ pos, tex, normal, texID, 1.f, vec2(1.f, 1.f) });
 		}
 	}
 	DefaultMesh mesh;

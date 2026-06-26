@@ -18,6 +18,16 @@ namespace Dir3D {
 		return s_all_dirs[dir];
 	}
 
+	Dir from_ivec3(ivec3 v) {
+		if (v.y == 1) return UP;
+		if (v.x == 1) return FRONT;
+		if (v.z == 1) return RIGHT;
+		if (v.y == -1) return DOWN;
+		if (v.x == -1) return BACK;
+		if (v.z == -1) return LEFT;
+		throw std::invalid_argument("Invalid 3D direction vector");
+	}
+
 	Dir prev(Dir dir) {
 		return static_cast<Dir>((dir - 1 + SIZE) % SIZE);
 	}

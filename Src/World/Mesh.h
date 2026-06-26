@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <atomic>
+#include <cstddef>
 
 template<typename V, typename Derived>
 struct Mesh {
@@ -123,6 +124,7 @@ struct DefaultVertex {
 	vec3 norm;
 	GLuint texID;
 	GLfloat ao;
+	vec2 light;
 };
 
 struct WaterVertex {
@@ -137,11 +139,12 @@ struct PostProcessingVertex {
 
 struct DefaultMesh : Mesh<DefaultVertex, DefaultMesh> {
 	void loadAttributes() {
-		addFloatVertexAttribPointer(0, 3, 0);
-		addFloatVertexAttribPointer(1, 2, sizeof(vec3));
-		addFloatVertexAttribPointer(2, 3, sizeof(vec3) + sizeof(vec2));
-		addIntVertexAttribPointer(3, 1, sizeof(vec3) + sizeof(vec2) + sizeof(vec3));
-		addFloatVertexAttribPointer(4, 1, sizeof(vec3) + sizeof(vec2) + sizeof(vec3) + sizeof(GLuint));
+		addFloatVertexAttribPointer(0, 3, offsetof(DefaultVertex, pos));
+		addFloatVertexAttribPointer(1, 2, offsetof(DefaultVertex, tex));
+		addFloatVertexAttribPointer(2, 3, offsetof(DefaultVertex, norm));
+		addIntVertexAttribPointer(3, 1, offsetof(DefaultVertex, texID));
+		addFloatVertexAttribPointer(4, 1, offsetof(DefaultVertex, ao));
+		addFloatVertexAttribPointer(5, 2, offsetof(DefaultVertex, light));
 	}
 };
 

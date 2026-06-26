@@ -4,6 +4,7 @@
 #include "World/WorldConstants.h"
 #include "World/BlockEdit.h"
 #include "View/Frustum.h"
+#include "Maths/GlmCommon.h"
 
 #include <vector>
 #include <queue>
@@ -71,15 +72,6 @@ public:
 	void onChangeChunkState(Chunk::State previous, Chunk::State next);
 
 private:
-	struct Comp_ivec2 {
-		size_t operator()(const ivec2& vec) const {
-			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1);
-		}
-		bool operator()(const ivec2& a, const ivec2& b) const {
-			return a.x == b.x && a.y == b.y;
-		}
-	};
-
 	// shared_ptr so threads can keep a chunk alive while editing it, even if the orchestrator
 	// thread erases it from the map in the meantime.
 	std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2> m_chunks;
@@ -106,6 +98,10 @@ private:
 
 	ivec2 m_center;
 	mutable std::mutex m_chunksMutex; // guards m_chunks, the work pools and the upload queues
+	// Guards the cross-chunk light spill (LightEngine::spillBorderLight) before each mesh, so two
+	// workers can't write the same border light at once. Held only around the spill, not the mesh
+	// build, and never alongside m_chunksMutex.
+	std::mutex m_lightMutex;
 	bool m_mustStop = false;
 
 	int m_renderedChunks = 0; // written and read only on the main thread (render / getRenderedChunks)

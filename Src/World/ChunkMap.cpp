@@ -1,5 +1,6 @@
 #include "ChunkMap.h"
 
+#include "LightEngine.h"
 #include "ResManager/ResManager.h"
 #include "Util/DebugGL.h"
 #include "Maths/Dir2D.h"
@@ -94,9 +95,25 @@ void ChunkMap::setBlock(ivec3 globalPos, Block block) {
 	applyEdits({ { globalPos, block } });
 }
 
+bool allAirEdits(const std::vector<const BlockEdit*>& edits) {
+	for (const BlockEdit* edit : edits)
+		if (edit->block.id != +BlockID::AIR)
+			return false;
+	return true;
+}
+
 void ChunkMap::applyEdits(const std::vector<BlockEdit>& edits) {
+	auto startTime = std::chrono::high_resolution_clock::now();
+
 	if (edits.empty())
 		return;
+
+	auto timeSinceStart = [&]() {
+		std::cout << "  - Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::high_resolution_clock::now().time_since_epoch()).count() - std::chrono::duration_cast<std::chrono::milliseconds>(startTime.time_since_epoch()).count() << " ms" << std::endl;
+	};
+
+	std::cout << "Grouping " << edits.size() << " by chunk" << std::endl;
 
 	// Group the edits by chunk, then resolve those chunks once under the lock, keeping each alive
 	// with a shared_ptr for the duration of the write (the orchestrator may unload it meanwhile).
@@ -105,49 +122,106 @@ void ChunkMap::applyEdits(const std::vector<BlockEdit>& edits) {
 		editsByChunk[Converter::globalToChunk(edit.pos)].push_back(&edit);
 
 	std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2> chunks;
+	// Chunks the light update may touch: each edited chunk plus its four neighbors. Light reaches at
+	// most 15 blocks, less than a chunk's width (32), so it can't spread any further.
+	std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2> lightChunks;
 	{
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
+		auto pin = [&](ivec2 pos) {
+			auto it = m_chunks.find(pos);
+			if (it != m_chunks.end() && it->second->getState() >= Chunk::TO_LOAD_MESH)
+				lightChunks.emplace(pos, it->second);
+		};
 		for (auto& [chunkPos, _] : editsByChunk) {
 			auto it = m_chunks.find(chunkPos);
 			if (it != m_chunks.end() && it->second->getState() >= Chunk::TO_LOAD_MESH)
 				chunks.emplace(chunkPos, it->second);
+			pin(chunkPos);
+			for (Dir2D::Dir dir : Dir2D::all())
+				pin(chunkPos + Dir2D::to_ivec2(dir));
 		}
 	}
 
-	// Write the block data without the global lock. Group by section so each is created/looked up
-	// once; the array writes themselves need no lock (see Chunk::setBlock).
+	// TODO somewhere: all neighbors of a section that is updated must be created if they don't exist, 
+	// even if it means creating empty sections. Otherwise sky light may not propagate from the sides.
+
+	timeSinceStart();
+	std::cout << "Applying " << edits.size() << " block edits" << std::endl;
+
+	// Write the blocks without the global lock, grouped by section so each is looked up once.
+	std::vector<LightEngine::LightEdit> lightEdits;
+	std::vector<ivec3> editedSections;
 	for (auto& [chunkPos, chunkEdits] : editsByChunk) {
 		auto chunkIt = chunks.find(chunkPos);
 		if (chunkIt == chunks.end())
-			continue; // chunk not loaded (edge of the map, or unloaded) — skip its edits
+			continue; // chunk not loaded (edge of the map, or unloaded), skip its edits
 		Chunk& chunk = *chunkIt->second;
 		std::unordered_map<int, std::vector<const BlockEdit*>> editsBySection;
 		for (const BlockEdit* edit : chunkEdits)
 			editsBySection[floorDiv(edit->pos.y, Const::SECTION_HEIGHT)].push_back(edit);
 		for (auto& [sectionY, sectionEdits] : editsBySection) {
-			Section& section = chunk.getOrCreateSection(sectionY);
+			Section* section = nullptr;
+			if (allAirEdits(sectionEdits)) {
+				section = chunk.tryGetSection(sectionY);
+				if (section == nullptr)
+					continue; // The section stays empty
+			} else {
+				section = &chunk.getOrCreateSection(sectionY);
+			}
+			editedSections.push_back({ chunkPos.x, sectionY, chunkPos.y });
 			for (const BlockEdit* edit : sectionEdits) {
-				ivec2 inner = Converter::globalToInnerChunk(edit->pos);
-				section.setBlock({ inner.x, posMod(edit->pos.y, Const::SECTION_HEIGHT), inner.y }, edit->block);
+				ivec3 local = Converter::globalToInnerSection(edit->pos);
+				// Keep the old block (its light feeds the relight) and write the new one with its light
+				// cleared; the relighter fills it back in.
+				Block oldBlock = section->getBlock(local);
+				Block newBlock = edit->block;
+				newBlock.light = { 0 };
+				section->setBlock(local, newBlock);
+				lightEdits.push_back({ edit->pos, oldBlock, newBlock });
 			}
 		}
 	}
 
-	// Remesh every section a changed block can affect: its own section and its six face neighbors,
-	// since a face is culled against the block on the other side.
-	struct Comp_ivec3 {
-		size_t operator()(ivec3 vec) const {
-			return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1) ^ (std::hash<int>()(vec.z) << 2);
-		}
-		bool operator()(ivec3 a, ivec3 b) const { return a.x == b.x && a.y == b.y && a.z == b.z; }
-	};
-	std::unordered_set<ivec3, Comp_ivec3, Comp_ivec3> sectionsToUpdate;
-	for (const BlockEdit& edit : edits) {
-		sectionsToUpdate.insert(Converter::globalToSection(edit.pos));
-		for (Dir3D::Dir dir : Dir3D::all())
-			sectionsToUpdate.insert(Converter::globalToSection(edit.pos + Dir3D::to_ivec3(dir)));
+	timeSinceStart();
+	std::cout << "Relighting " << lightEdits.size() << " edits" << std::endl;
+
+	// Fix up the light around the edits and add the sections it changed to the remesh set below.
+	// m_lightMutex keeps this from racing the other light writers.
+	std::vector<ivec3> lightDirtySections;
+	if (!lightEdits.empty()) {
+		std::vector<std::pair<ivec2, Chunk*>> lightChunksRaw;
+		lightChunksRaw.reserve(lightChunks.size());
+		for (auto& [pos, chunk] : lightChunks)
+			lightChunksRaw.emplace_back(pos, chunk.get());
+		std::lock_guard<std::mutex> lightLock(m_lightMutex);
+		LightEngine::updateEditLight(lightChunksRaw, lightEdits, lightDirtySections);
 	}
+
+	timeSinceStart();
+	std::cout << "Determining the sections of " << edits.size() << " edits" << std::endl;
+
+	// Remesh every section a change can affect: each edited section and its six face neighbors (a face
+	// is hidden by the block on the other side). Expanding whole sections instead of each block may
+	// rebuild a neighbor that didn't really change, but that's just a wasted rebuild, never a stale
+	// mesh, and far cheaper than doing this per block.
+
+	std::unordered_set<ivec3, Comp_ivec3, Comp_ivec3> sectionsToUpdate;
+	for (const ivec3& section : editedSections) {
+		sectionsToUpdate.insert(section);
+		for (Dir3D::Dir dir : Dir3D::all())
+			sectionsToUpdate.insert(section + Dir3D::to_ivec3(dir));
+	}
+
+	timeSinceStart();
+	std::cout << "Remeshing " << sectionsToUpdate.size() << " sections" << std::endl;
+
+	// Light can change well past the edited block (removing a torch darkens its whole radius), so add
+	// every section the relight changed.
+	for (const ivec3& section : lightDirtySections)
+		sectionsToUpdate.insert(section);
 	remeshSections({ sectionsToUpdate.begin(), sectionsToUpdate.end() });
+	
+	timeSinceStart();
 }
 
 bool ChunkMap::submitBulkEdit(EditGenerator generator) {
@@ -163,7 +237,7 @@ Block ChunkMap::getBlock(ivec3 globalPos) const {
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
 	auto chunkIt = findLoadedChunk(globalPos);
 	if (chunkIt != m_chunks.end()) {
-		ivec2 innerChunkPos = Converter::globalToInnerChunk(globalPos);
+		ivec2 innerChunkPos = Converter::globalToInnerChunk2D(globalPos);
 		return chunkIt->second->getBlock({ innerChunkPos.x, globalPos.y, innerChunkPos.y });
 	}
 	return { BlockID::AIR };
@@ -310,7 +384,7 @@ void ChunkMap::onChangeChunkState(Chunk::State previous, Chunk::State next) {
 		++m_countChunks[next];
 }
 
-std::unordered_map<ivec2, std::shared_ptr<Chunk>, ChunkMap::Comp_ivec2, ChunkMap::Comp_ivec2>::const_iterator
+std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2>::const_iterator
 ChunkMap::findLoadedChunk(ivec3 globalPos) const {
 	auto chunkIt = m_chunks.find(Converter::globalToChunk(globalPos));
 	if (chunkIt != m_chunks.end() && chunkIt->second->getState() >= Chunk::TO_LOAD_MESH)
@@ -377,12 +451,33 @@ void ChunkMap::doLoadMesh(ivec2 pos) {
 			return; // gone or already meshing
 		chunk = it->second;
 	}
+
+	// Before meshing, settle light across this chunk's borders: push its light into the neighbors and
+	// pull theirs in. The neighbors are at least TO_LOAD_MESH, so their light is ready to read. The
+	// lock stops two spills racing on the same light bytes.
+	std::array<Chunk*, Dir2D::SIZE> mutableNeighbors{};
+	for (Dir2D::Dir dir : Dir2D::all())
+		mutableNeighbors[dir] = keepAlive[dir].get();
+	std::vector<ivec3> lightDirtySections;
+	{
+		std::lock_guard<std::mutex> lightLock(m_lightMutex);
+		LightEngine::spillBorderLight(*chunk, mutableNeighbors, lightDirtySections);
+	}
+
 	chunk->loadMesh(neighbors); // builds from the snapshot; no map access
 	chunk->setState(Chunk::TO_RENDER);
 	// Publishing to the main thread, which uploads the VAOs in update().
-	std::lock_guard<std::mutex> lock(m_chunksMutex);
-	m_chunksToUploadMesh.push(pos);
-	m_chunksPendingUpload.insert(pos);
+	{
+		std::lock_guard<std::mutex> lock(m_chunksMutex);
+		m_chunksToUploadMesh.push(pos);
+		m_chunksPendingUpload.insert(pos);
+	}
+	// Rebuild the neighbor sections the spill brightened (this chunk's own are covered by the mesh we
+	// just published). Runs after the publish so it can't race this chunk's upload. A neighbor not yet
+	// meshed picks up the spilled light on its own when it meshes. The one gap: a neighbor meshing
+	// right now may miss the spill and show a faint seam until its next rebuild. This is rare, and any
+	// later edit fixes it.
+	remeshSections(lightDirtySections);
 }
 
 void ChunkMap::doBulkEdit(EditGenerator generator) {

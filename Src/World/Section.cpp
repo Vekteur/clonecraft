@@ -77,16 +77,20 @@ void Section::addVisibleFacesOnLastAxis(
 
 	const ivec3 dirVec = Dir3D::to_ivec3(dir);
 	const std::array<GLfloat, 4> noAO{ 1.f, 1.f, 1.f, 1.f };
+	// Full sky, no block light at all four corners: plain daylight.
+	const std::array<vec2, 4> fullLight{ { { 1.f, 0.f }, { 1.f, 0.f }, { 1.f, 0.f }, { 1.f, 0.f } } };
 	Block lastBlock{ BlockID::AIR }; // Last block we have iterated on
 	std::array<GLfloat, 4> lastAO{ noAO }; // Ambient occlusion of the face we are currently extending
+	std::array<vec2, 4> lastLight{ fullLight }; // Per-corner light of the face we are currently extending
 	int firstBlockIndex = -1; // Index on the last axis of the first block of the face we are creating
 
 	for (localPos[indexOfLastAxis] = 0; localPos[indexOfLastAxis] < sizeOfLastAxis; ++localPos[indexOfLastAxis]) {
 		Block currBlock{ BlockID::AIR }; // Current block of which we can see the face
 		std::array<GLfloat, 4> currAO{ noAO };
+		std::array<vec2, 4> currLight{ fullLight };
 
 		const Block block = this->getBlock(localPos);
-		// We can pass the air block for efficiency because its face will be invisible anyway
+		// We can skip the air block for efficiency because its face will be invisible anyway
 		if (block.id != +BlockID::AIR) {
 			// The neighboring position in the current direction
 			const ivec3 localNeighPos{ localPos + dirVec };
@@ -100,28 +104,31 @@ void Section::addVisibleFacesOnLastAxis(
 				neighBlock = neighboringSection->getBlock(Converter::globalToInnerSection(localNeighPos));
 			}
 			// The face is visible only if the block in the direction of the face is transparent
-			// and if this block is different from the current block
+			// and different from the current block
 			if (!ResManager::blockDatas().get(neighBlock.id).isOpaque() && neighBlock.id != block.id) {
 				currBlock = block;
-				currAO = computeFaceAO(neighbors, dir, localPos);
+				// Ambient occlusion and smooth lighting share the same corner neighborhood, so they
+				// are computed together in one pass.
+				std::tie(currAO, currLight) = computeFaceLighting(neighbors, dir, localPos);
 			}
 		}
-		// Add the last face because we can't extend it if the current block is different. A merged
-		// face carries a single ambient occlusion value per corner, so a change in AO also ends it.
-		if (currBlock.id != lastBlock.id || currAO != lastAO) {
-			addFace(defaultVertices, waterVertices, dir, localPos, firstBlockIndex, lastBlock, indexOfLastAxis, lastAO);
+		// End the current face when the next block differs. A merged face has one AO and one light
+		// value per corner, so a change in either ends it too.
+		if (currBlock.id != lastBlock.id || currAO != lastAO || currLight != lastLight) {
+			addFace(defaultVertices, waterVertices, dir, localPos, firstBlockIndex, lastBlock, indexOfLastAxis, lastAO, lastLight);
 			firstBlockIndex = localPos[indexOfLastAxis];
 			lastBlock = currBlock;
 			lastAO = currAO;
+			lastLight = currLight;
 		}
 	}
 	// Add the last face if at the end of last axis
-	addFace(defaultVertices, waterVertices, dir, localPos, firstBlockIndex, lastBlock, indexOfLastAxis, lastAO);
+	addFace(defaultVertices, waterVertices, dir, localPos, firstBlockIndex, lastBlock, indexOfLastAxis, lastAO, lastLight);
 }
 
 void Section::addFace(std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
 	Dir3D::Dir dir, ivec3 localPos, int firstBlockIndex, Block block, int indexOfLastAxis,
-	const std::array<GLfloat, 4>& ao) const {
+	const std::array<GLfloat, 4>& ao, const std::array<vec2, 4>& light) const {
 
 	BlockData::Category category = ResManager::blockDatas().get(block.id).getCategory();
 	if (category != BlockData::AIR) {
@@ -131,7 +138,7 @@ void Section::addFace(std::vector<DefaultMesh::Vertex>& defaultVertices, std::ve
 		ivec3 firstBlockGlobalPos{ Converter::sectionToGlobal(m_position) + localPos + negativeLastAxis * length };
 
 		if (category == BlockData::DEFAULT || category == BlockData::SEMI_TRANSPARENT) {
-			addDefaultFace(defaultVertices, dir, block, indexOfLastAxis, length, firstBlockGlobalPos, ao);
+			addDefaultFace(defaultVertices, dir, block, indexOfLastAxis, length, firstBlockGlobalPos, ao, light);
 		}
 		else if (category == BlockData::WATER) {
 			addWaterFace(waterVertices, dir, indexOfLastAxis, length, firstBlockGlobalPos);
@@ -140,7 +147,7 @@ void Section::addFace(std::vector<DefaultMesh::Vertex>& defaultVertices, std::ve
 }
 
 void Section::addDefaultFace(std::vector<DefaultMesh::Vertex>& defaultVertices, Dir3D::Dir dir, Block block,
-	int indexOfLastAxis, int length, ivec3 firstBlockGlobalPos, const std::array<GLfloat, 4>& ao) const {
+	int indexOfLastAxis, int length, ivec3 firstBlockGlobalPos, const std::array<GLfloat, 4>& ao, const std::array<vec2, 4>& light) const {
 
 	GLuint texID = ResManager::blockDatas().get(block.id).getTexture(dir);
 	for (int vtx = 0; vtx < 4; ++vtx) {
@@ -153,7 +160,7 @@ void Section::addDefaultFace(std::vector<DefaultMesh::Vertex>& defaultVertices, 
 		} else {
 			tex.x *= length;
 		}
-		defaultVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, Dir3D::to_ivec3(dir), texID, ao[vtx] });
+		defaultVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), tex, Dir3D::to_ivec3(dir), texID, ao[vtx], light[vtx] });
 	}
 }
 
@@ -171,54 +178,76 @@ void Section::addWaterFace(std::vector<WaterMesh::Vertex>& waterVertices, Dir3D:
 	addWaterFaceInDir(Dir3D::opp(dir), firstBlockGlobalPos + Dir3D::to_ivec3(dir));
 }
 
-std::array<GLfloat, 4> Section::computeFaceAO(const NeighborChunks& neighbors, Dir3D::Dir dir, ivec3 localPos) const {
+std::pair<std::array<GLfloat, 4>, std::array<vec2, 4>> Section::computeFaceLighting(
+		const NeighborChunks& neighbors, Dir3D::Dir dir, ivec3 localPos) const {
 	const ivec3 n = Dir3D::to_ivec3(dir);
 	// The axis the face points along, and the two axes spanning the face plane.
 	const int normalAxis = (n.x != 0) ? 0 : (n.y != 0 ? 1 : 2);
 	const int u = (normalAxis + 1) % 3;
 	const int v = (normalAxis + 2) % 3;
-	const ivec3 base = localPos + n; // One block out, into the layer that can occlude the face.
+	const ivec3 base = localPos + n; // One block out, into the open layer the face looks into.
 
 	// Brightness per occlusion level: 0 = corner fully tucked between two blocks, 3 = open.
 	static const std::array<GLfloat, 4> levelBrightness{ 0.5f, 0.7f, 0.85f, 1.f };
 
-	auto isSolid = [&](ivec3 pos) {
-		return ResManager::blockDatas().get(getBlockForAO(neighbors, pos).id).isOpaque();
+	auto sample = [&](ivec3 pos) -> std::pair<vec2, bool> {
+		const Block b = getNeigboringBlock(neighbors, pos);
+		const bool opaque = ResManager::blockDatas().get(b.id).isOpaque();
+		return { vec2{ b.light.sky() / 15.f, b.light.block() / 15.f }, opaque };
 	};
 
+	// The cell in front of the face is always open, so it lights every corner.
+	const vec2 baseLight = sample(base).first;
+
 	std::array<GLfloat, 4> ao;
+	std::array<vec2, 4> light;
 	for (int vtx = 0; vtx < 4; ++vtx) {
 		const vec3 corner = CubeData::dirToFace[dir][vtx];
-		ivec3 du{ 0, 0, 0 }; du[u] = (corner[u] > 0.5f) ? 1 : -1;
-		ivec3 dv{ 0, 0, 0 }; dv[v] = (corner[v] > 0.5f) ? 1 : -1;
+		ivec3 du{ 0, 0, 0 }; du[u] = (corner[u] == 1) ? 1 : -1;
+		ivec3 dv{ 0, 0, 0 }; dv[v] = (corner[v] == 1) ? 1 : -1;
 
-		const int side1 = isSolid(base + du) ? 1 : 0;
-		const int side2 = isSolid(base + dv) ? 1 : 0;
-		const int corn = isSolid(base + du + dv) ? 1 : 0;
-		// Two side blocks fully close the corner, hiding whatever is diagonally behind it.
-		const int level = (side1 && side2) ? 0 : (3 - (side1 + side2 + corn));
+		const auto [side1Light, side1Opaque] = sample(base + du);
+		const auto [side2Light, side2Opaque] = sample(base + dv);
+		const auto [cornLight, cornOpaque] = sample(base + du + dv);
+
+		// Ambient occlusion: two side blocks fully close the corner, hiding whatever is diagonally
+		// behind it; otherwise darken by how many of the three surrounding cells are solid.
+		const int level = (side1Opaque && side2Opaque)
+				? 0 : (3 - (side1Opaque + side2Opaque + cornOpaque));
 		ao[vtx] = levelBrightness[level];
+
+		// Smooth lighting: average the open cells around the corner. The diagonal counts only if a
+		// side is open, since light can't slip through a solid corner.
+		vec2 sum = baseLight;
+		int count = 1;
+		if (!side1Opaque) { sum += side1Light; ++count; }
+		if (!side2Opaque) { sum += side2Light; ++count; }
+		if (!(side1Opaque && side2Opaque) && !cornOpaque) { sum += cornLight; ++count; }
+		light[vtx] = sum / float(count);
 	}
-	return ao;
+	return { ao, light };
 }
 
-Block Section::getBlockForAO(const NeighborChunks& neighbors, ivec3 localPos) const {
+Block Section::getNeigboringBlock(const NeighborChunks& neighbors, ivec3 localPos) const {
 	const Block air{ BlockID::AIR };
 	if (isInSection(localPos))
 		return getBlock(localPos);
 
+	auto axisCrossing = [](int coord) {
+		return coord < 0 ? -1 : (coord >= Const::SECTION_SIDE ? 1 : 0);
+	};
+
 	const Chunk* chunk = p_chunk;
+	const int dx = axisCrossing(localPos.x);
+	const int dz = axisCrossing(localPos.z);
+
 	// Horizontal crossing into a cardinal neighbor chunk. A diagonal crossing (both axes out at
 	// once, only at a chunk's vertical corner edges) would need a neighbor we do not snapshot, so
 	// it counts as air; the resulting AO error is confined to those rare corner columns.
-	if (localPos.x < 0 || localPos.x >= Const::SECTION_SIDE ||
-		localPos.z < 0 || localPos.z >= Const::SECTION_SIDE) {
-		const int dx = localPos.x < 0 ? -1 : (localPos.x >= Const::SECTION_SIDE ? 1 : 0);
-		const int dz = localPos.z < 0 ? -1 : (localPos.z >= Const::SECTION_SIDE ? 1 : 0);
+	if (dx != 0 || dz != 0) {
 		if (dx != 0 && dz != 0)
 			return air;
-		const Dir2D::Dir dir = dx == 1 ? Dir2D::FRONT : dx == -1 ? Dir2D::BACK
-							 : dz == 1 ? Dir2D::RIGHT : Dir2D::LEFT;
+		const Dir2D::Dir dir = Dir2D::from_ivec2({ dx, dz });
 		chunk = neighbors[dir];
 		if (chunk == nullptr)
 			return air;
@@ -289,6 +318,10 @@ void Section::setBlock(ivec3 pos, Block block) {
 }
 
 Block Section::getBlock(ivec3 pos) const {
+	return m_blocks->at(pos);
+}
+
+Block& Section::getBlock(ivec3 pos) {
 	return m_blocks->at(pos);
 }
 

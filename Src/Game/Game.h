@@ -22,6 +22,7 @@
 #include "Renderer/PostProcessingRenderer.h"
 #include "Commands/Commands.h"
 #include "Game/Player.h"
+#include "Game/DayCycle.h"
 
 class Window;
 
@@ -44,6 +45,7 @@ public:
 	ChunkMap& getChunkMap();
 	const ChunkMap& getChunkMap() const;
 	Window& getWindow();
+	float getTimeOfDay() const;
 
 private:
 	void clearRenderTarget();
@@ -57,6 +59,7 @@ private:
 	ChunkMap m_chunkMap;
 
 	float moveOffset = 0;
+	DayCycle m_dayCycle;
 
 	DefaultRenderer m_defaultRenderer;
 	WaterRenderer m_waterRenderer;

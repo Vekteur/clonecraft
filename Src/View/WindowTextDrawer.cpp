@@ -17,12 +17,15 @@ void WindowTextDrawer::drawAll(int fps, Game& game) {
 	drawFPS(fps);
 	vec3 pos = game.getPlayer().getPosition();
 	ivec3 blockPos = Converter::globalPosToBlock(pos);
+	Block block = game.getChunkMap().getBlock(blockPos);
 	drawGlobalPosition(pos);
 	drawLocalPosition(Converter::globalToInnerSection(pos));
 	drawSectionPosition(Converter::globalToSection(blockPos));
 	drawTarget(game.getPlayer().getTarget());
 	drawDirection(game.getPlayer().getCamera().getYaw(), game.getPlayer().getCamera().getPitch());
 	drawBiome(g_worldGenerator.biomeMap().getBiomeName(Converter::to2D(blockPos)));
+	drawLightLevel(block.light.sky(), block.light.block());
+	drawTimeOfDay(game.getTimeOfDay());
 	drawRenderedChunks(game.getChunkMap().getRenderedChunks());
 	drawBlockChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_LOAD_MESH));
 	drawFaceChunks(game.getChunkMap().chunksAtLeastInState(Chunk::TO_RENDER));
@@ -80,6 +83,18 @@ void WindowTextDrawer::drawDirection(float pitch, float yaw) {
 
 void WindowTextDrawer::drawBiome(std::string biomeName) {
 	draw("Biome: " + biomeName);
+}
+
+void WindowTextDrawer::drawLightLevel(int skyLight, int blockLight) {
+	std::ostringstream oss;
+	oss << "Sky / Block light: " << std::setw(3) << skyLight << ' ' << std::setw(3) << blockLight;
+	draw(oss.str());
+}
+
+void WindowTextDrawer::drawTimeOfDay(float timeOfDay) {
+	std::ostringstream oss;
+	oss << "Time of Day: " << std::setprecision(3) << std::fixed << std::setw(6) << timeOfDay;
+	draw(oss.str());
 }
 
 void WindowTextDrawer::drawRenderedChunks(int renderedChunks) {

@@ -18,6 +18,7 @@ BlockData::BlockData(const json& j, const std::vector<TextureArray*>& texArrays)
 	m_opaque = j.value("opaque", false);
 	m_obstacle = j.value("obstacle", false);
 	m_resistance = j.value("resistance", 0);
+	m_emission = j.value("emission", 0);
 	std::string category = j.value("category", "");
 	if (category == "default")
 		m_category = DEFAULT;
@@ -75,6 +76,10 @@ bool BlockData::isObstacle() const {
 
 int BlockData::getResistance() const {
 	return m_resistance;
+}
+
+int BlockData::getEmission() const {
+	return m_emission;
 }
 
 BlockData::Category BlockData::getCategory() const {

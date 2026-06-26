@@ -29,6 +29,8 @@ private:
 	void drawTarget(std::optional<ivec3> pos);
 	void drawDirection(float pitch, float yaw);
 	void drawBiome(std::string biomeName);
+	void drawLightLevel(int skyLight, int blockLight);
+	void drawTimeOfDay(float timeOfDay);
 	void drawRenderedChunks(int renderedChunks);
 	void drawBlockChunks(int blockChunks);
 	void drawFaceChunks(int faceChunks);

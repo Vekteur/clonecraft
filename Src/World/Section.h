@@ -7,6 +7,7 @@
 #include <vector>
 #include <optional>
 #include <mutex>
+#include <utility>
 
 #include "Util/Array3D.h"
 #include "Maths/Dir2D.h"
@@ -39,6 +40,7 @@ public:
 	ivec3 getPosition() const;
 	void setBlock(ivec3 pos, Block block);
 	Block getBlock(ivec3 pos) const;
+	Block& getBlock(ivec3 pos);
 
 private:
 	using BlockArray = Array3D<Block, Const::SECTION_SIDE, Const::SECTION_HEIGHT, Const::SECTION_SIDE>;
@@ -68,14 +70,17 @@ private:
 	) const;
 	void addFace(std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
 		Dir3D::Dir dir, ivec3 localPos, int length, Block block, int indexOfLastAxis,
-		const std::array<GLfloat, 4>& ao) const;
+		const std::array<GLfloat, 4>& ao, const std::array<vec2, 4>& light) const;
 	void addDefaultFace(std::vector<DefaultMesh::Vertex>& defaultVertices, Dir3D::Dir dir, Block block,
-		int indexOfLastAxis, int length, ivec3 firstBlockGlobalPos, const std::array<GLfloat, 4>& ao) const;
-	// Ambient occlusion: brightness (0..1) for each of a face's 4 corners, darkened by the solid
-	// blocks diagonally around the corner. Computed per unit-block face during meshing.
-	std::array<GLfloat, 4> computeFaceAO(const NeighborChunks& neighbors, Dir3D::Dir dir, ivec3 localPos) const;
+		int indexOfLastAxis, int length, ivec3 firstBlockGlobalPos, const std::array<GLfloat, 4>& ao,
+		const std::array<vec2, 4>& light) const;
+	// Per-corner lighting for a unit-block face, computed during meshing over a shared neighborhood:
+	//  - ambient occlusion: brightness (0..1), darkened by the solid blocks diagonally around the corner;
+	//  - smooth lighting: (sky, block) light, each averaging the open cells around the corner.
+	std::pair<std::array<GLfloat, 4>, std::array<vec2, 4>> computeFaceLighting(
+		const NeighborChunks& neighbors, Dir3D::Dir dir, ivec3 localPos) const;
 	// Block at a position in this section's local coordinates, resolving across neighboring sections
-	Block getBlockForAO(const NeighborChunks& neighbors, ivec3 localPos) const;
+	Block getNeigboringBlock(const NeighborChunks& neighbors, ivec3 localPos) const;
 	void addWaterFace(std::vector<WaterMesh::Vertex>& waterVertices, Dir3D::Dir dir,
 		int indexOfLastAxis, int length, ivec3 firstBlockGlobalPos) const;
 };

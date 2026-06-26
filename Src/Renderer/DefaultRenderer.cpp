@@ -21,8 +21,10 @@ std::vector<fs::path> getPaths() {
 
 DefaultRenderer::DefaultRenderer() : texArray{ getPaths(), ivec2{ 16, 16 }, GL_RGBA } {
 	m_shader.loadFromFile("Data/Shaders/cube.vs", "Data/Shaders/cube.frag");
-	
+
 	getShader().use().set("distance", ChunkMap::SIDE);
+	// Start at full daylight until update() takes over and runs the day/night cycle.
+	getShader().use().set("dayFactor", 1.0f);
 }
 
 void DefaultRenderer::render(const DefaultMesh& mesh) const {

@@ -29,3 +29,19 @@ std::ostream& operator <<(std::ostream& out, const mat4& vec);
 std::ostream& operator <<(std::ostream& out, const ivec2& vec);
 std::ostream& operator <<(std::ostream& out, const ivec3& vec);
 std::ostream& operator <<(std::ostream& out, const ivec4& vec);
+
+struct Comp_ivec2 {
+    size_t operator()(const ivec2& vec) const {
+        return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1);
+    }
+    bool operator()(const ivec2& a, const ivec2& b) const {
+        return a.x == b.x && a.y == b.y;
+    }
+};
+
+struct Comp_ivec3 {
+    size_t operator()(ivec3 vec) const {
+        return std::hash<int>()(vec.x) ^ (std::hash<int>()(vec.y) << 1) ^ (std::hash<int>()(vec.z) << 2);
+    }
+    bool operator()(ivec3 a, ivec3 b) const { return a.x == b.x && a.y == b.y && a.z == b.z; }
+};

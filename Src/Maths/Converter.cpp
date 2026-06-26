@@ -10,11 +10,19 @@ ivec2 Converter::globalToChunk(ivec3 pos) {
 	return { floorDiv(pos.x, Const::SECTION_SIDE), floorDiv(pos.z, Const::SECTION_SIDE) };
 }
 
-ivec2 Converter::globalToInnerChunk(ivec3 pos) {
+ivec3 Converter::globalToInnerChunk(ivec3 pos) {
+	return { posMod(pos.x, Const::SECTION_SIDE), pos.y, posMod(pos.z, Const::SECTION_SIDE) };
+}
+
+vec3 Converter::globalToInnerChunk(vec3 pos) {
+	return { posMod(pos.x, float(Const::SECTION_SIDE)), pos.y, posMod(pos.z, float(Const::SECTION_SIDE)) };
+}
+
+ivec2 Converter::globalToInnerChunk2D(ivec3 pos) {
 	return { posMod(pos.x, Const::SECTION_SIDE), posMod(pos.z, Const::SECTION_SIDE) };
 }
 
-vec2 Converter::globalToInnerChunk(vec3 pos) {
+vec2 Converter::globalToInnerChunk2D(vec3 pos) {
 	return { posMod(pos.x, float(Const::SECTION_SIDE)), posMod(pos.z, float(Const::SECTION_SIDE)) };
 }
 
@@ -44,20 +52,4 @@ ivec2 Converter::to2D(ivec3 pos) {
 
 ivec3 Converter::to3D(ivec2 pos) {
 	return { pos.x, 0, pos.y };
-}
-
-int floorDiv(int base, int divider) {
-	return (base >= 0 ? base : (base - divider + 1)) / divider;
-}
-
-int floorDiv(float base, float divider) {
-	return static_cast<int>(floor(base / divider));
-}
-
-int posMod(int base, int modulo) {
-	return ((base % modulo) + modulo) % modulo;
-}
-
-float posMod(float base, float modulo) {
-	return fmod(fmod(base, modulo) + modulo, modulo);
 }

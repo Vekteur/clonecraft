@@ -1,0 +1,9 @@
+{
+	"opaque" : true,
+	"obstacle" : true,
+	"emission" : 15,
+	"category" : "default",
+	"textures" : {
+		"all" : "light"
+	}
+}

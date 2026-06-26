@@ -22,6 +22,7 @@ public:
 	bool isOpaque() const;
 	bool isObstacle() const;
 	int getResistance() const;
+	int getEmission() const;
 	Category getCategory() const;
 	int getTexture(Dir3D::Dir dir) const;
 
@@ -29,6 +30,7 @@ private:
 	bool m_opaque = false;
 	bool m_obstacle = false;
 	int m_resistance = 0;
+	int m_emission = 0;
 	Category m_category = DEFAULT;
 	std::array<int, Dir3D::SIZE> m_textures;
 };

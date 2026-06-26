@@ -29,6 +29,9 @@ public:
 
 	void setBlock(ivec3 pos, Block block);
 	Block getBlock(ivec3 pos) const;
+	// Sets just the light byte at pos, but only if its section already exists; returns whether it did.
+	// Used by the cross-chunk light spill, which must never create an empty air section just to hold
+	// light.
 	void loadBlocks();
 	void loadMesh(const NeighborChunks& neighbors);
 	void uploadMesh();
@@ -49,6 +52,8 @@ public:
 	bool hasSection(int sectionY) const;
 	Section& getSection(int sectionY);             // section must exist
 	const Section& getSection(int sectionY) const; // section must exist
+	std::map<int, Section>& getSections();  // returns the map of sections, for iteration
+	Section* tryGetSection(int sectionY); // nullptr if it does not exist
 	const Section* tryGetSection(int sectionY) const; // nullptr if it does not exist
 	Section& getOrCreateSection(int sectionY);
 	int minSectionY() const; // 0 if the chunk has no sections

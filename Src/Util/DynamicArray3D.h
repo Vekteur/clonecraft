@@ -21,6 +21,12 @@ public:
 		return m_array[(index.x * m_size.y + index.y) * m_size.z + index.z];
 	}
 
+	bool isValidIndex(ivec3 index) const {
+		return index.x >= 0 && index.x < m_size.x &&
+			index.y >= 0 && index.y < m_size.y &&
+			index.z >= 0 && index.z < m_size.z;
+	}
+
 	ivec3 size() const {
 		return m_size;
 	}

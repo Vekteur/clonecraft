@@ -15,6 +15,7 @@ namespace Dir3D {
 
 	std::array<Dir3D::Dir, SIZE> all();
 	ivec3 to_ivec3(Dir dir);
+	Dir from_ivec3(ivec3 v);
 	Dir prev(Dir dir);
 	Dir next(Dir dir);
 	Dir opp(Dir dir);

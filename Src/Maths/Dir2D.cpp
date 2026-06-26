@@ -14,6 +14,14 @@ namespace Dir2D {
 		return s_all_dirs[dir];
 	}
 
+	Dir from_ivec2(ivec2 v) {
+		if (v.x == 1) return FRONT;
+		if (v.x == -1) return BACK;
+		if (v.y == 1) return RIGHT;
+		if (v.y == -1) return LEFT;
+		throw std::invalid_argument("Invalid 2D direction vector");
+	}
+
 	Dir prev(Dir dir) {
 		return static_cast<Dir>((dir - 1 + SIZE) % SIZE);
 	}

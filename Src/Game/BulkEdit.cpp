@@ -39,10 +39,11 @@ std::vector<BlockEdit> smoothSphere(ivec3 center, int radius, Block block) {
 				double n = (perlin.getNoise({ p.x, p.y })
 				          + perlin.getNoise({ p.y, p.z })
 				          + perlin.getNoise({ p.z, p.x })) / 3.0;
+						  
 				float effRadius = float(radius) * (1.f + lobeAmplitude * float(n));
-
-				// Rim with ragged edge: blocks well inside are always affected, blocks straddling the
-				// boundary are affected with falling probability.
+				// We are inside the sphere if dist3 <= effRadius i.e. edge >= 0. 
+				// To have a ragged edge, we allow a 1-block margin where the probability of being inside the sphere 
+				// falls off linearly to zero.
 				float edge = effRadius - dist3;
 				if (edge >= 1.f || (edge > -1.f && dist(rng) < (edge + 1.f) * 0.5f))
 					edits.push_back({ center + ivec3{ x, y, z }, block });
