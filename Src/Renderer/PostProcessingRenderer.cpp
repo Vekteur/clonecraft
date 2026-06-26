@@ -28,10 +28,6 @@ PostProcessingRenderer::PostProcessingRenderer(ivec2 windowSize) {
 	onChangedSize(windowSize);
 }
 
-PostProcessingRenderer::~PostProcessingRenderer() {
-	m_mesh.unloadVAOs();
-}
-
 void PostProcessingRenderer::prepare(std::function<void()> renderFunc, std::function<void()> clearFunc) {
 	m_renderTexture.setActive(true);
 	clearFunc();

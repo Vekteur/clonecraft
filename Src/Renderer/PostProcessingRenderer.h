@@ -11,7 +11,6 @@
 class PostProcessingRenderer {
 public:
 	PostProcessingRenderer(ivec2 windowSize);
-	~PostProcessingRenderer();
 
 	void prepare(std::function<void()> renderFunc, std::function<void()> clearFunc);
 	void render();

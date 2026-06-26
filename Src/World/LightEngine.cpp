@@ -15,8 +15,8 @@
 #include <utility>
 
 namespace {
-	constexpr int SX = Const::SECTION_SIDE;    // x extent of a section/chunk
-	constexpr int SZ = Const::SECTION_SIDE;    // z extent
+	constexpr int SX = Const::SECTION_SIDE;   // x extent of a section/chunk
+	constexpr int SZ = Const::SECTION_SIDE;   // z extent
 	constexpr int SY = Const::SECTION_HEIGHT; // y extent of one section
 	constexpr unsigned char SKY_FULL = 15;
 

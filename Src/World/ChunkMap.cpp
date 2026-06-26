@@ -58,7 +58,7 @@ void ChunkMap::update() {
 		if (it != m_chunks.end() && it->second->getState() == Chunk::TO_RENDER &&
 				it->second->hasSection(sectionPos.y)) {
 			Section& section = it->second->getSection(sectionPos.y);
-			section.releaseMesh();
+			// uploadMesh() frees the previous mesh before the upload.
 			section.uploadMesh();
 		}
 	}

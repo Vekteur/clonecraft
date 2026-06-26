@@ -276,29 +276,34 @@ void Section::loadMesh(const NeighborChunks& neighbors) {
 	std::lock_guard<std::mutex> lock(m_meshMutex);
 	m_nextDefaultVertices = std::move(defaultVertices);
 	m_nextWaterVertices = std::move(waterVertices);
+	m_meshReady = true;
 }
 
 void Section::uploadMesh() {
 	// All OpenGL for the mesh happens here, on the main thread
 	std::lock_guard<std::mutex> lock(m_meshMutex);
+	if (!m_meshReady)
+		return;
 	nextDefaultMesh.loadBuffers(m_nextDefaultVertices, getIndices((int)m_nextDefaultVertices.size() / 4));
 	nextWaterMesh.loadBuffers(m_nextWaterVertices, getIndices((int)m_nextWaterVertices.size() / 4));
 	nextDefaultMesh.loadVAOs();
 	nextWaterMesh.loadVAOs();
 
+	// Assigning frees the previous mesh's GPU resources: clear() runs on the old value first.
 	activeDefaultMesh = std::move(nextDefaultMesh);
 	activeWaterMesh = std::move(nextWaterMesh);
 
 	// Free memory
 	m_nextDefaultVertices = {};
 	m_nextWaterVertices = {};
+	m_meshReady = false;
 
 	Debug::glCheckError();
 }
 
 void Section::releaseMesh() {
-	activeDefaultMesh.release();
-	activeWaterMesh.release();
+	activeDefaultMesh.clear();
+	activeWaterMesh.clear();
 }
 
 void Section::render(const DefaultRenderer &defaultRenderer) const {

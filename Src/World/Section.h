@@ -55,6 +55,10 @@ private:
 	// Built on a worker thread by loadMesh(); uploaded to the GPU on the main thread by uploadMesh().
 	std::vector<DefaultMesh::Vertex> m_nextDefaultVertices;
 	std::vector<WaterMesh::Vertex> m_nextWaterVertices;
+	// True while the vertices above hold a fresh build waiting to be uploaded. uploadMesh() consumes
+	// and clears the buffers, so without this a second upload with no rebuild in between would push an
+	// empty mesh and make the section disappear. Guarded by m_meshMutex.
+	bool m_meshReady = false;
 	// Serializes producers/consumer of the "next" vertex buffers above. A single block edit (main
 	// thread) and a bulk edit (worker) can remesh the same section at once, and the main thread
 	// uploads it; this guards those vectors from concurrent build/build and build/upload.

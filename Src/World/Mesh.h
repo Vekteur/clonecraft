@@ -27,12 +27,13 @@ public:
 	}
 
 	void clear() {
+		unloadVAOs();
 		if (indicesNb != 0 && loadedVBO) {
 			glDeleteBuffers(1, &VBO);
 			glDeleteBuffers(1, &EBO);
 		}
 		indicesNb = 0;
-		loadedVBO = loadedVAO = false;
+		loadedVBO = false;
 	}
 
 	Mesh() { }
@@ -51,15 +52,12 @@ public:
 		return *this;
 	}
 
+	// Kept public so a renderer can drop its VAO without destroying the buffers.
 	void unloadVAOs() {
-		if (indicesNb != 0) {
+		if (indicesNb != 0 && loadedVAO) {
 			glDeleteVertexArrays(1, &VAO);
 		}
-	}
-
-	void release() {
-		unloadVAOs();
-		clear();
+		loadedVAO = false;
 	}
 
 	void loadBuffers(const std::vector<V>& faces, const std::vector<GLuint>& indices) {
