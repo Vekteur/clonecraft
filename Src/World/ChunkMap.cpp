@@ -11,6 +11,7 @@
 #include "Maths/Converter.h"
 
 #include <vector>
+#include <array>
 #include <algorithm>
 #include <unordered_set>
 #include <thread>
@@ -20,12 +21,19 @@
 #define CC_VIEW_DISTANCE 32
 #endif
 const int ChunkMap::VIEW_DISTANCE{ CC_VIEW_DISTANCE };
-const int ChunkMap::LOAD_DISTANCE{ VIEW_DISTANCE + 1 };
 const int ChunkMap::SIDE{ (2 * VIEW_DISTANCE + 1) * Const::SECTION_SIDE };
 #ifndef CC_LOADING_WORKERS_COUNT
 #define CC_LOADING_WORKERS_COUNT 4
 #endif
 const int ChunkMap::LOADING_WORKERS_COUNT{ CC_LOADING_WORKERS_COUNT };
+
+namespace {
+	constexpr std::array<ivec2, 9> NEIGHBORHOOD_3X3 = { {
+		{ -1, -1 }, { 0, -1 }, { 1, -1 },
+		{ -1,  0 }, { 0,  0 }, { 1,  0 },
+		{ -1,  1 }, { 0,  1 }, { 1,  1 },
+	} };
+}
 
 ChunkMap::ChunkMap(ivec2 center) : m_center{ center } { }
 
@@ -122,8 +130,7 @@ void ChunkMap::applyEdits(const std::vector<BlockEdit>& edits) {
 		editsByChunk[Converter::globalToChunk(edit.pos)].push_back(&edit);
 
 	std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2> chunks;
-	// Chunks the light update may touch: each edited chunk plus its four neighbors. Light reaches at
-	// most 15 blocks, less than a chunk's width (32), so it can't spread any further.
+	// Chunks the light update may touch: each edited chunk plus its eight surrounding neighbors.
 	std::unordered_map<ivec2, std::shared_ptr<Chunk>, Comp_ivec2, Comp_ivec2> lightChunks;
 	{
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
@@ -136,9 +143,8 @@ void ChunkMap::applyEdits(const std::vector<BlockEdit>& edits) {
 			auto it = m_chunks.find(chunkPos);
 			if (it != m_chunks.end() && it->second->getState() >= Chunk::TO_LOAD_MESH)
 				chunks.emplace(chunkPos, it->second);
-			pin(chunkPos);
-			for (Dir2D::Dir dir : Dir2D::all())
-				pin(chunkPos + Dir2D::to_ivec2(dir));
+			for (ivec2 off : NEIGHBORHOOD_3X3)
+				pin(chunkPos + off);
 		}
 	}
 
@@ -394,15 +400,17 @@ ChunkMap::findLoadedChunk(ivec3 globalPos) const {
 }
 
 bool ChunkMap::isInLoadDistance(ivec2 pos) const {
-	return math::euclidianPow2(pos, m_center) <= LOAD_DISTANCE * LOAD_DISTANCE;
+	// Load a chunk iff some chunk in its 3x3 neighborhood is within view.
+	ivec2 d = glm::max(ivec2{ 0, 0 }, glm::abs(pos - m_center) - ivec2{ 1, 1 });
+	return d.x * d.x + d.y * d.y <= VIEW_DISTANCE * VIEW_DISTANCE;
 }
 
 void ChunkMap::doSelectChunk(ivec2 pos) {
-	// Queue blocks for this chunk and its neighbors (a chunk's mesh needs its neighbors' blocks).
+	// A chunk's mesh needs every one of its eight neighbors' blocks (diagonals included, for corner
+	// lighting), so queue blocks for the whole 3x3 around each selected chunk.
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
-	enqueueBlocksIfNeeded(pos);
-	for (Dir2D::Dir dir : Dir2D::all())
-		enqueueBlocksIfNeeded(pos + Dir2D::to_ivec2(dir));
+	for (ivec2 off : NEIGHBORHOOD_3X3)
+		enqueueBlocksIfNeeded(pos + off);
 }
 
 void ChunkMap::doLoadBlocks(ivec2 pos) {
@@ -422,29 +430,29 @@ void ChunkMap::doLoadBlocks(ivec2 pos) {
 	// Generating only mutates this chunk, so it runs without the lock. loadBlocks() ends at
 	// TO_LOAD_MESH.
 	chunk->loadBlocks();
-	// This chunk's blocks just appeared, which may complete the mesh prerequisites of itself and
-	// of each neighbor it borders, so re-check them all.
+	// This chunk's blocks just appeared, which may complete the mesh prerequisites of itself and of
+	// every chunk it borders, diagonals included, so re-check the whole 3x3.
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
-	enqueueMeshIfReady(pos);
-	for (Dir2D::Dir dir : Dir2D::all())
-		enqueueMeshIfReady(pos + Dir2D::to_ivec2(dir));
+	for (ivec2 off : NEIGHBORHOOD_3X3)
+		enqueueMeshIfReady(pos + off);
 }
 
 void ChunkMap::doLoadMesh(ivec2 pos) {
 	std::shared_ptr<Chunk> chunk;
-	std::array<std::shared_ptr<Chunk>, Dir2D::SIZE> keepAlive; // keep neighbors alive during the build
+	std::array<std::shared_ptr<Chunk>, 9> keepAlive; // keep the 3x3 neighborhood alive during the build
 	NeighborChunks neighbors{};
 	{
 		std::lock_guard<std::mutex> lock(m_chunksMutex);
 		auto it = m_chunks.find(pos);
 		if (it == m_chunks.end())
 			return;
-		// Snapshot the neighboring chunks so the build below never reads the map.
-		for (Dir2D::Dir dir : Dir2D::all()) {
-			auto neighborIt = m_chunks.find(pos + Dir2D::to_ivec2(dir));
+		// Snapshot the 3x3 chunk neighborhood (center included) so the build below never reads the map.
+		// The diagonals feed corner lighting.
+		for (ivec2 off : NEIGHBORHOOD_3X3) {
+			auto neighborIt = m_chunks.find(pos + off);
 			if (neighborIt != m_chunks.end()) {
-				keepAlive[dir] = neighborIt->second;
-				neighbors[dir] = neighborIt->second.get();
+				keepAlive[NeighborChunks::index(off.x, off.y)] = neighborIt->second;
+				neighbors.at(off.x, off.y) = neighborIt->second.get();
 			}
 		}
 		if (!it->second->casState(Chunk::TO_LOAD_MESH, Chunk::LOADING_MESH))
@@ -456,8 +464,10 @@ void ChunkMap::doLoadMesh(ivec2 pos) {
 	// pull theirs in. The neighbors are at least TO_LOAD_MESH, so their light is ready to read. The
 	// lock stops two spills racing on the same light bytes.
 	std::array<Chunk*, Dir2D::SIZE> mutableNeighbors{};
-	for (Dir2D::Dir dir : Dir2D::all())
-		mutableNeighbors[dir] = keepAlive[dir].get();
+	for (Dir2D::Dir dir : Dir2D::all()) {
+		const ivec2 v = Dir2D::to_ivec2(dir);
+		mutableNeighbors[dir] = keepAlive[NeighborChunks::index(v.x, v.y)].get();
+	}
 	std::vector<ivec3> lightDirtySections;
 	{
 		std::lock_guard<std::mutex> lightLock(m_lightMutex);
@@ -493,7 +503,7 @@ void ChunkMap::remeshSections(const std::vector<ivec3>& sections) {
 	struct MeshJob {
 		ivec3 pos;
 		std::shared_ptr<Chunk> chunk;
-		std::array<std::shared_ptr<Chunk>, Dir2D::SIZE> keepAlive;
+		std::array<std::shared_ptr<Chunk>, 9> keepAlive; // the 3x3 neighborhood, center included
 		NeighborChunks neighbors{};
 	};
 
@@ -513,11 +523,12 @@ void ChunkMap::remeshSections(const std::vector<ivec3>& sections) {
 			MeshJob job;
 			job.pos = sectionPos;
 			job.chunk = chunkIt->second;
-			for (Dir2D::Dir dir : Dir2D::all()) {
-				auto it = m_chunks.find(pos2D + Dir2D::to_ivec2(dir));
+			// Snapshot the 3x3 neighborhood (center included); the diagonals feed corner lighting.
+			for (ivec2 off : NEIGHBORHOOD_3X3) {
+				auto it = m_chunks.find(pos2D + off);
 				if (it != m_chunks.end()) {
-					job.keepAlive[dir] = it->second;
-					job.neighbors[dir] = it->second.get();
+					job.keepAlive[NeighborChunks::index(off.x, off.y)] = it->second;
+					job.neighbors.at(off.x, off.y) = it->second.get();
 				}
 			}
 			jobs.push_back(std::move(job));
@@ -539,10 +550,10 @@ void ChunkMap::remeshSections(const std::vector<ivec3>& sections) {
 }
 
 bool ChunkMap::canChunkBeEdited(ivec2 pos) const {
-	for (Dir2D::Dir dir : Dir2D::all()) {
-		if (m_chunks.find(pos + Dir2D::to_ivec2(dir)) == m_chunks.end())
+	// A remesh reads the full 3x3 neighborhood (diagonals feed corner lighting), so all must exist.
+	for (ivec2 off : NEIGHBORHOOD_3X3)
+		if (m_chunks.find(pos + off) == m_chunks.end())
 			return false;
-	}
 	return true;
 }
 
@@ -557,8 +568,9 @@ void ChunkMap::enqueueMeshIfReady(ivec2 pos) {
 	auto it = m_chunks.find(pos);
 	if (it == m_chunks.end() || it->second->getState() != Chunk::TO_LOAD_MESH)
 		return; // missing, still loading blocks, or already meshing/meshed
-	for (Dir2D::Dir dir : Dir2D::all()) {
-		auto neighborIt = m_chunks.find(pos + Dir2D::to_ivec2(dir));
+	// All eight neighbors' blocks must be ready: a face's corner lighting samples the diagonal chunks.
+	for (ivec2 off : NEIGHBORHOOD_3X3) {
+		auto neighborIt = m_chunks.find(pos + off);
 		if (neighborIt == m_chunks.end() || neighborIt->second->getState() < Chunk::TO_LOAD_MESH)
 			return; // a neighbor's blocks are not ready, so this mesh is not either
 	}

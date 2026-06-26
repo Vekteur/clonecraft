@@ -21,15 +21,13 @@ int dirToBin(ivec3 dir) {
 }
 
 const Section* Section::findNeighboringSection(Dir3D::Dir dir, const NeighborChunks& neighbors) const {
-	// If the 3D direction is horizontal, it matches one of the neighboring chunks
-	const Chunk* neighborChunk = p_chunk;
-	auto dirOpt = Dir3D::to_2D(dir);
-	if (dirOpt.has_value())
-		neighborChunk = neighbors[dirOpt.value()];
+	// If the 3D direction is horizontal, it matches one of the neighboring chunks.
+	const ivec3 v = Dir3D::to_ivec3(dir);
+	const Chunk* neighborChunk = neighbors.at(v.x, v.z);
 	if (neighborChunk == nullptr)
 		return nullptr;
 	// A missing section (above/below the populated range, or a sparse gap) reads as air.
-	return neighborChunk->tryGetSection(m_position.y + Dir3D::to_ivec3(dir).y);
+	return neighborChunk->tryGetSection(m_position.y + v.y);
 }
 
 std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex> > Section::findVisibleFaces(const NeighborChunks& neighbors) const {
@@ -229,7 +227,6 @@ std::pair<std::array<GLfloat, 4>, std::array<vec2, 4>> Section::computeFaceLight
 }
 
 Block Section::getNeigboringBlock(const NeighborChunks& neighbors, ivec3 localPos) const {
-	const Block air{ BlockID::AIR };
 	if (isInSection(localPos))
 		return getBlock(localPos);
 
@@ -237,23 +234,12 @@ Block Section::getNeigboringBlock(const NeighborChunks& neighbors, ivec3 localPo
 		return coord < 0 ? -1 : (coord >= Const::SECTION_SIDE ? 1 : 0);
 	};
 
-	const Chunk* chunk = p_chunk;
-	const int dx = axisCrossing(localPos.x);
-	const int dz = axisCrossing(localPos.z);
-
-	// Horizontal crossing into a cardinal neighbor chunk. A diagonal crossing (both axes out at
-	// once, only at a chunk's vertical corner edges) would need a neighbor we do not snapshot, so
-	// it counts as air; the resulting AO error is confined to those rare corner columns.
-	if (dx != 0 || dz != 0) {
-		if (dx != 0 && dz != 0)
-			return air;
-		const Dir2D::Dir dir = Dir2D::from_ivec2({ dx, dz });
-		chunk = neighbors[dir];
-		if (chunk == nullptr)
-			return air;
-		localPos.x = (localPos.x + Const::SECTION_SIDE) % Const::SECTION_SIDE;
-		localPos.z = (localPos.z + Const::SECTION_SIDE) % Const::SECTION_SIDE;
-	}
+	// Resolve the horizontal crossing through the 3x3 grid; an unsnapshotted neighbor reads as air.
+	const Chunk* chunk = neighbors.at(axisCrossing(localPos.x), axisCrossing(localPos.z));
+	if (chunk == nullptr)
+		return { BlockID::AIR };
+	localPos.x = (localPos.x + Const::SECTION_SIDE) % Const::SECTION_SIDE;
+	localPos.z = (localPos.z + Const::SECTION_SIDE) % Const::SECTION_SIDE;
 
 	// Vertical crossing into another stacked section of the resolved chunk. A position outside the
 	// populated range (or in a sparse gap) resolves to air inside getBlock().

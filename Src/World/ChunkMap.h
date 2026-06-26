@@ -29,7 +29,7 @@
 // from the map without freeing them under a worker.
 class ChunkMap {
 public:
-	static const int VIEW_DISTANCE, LOAD_DISTANCE, SIDE, LOADING_WORKERS_COUNT;
+	static const int VIEW_DISTANCE, SIDE, LOADING_WORKERS_COUNT;
 
 	// A bulk edit produces its block changes lazily on a worker thread (so the heavy computation never
 	// stutters the frame). The function is the generator; it must not touch the ChunkMap.

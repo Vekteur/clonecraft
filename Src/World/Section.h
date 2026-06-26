@@ -20,8 +20,15 @@
 
 class Chunk;
 
-// Chunks around a section's own chunk, snapshotted so sections never read the chunk map.
-using NeighborChunks = std::array<const Chunk*, Dir2D::SIZE>;
+// The 3x3 block of chunks around (and including) a section's own chunk, snapshotted so sections never
+// read the chunk map. Indexed by a horizontal offset in [-1, 1] on each axis; the center (0, 0) holds
+// the own chunk. The diagonals are needed for corner lighting (ambient occlusion and smooth light).
+struct NeighborChunks {
+	std::array<const Chunk*, 9> chunks{};
+	static int index(int dx, int dz) { return (dx + 1) + (dz + 1) * 3; }
+	const Chunk* at(int dx, int dz) const { return chunks[index(dx, dz)]; }
+	const Chunk*& at(int dx, int dz) { return chunks[index(dx, dz)]; }
+};
 
 class Section {
 public:

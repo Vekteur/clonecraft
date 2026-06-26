@@ -23,8 +23,8 @@ namespace {
 	// Sections are 32 wide (a power of two), so splitting a world coord into section + inner is a shift
 	// and a mask instead of floorDiv/posMod, which each do a real division. The relight resolves cells
 	// millions of times, so this adds up; the static_assert holds us to the assumption.
-	constexpr int SEC_SHIFT = 5;
-	constexpr int SEC_MASK = 31;
+	constexpr int SEC_SHIFT = Const::SECTION_SIDE_POWER;
+	constexpr int SEC_MASK = Const::SECTION_SIDE - 1;
 	static_assert(SX == (1 << SEC_SHIFT) && SZ == (1 << SEC_SHIFT) && SY == (1 << SEC_SHIFT),
 		"LightVolume assumes 32-wide power-of-two sections for its shift/mask cell resolution");
 
