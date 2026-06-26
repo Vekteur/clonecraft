@@ -10,7 +10,10 @@
 
 Game::Game(Window* const window)
 	: m_player{ this }, p_window{ window },
-	m_waterRenderer{ { p_window->size() } }, m_postProcessingRenderer{ { p_window->size() } } {
+	m_defaultRenderer{ m_player.getCamera(), m_dayCycle },
+	m_waterRenderer{ p_window->size(), m_player.getCamera(), m_dayCycle },
+	m_lavaRenderer{ m_player.getCamera(), m_dayCycle },
+	m_postProcessingRenderer{ p_window->size(), m_dayCycle } {
 
 	ResManager::initBlockDatas(std::vector<TextureArray*>{ &m_defaultRenderer.getTextureArray() });
 
@@ -114,25 +117,19 @@ void Game::processMouseWheel(sf::Time dt, GLfloat delta) {
 void Game::update(sf::Time dt) {
 	m_player.update(dt);
 	m_dayCycle.update(dt);
-	m_defaultRenderer.getShader().use().set("dayFactor", m_dayCycle.getDayFactor());
-
-	m_defaultRenderer.getShader().use().set("view", m_player.getCamera().getViewMatrix());
-	m_defaultRenderer.getShader().use().set("projection", m_player.getCamera().getProjMatrix());
-	m_defaultRenderer.getShader().use().set("skyColor", m_dayCycle.getSkyColor());
-	m_waterRenderer.getShader().use().set("view", m_player.getCamera().getViewMatrix());
-	m_waterRenderer.getShader().use().set("projection", m_player.getCamera().getProjMatrix());
-	m_waterRenderer.getShader().use().set("skyColor", m_dayCycle.getSkyColor());
-	m_waterRenderer.getShader().use().set("cameraPosition", m_player.getCamera().getPosition());
 
 	m_chunkMap.setCenter(Converter::globalToChunk(m_player.getPosition()));
 	m_chunkMap.update();
 
-	moveOffset = fmod(moveOffset + 0.02f * dt.asSeconds(), 1.f);
-	m_waterRenderer.getShader().use().set("moveOffset", moveOffset);
+	BlockID eyeBlock = m_chunkMap.getBlock(Converter::globalPosToBlock(m_player.getPosition())).id;
+	m_waterRenderer.setUnderwater(eyeBlock == +BlockID::WATER);
+	m_postProcessingRenderer.setUnderwater(eyeBlock == +BlockID::WATER);
+	m_postProcessingRenderer.setInLava(eyeBlock == +BlockID::LAVA);
 
-	bool underwater = m_chunkMap.getBlock(Converter::globalPosToBlock(m_player.getPosition())).id == +BlockID::WATER;
-	m_waterRenderer.getShader().use().set("underwater", underwater);
-	m_postProcessingRenderer.getShader().use().set("underwater", underwater);
+	m_defaultRenderer.update(dt);
+	m_waterRenderer.update(dt);
+	m_lavaRenderer.update(dt);
+	m_postProcessingRenderer.update(dt);
 
 	m_explosionDrawer.update(dt.asSeconds());
 }
@@ -160,13 +157,17 @@ void Game::render() {
 	ivec2 size = p_window->size();
 
 	m_waterRenderer.prepare([this](bool refractionPass) {
-		m_chunkMap.render(m_player.getCamera().getFrustum(), &m_defaultRenderer);
-		// Drawn into the scene textures rather than over the final image, so the water shader (which
-		// composites the scene from the refraction texture) shows the fireball through and underneath
-		// the water. In the reflection pass we clip it at the sea level, the same plane the terrain
-		// uses, so an underwater blast is not mirrored as a phantom explosion above the surface.
+		// In the reflection pass we clip at the sea level, the same plane the terrain uses, so things
+		// below the surface are not mirrored as phantoms above it.
 		vec4 clipPlane = refractionPass ? vec4(0.f, -1.f, 0.f, 10000.f)
 		                                : vec4(0.f, 1.f, 0.f, -float(Const::SEA_LEVEL));
+		// Lava is opaque, so it rides along in the terrain pass and ends up in the scene textures the
+		// water shader composites from.
+		m_lavaRenderer.getShader().use().set("clipPlane", clipPlane);
+		m_chunkMap.render(m_player.getCamera().getFrustum(), { &m_defaultRenderer, &m_lavaRenderer });
+		// Drawn into the scene textures rather than over the final image, so the water shader (which
+		// composites the scene from the refraction texture) shows the fireball through and underneath
+		// the water.
 		m_explosionDrawer.render(m_player.getCamera().getViewMatrix(),
 			m_player.getCamera().getProjMatrix(), clipPlane, m_dayCycle.getSkyColor());
 	}, [this]() {
@@ -189,7 +190,7 @@ void Game::render() {
 			GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		glBindFramebuffer(GL_FRAMEBUFFER, renderFbo);
 
-		m_chunkMap.render(m_player.getCamera().getFrustum(), nullptr, &m_waterRenderer);
+		m_chunkMap.render(m_player.getCamera().getFrustum(), { &m_waterRenderer });
 
 		// Drawn into the post-processing FBO which still holds the world depth.
 		m_blockContourDrawer.render(m_player.getTarget(),

@@ -19,6 +19,7 @@
 #include "View/ExplosionDrawer.h"
 #include "Renderer/DefaultRenderer.h"
 #include "Renderer/WaterRenderer.h"
+#include "Renderer/LavaRenderer.h"
 #include "Renderer/PostProcessingRenderer.h"
 #include "Commands/Commands.h"
 #include "Game/Player.h"
@@ -58,11 +59,11 @@ private:
 	Window* const p_window{ nullptr };
 	ChunkMap m_chunkMap;
 
-	float moveOffset = 0;
 	DayCycle m_dayCycle;
 
 	DefaultRenderer m_defaultRenderer;
 	WaterRenderer m_waterRenderer;
+	LavaRenderer m_lavaRenderer;
 	PostProcessingRenderer m_postProcessingRenderer;
 
 	PickedBlockDrawer m_pickedBlockDrawer;

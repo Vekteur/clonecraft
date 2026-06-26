@@ -79,9 +79,15 @@ void WorldGenerator::loadBlocks(Chunk& chunk) const {
 				double density = (height - y) + sampleNoise(x, y, z) * rugged;
 				ivec3 local{ x, y, z };
 				if (density > 0.) {
-					// Carved blocks stay air but still count as depth, so caves keep stone walls.
-					if (!m_caveCarver.isCarved(caveGrid, caveCol, local, origin + local, depth))
+					if (m_caveCarver.isCarved(caveGrid, caveCol, local, origin + local, depth)) {
+						// Carved blocks stay air but still count as depth, so caves keep stone walls.
+						// The deepest carved cells pool lava instead, so caves bottom out in lava lakes.
+						if (y < Const::LAVA_LEVEL)
+							chunk.setBlock(local, { BlockID::LAVA });
+					}
+					else {
 						chunk.setBlock(local, biome.getBlock(origin + local, depth));
+					}
 					++depth;
 				}
 				else {

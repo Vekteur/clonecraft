@@ -17,11 +17,6 @@ const float Movement::PLAYER_HEAD_HEIGHT{ 1.65f };
 
 const float Movement::JUMP_SPEED{ 10.f };
 const float Movement::GRAVITY{ 32.f };
-const float Movement::WATER_JUMP_SPEED{ 7.f };
-const float Movement::WATER_SWIM_UP_ACCELERATION{ 20.f };
-const float Movement::WATER_GRAVITY{ 10.f };
-const float Movement::WATER_HORIZONTAL_MULTIPLIER{ 0.6f };
-const float Movement::WATER_VERTICAL_DRAG{ 0.07f }; // Fraction of vertical speed kept per second in water
 const float Movement::PUSH_OUT_SPEED{ 8.f }; // Blocks per second the player is ejected when stuck inside a block
 
 Movement::Movement(const Player* player)
@@ -54,13 +49,13 @@ void Movement::move(Direction direction, float deltaTime) {
 	case UP:
 		if (p_player->getGameMode() == GameMode::SURVIVAL) {
 			if (m_onTheGround) {
-				if (m_inWater)
-					m_verticalSpeed = WATER_JUMP_SPEED;
+				if (m_fluid != Fluid::NONE)
+					m_verticalSpeed = fluidPhysics(m_fluid).jumpSpeed;
 				else
 					m_verticalSpeed = JUMP_SPEED;
 			} else {
-				if (m_inWater)
-					m_verticalSpeed += WATER_SWIM_UP_ACCELERATION * deltaTime;
+				if (m_fluid != Fluid::NONE)
+					m_verticalSpeed += fluidPhysics(m_fluid).swimUpAcceleration * deltaTime;
 			}
 		} else {
 			m_verticalDir += Camera::WORLDUP;
@@ -74,9 +69,10 @@ void Movement::move(Direction direction, float deltaTime) {
 
 void Movement::update(float deltaTime) {
 	if (p_player->getGameMode() == GameMode::SURVIVAL) {
-		if (m_inWater) {
-			m_verticalSpeed -= WATER_GRAVITY * deltaTime;
-			m_verticalSpeed *= std::pow(WATER_VERTICAL_DRAG, deltaTime);
+		if (m_fluid != Fluid::NONE) {
+			FluidPhysics phys = fluidPhysics(m_fluid);
+			m_verticalSpeed -= phys.gravity * deltaTime;
+			m_verticalSpeed *= std::pow(phys.verticalDrag, deltaTime);
 		} else {
 			m_verticalSpeed -= GRAVITY * deltaTime;
 		}
@@ -92,8 +88,8 @@ vec3 Movement::getVelocityAndReset() {
 		horizontal_move = normalize(m_horizontalDir) * horizontal_speed;
 	if (m_sprinting)
 		horizontal_move *= sprint_multiplier;
-	if (gameMode == GameMode::SURVIVAL && m_inWater)
-		horizontal_move *= WATER_HORIZONTAL_MULTIPLIER;
+	if (gameMode == GameMode::SURVIVAL && m_fluid != Fluid::NONE)
+		horizontal_move *= fluidPhysics(m_fluid).horizontalMultiplier;
 	vec3 vertical_move;
 	if (gameMode == GameMode::SURVIVAL) {
 		vertical_move = Camera::WORLDUP * m_verticalSpeed;
@@ -146,7 +142,7 @@ vec3 Movement::getMoveWithCollisionsAndReset(float deltaTime) {
 		// Cancel vertical speed on landing or on hitting a ceiling
 		if (verticalBlocked)
 			m_verticalSpeed = 0.f;
-		m_inWater = isInWater();
+		m_fluid = currentFluid();
 	}
 
 	// Push the player out of any block it ends up embedded in (placed/generated inside it, etc.)
@@ -204,10 +200,21 @@ vec3 Movement::getUnstuckShift(float deltaTime) const {
 	return push * (std::min(dist, PUSH_OUT_SPEED * deltaTime) / dist);
 }
 
+Movement::Fluid Movement::currentFluid() const {
+	auto overlaps = [this](BlockData::Category category) {
+		return !getBroadphaseBlocks(makeHitbox(), vec3(), [category](Block block) {
+			return ResManager::blockDatas().get(block.id).getCategory() == category;
+		}).empty();
+	};
+	if (overlaps(BlockData::Category::LAVA))
+		return Fluid::LAVA;
+	if (overlaps(BlockData::Category::WATER))
+		return Fluid::WATER;
+	return Fluid::NONE;
+}
+
 bool Movement::isInWater() const {
-	return !getBroadphaseBlocks(makeHitbox(), vec3(), [](Block block) {
-		return ResManager::blockDatas().get(block.id).getCategory() == BlockData::Category::WATER;
-	}).empty();
+	return currentFluid() == Fluid::WATER;
 }
 
 bool Movement::intersectsBlock(ivec3 blockPos) const {

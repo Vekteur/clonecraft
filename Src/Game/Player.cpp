@@ -53,8 +53,7 @@ void Player::update(sf::Time dt) {
 	while (lineBlockFinder.getDistance() <= targetDistance) {
 		ivec3 iterPos = lineBlockFinder.next();
 		Block block = game->getChunkMap().getBlock(iterPos);
-		BlockData::Category category = ResManager::blockDatas().get(block.id).getCategory();
-		if (category != BlockData::AIR && category != BlockData::WATER) {
+		if (ResManager::blockDatas().get(block.id).isObstacle()) {
 			targetPos = iterPos;
 			break;
 		}

@@ -1,0 +1,9 @@
+{
+	"opaque" : true,
+	"obstacle" : false,
+	"emission" : 14,
+	"category" : "lava",
+	"textures" : {
+		"all" : "lava"
+	}
+}

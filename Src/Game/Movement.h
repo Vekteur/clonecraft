@@ -27,9 +27,7 @@ public:
 
 	static const float JUMP_SPEED;
 	static const float GRAVITY;
-	static const float WATER_JUMP_SPEED, WATER_SWIM_UP_ACCELERATION;
-	static const float WATER_GRAVITY, WATER_HORIZONTAL_MULTIPLIER;
-	static const float WATER_VERTICAL_DRAG;
+
 	static const float PUSH_OUT_SPEED;
 
 	Movement(const Player* player);
@@ -42,15 +40,32 @@ public:
 	bool intersectsBlock(ivec3 blockPos) const;
 
 private:
+	enum class Fluid { NONE, WATER, LAVA };
+	struct FluidPhysics {
+		float jumpSpeed;
+		float swimUpAcceleration;
+		float gravity;
+		float horizontalMultiplier;
+		float verticalDrag; // fraction of vertical speed kept per second
+	};
+	// Lava is thicker than water: you barely climb out, sink slowly and move sluggishly.
+	static constexpr FluidPhysics WATER_PHYSICS{ 7.f, 20.f, 10.f, 0.6f, 0.07f };
+	static constexpr FluidPhysics LAVA_PHYSICS{ 4.f, 12.f, 6.f, 0.35f, 0.04f };
+	static constexpr FluidPhysics fluidPhysics(Fluid fluid) {
+		return fluid == Fluid::LAVA ? LAVA_PHYSICS : WATER_PHYSICS;
+	}
+
 	const Player* p_player{ nullptr };
 
 	float m_verticalSpeed{ 0.f };
 	vec3 m_horizontalDir{};
 	vec3 m_verticalDir{};
 	bool m_onTheGround = false;
-	bool m_inWater = false;
+	Fluid m_fluid = Fluid::NONE;
 	bool m_sprinting = false;
 
+	// The fluid the hitbox currently overlaps; lava wins if it somehow touches both.
+	Fluid currentFluid() const;
 	vec3 getVelocityAndReset();
 	vec3 getMoveWithCollisionsAndReset(float deltaTime);
 	vec3 getUnstuckShift(float deltaTime) const;

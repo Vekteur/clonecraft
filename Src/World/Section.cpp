@@ -30,9 +30,10 @@ const Section* Section::findNeighboringSection(Dir3D::Dir dir, const NeighborChu
 	return neighborChunk->tryGetSection(m_position.y + v.y);
 }
 
-std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex> > Section::findVisibleFaces(const NeighborChunks& neighbors) const {
+std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex>, std::vector<LavaMesh::Vertex> > Section::findVisibleFaces(const NeighborChunks& neighbors) const {
 	std::vector<DefaultMesh::Vertex> defaultVertices;
 	std::vector<WaterMesh::Vertex> waterVertices;
+	std::vector<LavaMesh::Vertex> lavaVertices;
 	
 	// The axes are indexed by y = 0, x = 1 and z = 2;
 	const std::array<ivec3, 3> AXIS_ORDER{ {
@@ -60,16 +61,17 @@ std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex> > Se
 		ivec3 localPos; // Current position in the section coordinates
 		for (localPos[order[0]] = 0; localPos[order[0]] < orderedBounds[0]; ++localPos[order[0]]) {
 			for (localPos[order[1]] = 0; localPos[order[1]] < orderedBounds[1]; ++localPos[order[1]]) {
-				addVisibleFacesOnLastAxis(defaultVertices, waterVertices, dir, localPos, order[2],
+				addVisibleFacesOnLastAxis(defaultVertices, waterVertices, lavaVertices, dir, localPos, order[2],
 						orderedBounds[2], neighboringSection, neighbors);
 			}
 		}
 	}
-	return { defaultVertices, waterVertices };
+	return { defaultVertices, waterVertices, lavaVertices };
 }
 
 void Section::addVisibleFacesOnLastAxis(
 	std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
+	std::vector<LavaMesh::Vertex>& lavaVertices,
 	Dir3D::Dir dir, ivec3 localPos, int indexOfLastAxis, int sizeOfLastAxis,
 	const Section* neighboringSection, const NeighborChunks& neighbors) const {
 
@@ -113,7 +115,7 @@ void Section::addVisibleFacesOnLastAxis(
 		// End the current face when the next block differs. A merged face has one AO and one light
 		// value per corner, so a change in either ends it too.
 		if (currBlock.id != lastBlock.id || currAO != lastAO || currLight != lastLight) {
-			addFace(defaultVertices, waterVertices, dir, localPos, firstBlockIndex, lastBlock, indexOfLastAxis, lastAO, lastLight);
+			addFace(defaultVertices, waterVertices, lavaVertices, dir, localPos, firstBlockIndex, lastBlock, indexOfLastAxis, lastAO, lastLight);
 			firstBlockIndex = localPos[indexOfLastAxis];
 			lastBlock = currBlock;
 			lastAO = currAO;
@@ -121,10 +123,11 @@ void Section::addVisibleFacesOnLastAxis(
 		}
 	}
 	// Add the last face if at the end of last axis
-	addFace(defaultVertices, waterVertices, dir, localPos, firstBlockIndex, lastBlock, indexOfLastAxis, lastAO, lastLight);
+	addFace(defaultVertices, waterVertices, lavaVertices, dir, localPos, firstBlockIndex, lastBlock, indexOfLastAxis, lastAO, lastLight);
 }
 
 void Section::addFace(std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
+	std::vector<LavaMesh::Vertex>& lavaVertices,
 	Dir3D::Dir dir, ivec3 localPos, int firstBlockIndex, Block block, int indexOfLastAxis,
 	const std::array<GLfloat, 4>& ao, const std::array<vec2, 4>& light) const {
 
@@ -140,6 +143,9 @@ void Section::addFace(std::vector<DefaultMesh::Vertex>& defaultVertices, std::ve
 		}
 		else if (category == BlockData::WATER) {
 			addWaterFace(waterVertices, dir, indexOfLastAxis, length, firstBlockGlobalPos);
+		}
+		else if (category == BlockData::LAVA) {
+			addLavaFace(lavaVertices, dir, indexOfLastAxis, length, firstBlockGlobalPos);
 		}
 	}
 }
@@ -174,6 +180,16 @@ void Section::addWaterFace(std::vector<WaterMesh::Vertex>& waterVertices, Dir3D:
 	};
 	addWaterFaceInDir(dir, firstBlockGlobalPos);
 	addWaterFaceInDir(Dir3D::opp(dir), firstBlockGlobalPos + Dir3D::to_ivec3(dir));
+}
+
+void Section::addLavaFace(std::vector<LavaMesh::Vertex>& lavaVertices, Dir3D::Dir dir,
+	int indexOfLastAxis, int length, ivec3 firstBlockGlobalPos) const {
+
+	for (int vtx = 0; vtx < 4; ++vtx) {
+		vec3 currVtx = CubeData::dirToFace[dir][vtx];
+		currVtx[indexOfLastAxis] *= length;
+		lavaVertices.push_back({ currVtx + vec3(firstBlockGlobalPos), Dir3D::to_ivec3(dir) });
+	}
 }
 
 std::pair<std::array<GLfloat, 4>, std::array<vec2, 4>> Section::computeFaceLighting(
@@ -258,10 +274,11 @@ std::vector<GLuint> getIndices(int size) {
 void Section::loadMesh(const NeighborChunks& neighbors) {
 	// CPU only: build the vertex data. Runs on a worker thread, so it must not touch OpenGL. The
 	// heavy face search runs lock-free; only the handoff into the shared "next" buffers is guarded.
-	auto [defaultVertices, waterVertices] = findVisibleFaces(neighbors);
+	auto [defaultVertices, waterVertices, lavaVertices] = findVisibleFaces(neighbors);
 	std::lock_guard<std::mutex> lock(m_meshMutex);
 	m_nextDefaultVertices = std::move(defaultVertices);
 	m_nextWaterVertices = std::move(waterVertices);
+	m_nextLavaVertices = std::move(lavaVertices);
 	m_meshReady = true;
 }
 
@@ -272,16 +289,20 @@ void Section::uploadMesh() {
 		return;
 	nextDefaultMesh.loadBuffers(m_nextDefaultVertices, getIndices((int)m_nextDefaultVertices.size() / 4));
 	nextWaterMesh.loadBuffers(m_nextWaterVertices, getIndices((int)m_nextWaterVertices.size() / 4));
+	nextLavaMesh.loadBuffers(m_nextLavaVertices, getIndices((int)m_nextLavaVertices.size() / 4));
 	nextDefaultMesh.loadVAOs();
 	nextWaterMesh.loadVAOs();
+	nextLavaMesh.loadVAOs();
 
 	// Assigning frees the previous mesh's GPU resources: clear() runs on the old value first.
 	activeDefaultMesh = std::move(nextDefaultMesh);
 	activeWaterMesh = std::move(nextWaterMesh);
+	activeLavaMesh = std::move(nextLavaMesh);
 
 	// Free memory
 	m_nextDefaultVertices = {};
 	m_nextWaterVertices = {};
+	m_nextLavaVertices = {};
 	m_meshReady = false;
 
 	Debug::glCheckError();
@@ -290,14 +311,23 @@ void Section::uploadMesh() {
 void Section::releaseMesh() {
 	activeDefaultMesh.clear();
 	activeWaterMesh.clear();
+	activeLavaMesh.clear();
 }
 
-void Section::render(const DefaultRenderer &defaultRenderer) const {
-	defaultRenderer.render(activeDefaultMesh);
+void Section::render(const Renderer& renderer) const {
+	renderer.render(*this);
 }
 
-void Section::render(const WaterRenderer& waterRenderer) const {
-	waterRenderer.render(activeWaterMesh);
+const DefaultMesh& Section::getDefaultMesh() const {
+	return activeDefaultMesh;
+}
+
+const WaterMesh& Section::getWaterMesh() const {
+	return activeWaterMesh;
+}
+
+const LavaMesh& Section::getLavaMesh() const {
+	return activeLavaMesh;
 }
 
 ivec3 Section::getPosition() const {

@@ -7,6 +7,7 @@
 #include <vector>
 #include <optional>
 #include <mutex>
+#include <memory>
 #include <utility>
 
 #include "Util/Array3D.h"
@@ -14,8 +15,7 @@
 #include "Maths/Dir3D.h"
 #include "Block/Block.h"
 #include "Mesh.h"
-#include "Renderer/DefaultRenderer.h"
-#include "Renderer/WaterRenderer.h"
+#include "Renderer/Renderer.h"
 #include "WorldConstants.h"
 
 class Chunk;
@@ -41,8 +41,11 @@ public:
 	void loadMesh(const NeighborChunks& neighbors);
 	void uploadMesh();
 	void releaseMesh();
-	void render(const DefaultRenderer& shader) const;
-	void render(const WaterRenderer& waterRenderer) const;
+	void render(const Renderer& renderer) const;
+	// The active meshes a renderer draws; each renderer picks the one it owns.
+	const DefaultMesh& getDefaultMesh() const;
+	const WaterMesh& getWaterMesh() const;
+	const LavaMesh& getLavaMesh() const;
 
 	ivec3 getPosition() const;
 	void setBlock(ivec3 pos, Block block);
@@ -59,9 +62,12 @@ private:
 	DefaultMesh nextDefaultMesh;
 	WaterMesh activeWaterMesh;
 	WaterMesh nextWaterMesh;
+	LavaMesh activeLavaMesh;
+	LavaMesh nextLavaMesh;
 	// Built on a worker thread by loadMesh(); uploaded to the GPU on the main thread by uploadMesh().
 	std::vector<DefaultMesh::Vertex> m_nextDefaultVertices;
 	std::vector<WaterMesh::Vertex> m_nextWaterVertices;
+	std::vector<LavaMesh::Vertex> m_nextLavaVertices;
 	// True while the vertices above hold a fresh build waiting to be uploaded. uploadMesh() consumes
 	// and clears the buffers, so without this a second upload with no rebuild in between would push an
 	// empty mesh and make the section disappear. Guarded by m_meshMutex.
@@ -73,13 +79,15 @@ private:
 
 	bool isInSection(ivec3 globalPos) const;
 	const Section* findNeighboringSection(Dir3D::Dir dir, const NeighborChunks& neighbors) const;
-	std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex>> findVisibleFaces(const NeighborChunks& neighbors) const;
+	std::tuple<std::vector<DefaultMesh::Vertex>, std::vector<WaterMesh::Vertex>, std::vector<LavaMesh::Vertex>> findVisibleFaces(const NeighborChunks& neighbors) const;
 	void addVisibleFacesOnLastAxis(
 		std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
+		std::vector<LavaMesh::Vertex>& lavaVertices,
 		Dir3D::Dir dir, ivec3 localPos, int indexOfLastAxis, int sizeOfLastAxis,
 		const Section* neighboringSection, const NeighborChunks& neighbors
 	) const;
 	void addFace(std::vector<DefaultMesh::Vertex>& defaultVertices, std::vector<WaterMesh::Vertex>& waterVertices,
+		std::vector<LavaMesh::Vertex>& lavaVertices,
 		Dir3D::Dir dir, ivec3 localPos, int length, Block block, int indexOfLastAxis,
 		const std::array<GLfloat, 4>& ao, const std::array<vec2, 4>& light) const;
 	void addDefaultFace(std::vector<DefaultMesh::Vertex>& defaultVertices, Dir3D::Dir dir, Block block,
@@ -93,5 +101,9 @@ private:
 	// Block at a position in this section's local coordinates, resolving across neighboring sections
 	Block getNeigboringBlock(const NeighborChunks& neighbors, ivec3 localPos) const;
 	void addWaterFace(std::vector<WaterMesh::Vertex>& waterVertices, Dir3D::Dir dir,
+		int indexOfLastAxis, int length, ivec3 firstBlockGlobalPos) const;
+	// Lava is opaque, so it gets a single back-face-culled face like a default block, but with only
+	// position and normal: the molten look is fully procedural in the shader.
+	void addLavaFace(std::vector<LavaMesh::Vertex>& lavaVertices, Dir3D::Dir dir,
 		int indexOfLastAxis, int length, ivec3 firstBlockGlobalPos) const;
 };

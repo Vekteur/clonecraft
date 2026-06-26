@@ -1,8 +1,11 @@
 #include "DefaultRenderer.h"
 
+#include "Game/DayCycle.h"
 #include "ResManager/ResManager.h"
 #include "Util/Logger.h"
+#include "View/Camera.h"
 #include "World/ChunkMap.h"
+#include "World/Section.h"
 
 #include <filesystem>
 
@@ -19,12 +22,22 @@ std::vector<fs::path> getPaths() {
 	return paths;
 }
 
-DefaultRenderer::DefaultRenderer() : texArray{ getPaths(), ivec2{ 16, 16 }, GL_RGBA } {
+DefaultRenderer::DefaultRenderer(const Camera& camera, const DayCycle& dayCycle)
+	: Renderer(camera, dayCycle), texArray{ getPaths(), ivec2{ 16, 16 }, GL_RGBA } {
 	m_shader.loadFromFile("Data/Shaders/cube.vs", "Data/Shaders/cube.frag");
 
 	getShader().use().set("distance", ChunkMap::SIDE);
-	// Start at full daylight until update() takes over and runs the day/night cycle.
-	getShader().use().set("dayFactor", 1.0f);
+}
+
+void DefaultRenderer::render(const Section& section) const {
+	render(section.getDefaultMesh());
+}
+
+void DefaultRenderer::update(sf::Time) {
+	getShader().use().set("dayFactor", m_dayCycle.getDayFactor());
+	getShader().use().set("view", m_camera.getViewMatrix());
+	getShader().use().set("projection", m_camera.getProjMatrix());
+	getShader().use().set("skyColor", m_dayCycle.getSkyColor());
 }
 
 void DefaultRenderer::render(const DefaultMesh& mesh) const {
@@ -39,8 +52,4 @@ void DefaultRenderer::render(const DefaultMesh& mesh) const {
 
 TextureArray & DefaultRenderer::getTextureArray() {
 	return texArray;
-}
-
-const Shader & DefaultRenderer::getShader() const {
-	return m_shader;
 }

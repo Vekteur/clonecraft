@@ -1,5 +1,6 @@
 #include "Maths/GlmCommon.h"
 #include "Maths/Converter.h"
+#include "View/Window.h"
 
 class DayCycle {
 public:

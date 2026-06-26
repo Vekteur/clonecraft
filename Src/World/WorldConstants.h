@@ -9,4 +9,5 @@ namespace Const {
 	const int INIT_CHUNK_HEIGHT = INIT_CHUNK_NB_SECTIONS * SECTION_HEIGHT;
 
 	const int SEA_LEVEL = 64;
+	const int LAVA_LEVEL = 11;
 }

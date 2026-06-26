@@ -40,8 +40,7 @@ public:
 
 	// ---- Main (game-loop) thread ----
 	void update();
-	void render(const Frustum& frustum, const DefaultRenderer* defaultRenderer = nullptr,
-		const WaterRenderer* waterRenderer = nullptr);
+	void render(const Frustum& frustum, const std::vector<const Renderer*>& renderers);
 	void setBlock(ivec3 globalPos, Block block);
 	void applyEdits(const std::vector<BlockEdit>& edits);
 	// Returns true if the edit was queued, false if it was dropped because one is already in flight.

@@ -94,16 +94,10 @@ ivec2 Chunk::getPosition() const {
 	return m_position;
 }
 
-void Chunk::render(const DefaultRenderer & defaultRenderer) const {
+void Chunk::render(const Renderer& renderer) const {
 	std::lock_guard<std::mutex> lock(m_sectionsMutex);
 	for (auto& [y, section] : m_sections)
-		section.render(defaultRenderer);
-}
-
-void Chunk::render(const WaterRenderer& waterRenderer) const {
-	std::lock_guard<std::mutex> lock(m_sectionsMutex);
-	for (auto& [y, section] : m_sections)
-		section.render(waterRenderer);
+		section.render(renderer);
 }
 
 ChunkGenerationInfo& Chunk::chunkInfo() {

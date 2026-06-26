@@ -72,7 +72,7 @@ void ChunkMap::update() {
 	}
 }
 
-void ChunkMap::render(const Frustum& frustum, const DefaultRenderer* defaultRenderer, const WaterRenderer* waterRenderer) {
+void ChunkMap::render(const Frustum& frustum, const std::vector<const Renderer*>& renderers) {
 	std::lock_guard<std::mutex> lock(m_chunksMutex);
 
 	std::vector< std::tuple<int, Chunk* > > chunks;
@@ -87,14 +87,9 @@ void ChunkMap::render(const Frustum& frustum, const DefaultRenderer* defaultRend
 		return std::get<0>(c1) < std::get<0>(c2);
 	});
 
-	if (defaultRenderer != nullptr) {
+	for (const Renderer* renderer : renderers) {
 		for (auto& chunk : chunks) {
-			std::get<1>(chunk)->render(*defaultRenderer);
-		}
-	}
-	if (waterRenderer != nullptr) {
-		for (auto& chunk : chunks) {
-			std::get<1>(chunk)->render(*waterRenderer);
+			std::get<1>(chunk)->render(*renderer);
 		}
 	}
 }

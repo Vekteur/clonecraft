@@ -1,15 +1,20 @@
 #include "WaterRenderer.h"
 
+#include "Game/DayCycle.h"
 #include "ResManager/ResManager.h"
 #include "Util/Logger.h"
+#include "View/Camera.h"
 #include "World/ChunkMap.h"
+#include "World/Section.h"
 
+#include <cmath>
 #include <filesystem>
 #include <World/WorldConstants.h>
 
 namespace fs = std::filesystem;
 
-WaterRenderer::WaterRenderer(ivec2 windowSize) {
+WaterRenderer::WaterRenderer(ivec2 windowSize, const Camera& camera, const DayCycle& dayCycle)
+	: Renderer(camera, dayCycle) {
 	m_shader.loadFromFile("Data/Shaders/water.vs", "Data/Shaders/water.frag");
 
 	getShader().use().set("distance", ChunkMap::SIDE);
@@ -55,6 +60,10 @@ void WaterRenderer::prepare(std::function<void(bool refractionPass)> renderFunc,
 	refractionTexture.display();
 }
 
+void WaterRenderer::render(const Section& section) const {
+	render(section.getWaterMesh());
+}
+
 void WaterRenderer::render(const WaterMesh& mesh) const {
 	if (mesh.indicesNb != 0) {
 		m_shader.use();
@@ -69,6 +78,22 @@ void WaterRenderer::render(const WaterMesh& mesh) const {
 		sf::Texture::bind(&dudvMap);
 		mesh.draw();
 	}
+}
+
+void WaterRenderer::update(sf::Time dt) {
+	getShader().use().set("view", m_camera.getViewMatrix());
+	getShader().use().set("projection", m_camera.getProjMatrix());
+	getShader().use().set("skyColor", m_dayCycle.getSkyColor());
+	getShader().use().set("cameraPosition", m_camera.getPosition());
+
+	m_moveOffset = std::fmod(m_moveOffset + 0.02f * dt.asSeconds(), 1.f);
+	getShader().use().set("moveOffset", m_moveOffset);
+
+	getShader().use().set("underwater", m_underwater);
+}
+
+void WaterRenderer::setUnderwater(bool underwater) {
+	m_underwater = underwater;
 }
 
 void WaterRenderer::onChangedSize(ivec2 windowSize) {
@@ -88,10 +113,6 @@ void WaterRenderer::onChangedSize(ivec2 windowSize) {
 		LOG(Level::ERROR) << "Could not create DuDv Map texture" << std::endl;
 	}
 	dudvMap.setRepeated(true);
-}
-
-const Shader& WaterRenderer::getShader() const {
-	return m_shader;
 }
 
 sf::RenderTexture& WaterRenderer::getRefractionTexture() {

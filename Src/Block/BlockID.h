@@ -17,5 +17,6 @@ BETTER_ENUM(BlockID, char,
 	ICE,
 	CACTUS,
 	LIGHT,
+	LAVA,
 	SIZE
 )

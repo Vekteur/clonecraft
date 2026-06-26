@@ -1,10 +1,12 @@
 #include "PostProcessingRenderer.h"
 
+#include "Game/DayCycle.h"
 #include "World/CubeData.h"
 #include "ResManager/ResManager.h"
 #include "Util/Logger.h"
 
-PostProcessingRenderer::PostProcessingRenderer(ivec2 windowSize) {
+PostProcessingRenderer::PostProcessingRenderer(ivec2 windowSize, const DayCycle& dayCycle)
+	: m_dayCycle(dayCycle) {
 	m_shader.loadFromFile("Data/Shaders/post_processing.vs", "Data/Shaders/post_processing.frag");
 
 	getShader().use().set("renderTexture", 0);
@@ -40,6 +42,20 @@ void PostProcessingRenderer::render() {
 	glActiveTexture(GL_TEXTURE0);
 	sf::Texture::bind(&m_renderTexture.getTexture());
 	m_mesh.draw();
+}
+
+void PostProcessingRenderer::update(sf::Time) {
+	getShader().use().set("underwater", m_underwater);
+	getShader().use().set("inLava", m_inLava);
+	getShader().use().set("time", m_dayCycle.getTimeOfDay() * 3600.f);
+}
+
+void PostProcessingRenderer::setUnderwater(bool underwater) {
+	m_underwater = underwater;
+}
+
+void PostProcessingRenderer::setInLava(bool inLava) {
+	m_inLava = inLava;
 }
 
 void PostProcessingRenderer::onChangedSize(ivec2 windowSize) {

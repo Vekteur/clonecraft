@@ -24,6 +24,8 @@ BlockData::BlockData(const json& j, const std::vector<TextureArray*>& texArrays)
 		m_category = DEFAULT;
 	else if (category == "water")
 		m_category = WATER;
+	else if (category == "lava")
+		m_category = LAVA;
 	else if (category == "air")
 		m_category = AIR;
 	else if (category == "semi-transparent")

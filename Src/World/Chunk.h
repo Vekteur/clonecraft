@@ -42,8 +42,7 @@ public:
 	// it to claim a chunk so two of them never load the same one.
 	bool casState(State expected, State desired);
 	ivec2 getPosition() const;
-	void render(const DefaultRenderer& defaultRenderer) const;
-	void render(const WaterRenderer& waterRenderer) const;
+	void render(const Renderer& renderer) const;
 	ChunkGenerationInfo& chunkInfo();
 	const ChunkGenerationInfo& chunkInfo() const;
 
