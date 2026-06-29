@@ -44,10 +44,12 @@ void PostProcessingRenderer::render() {
 	m_mesh.draw();
 }
 
-void PostProcessingRenderer::update(sf::Time) {
+void PostProcessingRenderer::update(sf::Time dt) {
+	m_lavaTime = std::fmod(m_lavaTime + dt.asSeconds(), 3600.f);
+
 	getShader().use().set("underwater", m_underwater);
 	getShader().use().set("inLava", m_inLava);
-	getShader().use().set("time", m_dayCycle.getTimeOfDay() * 3600.f);
+	getShader().use().set("time", m_lavaTime);
 }
 
 void PostProcessingRenderer::setUnderwater(bool underwater) {
@@ -64,10 +66,13 @@ void PostProcessingRenderer::onChangedSize(ivec2 windowSize) {
 	settings.minorVersion = 3;
 	settings.depthBits = 24;
 	settings.stencilBits = 8;
-	settings.antialiasingLevel = 2;
+	// Disable antialiasing as it creates artifacts for distant blocks.
+	settings.antialiasingLevel = 0;
 	if (!m_renderTexture.create(windowSize.x, windowSize.y, settings)) {
 		LOG(Level::ERROR) << "Could not create render texture" << std::endl;
 	}
+	// Linear filtering so the FXAA pass can sample between texels.
+	m_renderTexture.setSmooth(true);
 }
 
 const Shader& PostProcessingRenderer::getShader() const {

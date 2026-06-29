@@ -25,6 +25,7 @@ public:
 
 private:
 	const DayCycle& m_dayCycle;
+	float m_lavaTime{ 0.f };
 	bool m_underwater = false;
 	bool m_inLava = false;
 	Shader m_shader;

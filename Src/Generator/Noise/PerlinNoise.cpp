@@ -1,8 +1,8 @@
 #include "PerlinNoise.h"
+#include "Maths/MiscMath.h"
 
 #include "Util/Logger.h"
 
-// p has coordinates in [0, 1[
 double PerlinNoise::getNoise(dvec2 p) {
 	// Unit square that contains the coordinates p, modulo 256
 	ivec2 pi{ int(floor(p.x)) & 255 , int(floor(p.y)) & 255 };
@@ -22,12 +22,12 @@ double PerlinNoise::getNoise(dvec2 p) {
 	double d3 = grad(g3, pf.x, pf.y - 1);
 	double d4 = grad(g4, pf.x - 1, pf.y - 1);
 
-	pf = { fade(pf.x), fade(pf.y) };
+	dvec2 f{ math::smoothstep(pf.x), math::smoothstep(pf.y) };
 
 	// Do bilinear interpolation
-	double x1Inter = lerp(pf.x, d1, d2);
-	double x2Inter = lerp(pf.x, d3, d4);
-	double yInter = lerp(pf.y, x1Inter, x2Inter);
+	double x1Inter = lerp(f.x, d1, d2);
+	double x2Inter = lerp(f.x, d3, d4);
+	double yInter = lerp(f.y, x1Inter, x2Inter);
 
 	return yInter;
 }
@@ -36,7 +36,6 @@ double PerlinNoise::getNoise(dvec2 pos, double frequency) {
 	return getNoise(pos * frequency);
 }
 
-// p has coordinates in [0, 1[
 double PerlinNoise::getNoise(dvec3 p) {
 	// Cube that contains p, modulo 256
 	ivec3 pi{ int(floor(p.x)) & 255, int(floor(p.y)) & 255, int(floor(p.z)) & 255 };
@@ -60,7 +59,7 @@ double PerlinNoise::getNoise(dvec3 p) {
 	double d011 = grad(perm[ab + 1], pf.x, pf.y - 1, pf.z - 1);
 	double d111 = grad(perm[bb + 1], pf.x - 1, pf.y - 1, pf.z - 1);
 
-	dvec3 f{ fade(pf.x), fade(pf.y), fade(pf.z) };
+	dvec3 f{ math::smoothstep(pf.x), math::smoothstep(pf.y), math::smoothstep(pf.z) };
 
 	// Trilinear interpolation
 	double x00 = lerp(f.x, d000, d100);
@@ -81,12 +80,7 @@ double PerlinNoise::lerp(double amount, double left, double right) {
 	return left + amount * (right - left);
 }
 
-// Fade function
-double PerlinNoise::fade(double t) {
-	return t * t * t * (t * (t * 6 - 15) + 10);
-}
-
-// Get dot product of
+// Dot product with one of the 4 gradient directions of a square's edges
 double PerlinNoise::grad(int hash, double x, double y) {
 	switch (hash & 3) {
 	case 0: return x + y;

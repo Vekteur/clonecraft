@@ -45,13 +45,10 @@ int main(int, char*[]) {
 				game.onChangedSize({ event.size.width, event.size.height });
 				break;
 			case sf::Event::KeyPressed:
-				commands.onPressedEvent(event.key.code);
+				commands.onKeyPressed(event.key.code);
 				if (event.key.code == sf::Keyboard::Escape) {
 					captureMouse.toggle();
 				}
-				break;
-			case sf::Event::MouseButtonPressed:
-				commands.onPressedEvent(event.mouseButton.button);
 				break;
 			case sf::Event::MouseWheelScrolled:
 				if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {

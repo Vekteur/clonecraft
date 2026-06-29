@@ -8,25 +8,38 @@
 const vec3 Player::INITIAL_POSITION{ vec3{ 0.f, 80.f, 0.f } };
 const float Player::DEFAULT_TARGET_DISTANCE{ 6. };
 const float Player::CREATIVE_TARGET_DISTANCE{ static_cast<float>(ChunkMap::VIEW_DISTANCE * Const::SECTION_SIDE) };
+const sf::Time Player::REPEAT_DELAY{ sf::seconds(0.2f) };
 
 Player::Player(Game* game)
 	: game{ game }, m_camera{ INITIAL_POSITION }, m_movement{ this } { }
 
 void Player::processMouseClick(sf::Time dt, Commands& commands) {
-	if (commands.isActive(Command::PICK) && targetPos.has_value()) {
+	if (commands.isActive(Command::PICK) && targetPos.has_value())
 		pickedBlock = game->getChunkMap().getBlock(targetPos.value());
-	}
-	breakAccumulator += dt;
-	if (commands.isActive(Command::BREAK) && breakAccumulator >= sf::seconds(0.1f) && targetPos.has_value()) {
+
+	bool breaking = commands.isActive(Command::BREAK) && targetPos.has_value();
+	if (tryRepeat(breakAccumulator, dt, breaking))
 		game->getChunkMap().setBlock(targetPos.value(), +BlockID::AIR);
-		breakAccumulator = sf::seconds(0.f);
-	}
-	placeAccumulator += dt;
-	if (commands.isActive(Command::PLACE) && placeAccumulator >= sf::seconds(0.1f) && placePos.has_value() &&
-		pickedBlock.has_value() && !intersectsBlock(placePos.value())) {
+
+	bool placing = commands.isActive(Command::PLACE) && placePos.has_value() &&
+		pickedBlock.has_value() && !intersectsBlock(placePos.value());
+	if (tryRepeat(placeAccumulator, dt, placing))
 		game->getChunkMap().setBlock(placePos.value(), pickedBlock.value());
-		placeAccumulator = sf::seconds(0.f);
+}
+
+// Advances a repeat timer. Returns true when the action should fire: right away on
+// the first active frame, then once every REPEAT_DELAY while it stays held.
+bool Player::tryRepeat(sf::Time& accumulator, sf::Time dt, bool active) {
+	if (!active) {
+		// Stay primed so the next click acts without waiting.
+		accumulator = REPEAT_DELAY;
+		return false;
 	}
+	accumulator += dt;
+	if (accumulator < REPEAT_DELAY)
+		return false;
+	accumulator = sf::seconds(0.f);
+	return true;
 }
 
 void Player::processMouseMove(sf::Time) {

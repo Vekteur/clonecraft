@@ -23,7 +23,7 @@ void main()
 	color = vec4(vec3(brightness * facing * ambientOcclusion), 1.f);
 
 	vec4 texColor = texture(arrayTexture, fragTex);
-	if (texColor.a < 0.01f)
+	if (texColor.a < 0.5f)
 		discard;
 	color *= texColor;
     color = mix(vec4(skyColor, 1.0f), color, visibility);

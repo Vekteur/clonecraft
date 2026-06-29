@@ -24,6 +24,8 @@ public:
 	struct Column {
 		double region = 0.; // 0 = no caves in this column, 1 = full strength
 		int spaghettiCover = 0; // solid blocks tunnels must stay under the surface here
+		int lavaLevel = 0; // carved cells below this y fill with lava (one flat level per region)
+		int wallLevel = 0; // on a region edge: keep rock solid below this y so heights don't merge
 		bool ravine = false;
 		int ravineTop = 0;
 		double ravineDist = 0.; // distance from the ravine's center line
@@ -34,7 +36,7 @@ public:
 
 	// True if the solid block at global 'pos' should be carved to air. 'local' indexes the block
 	// within the chunk (for lattice lookup), 'depth' is the solid blocks above it in the column.
-	bool isCarved(const Grid& grid, const Column& col, ivec3 local, ivec3 pos, int depth) const;
+	bool isCarved(const Grid& grid, const Column& col, ivec3 local, int depth) const;
 
 private:
 	static constexpr int LXZ = 4, LY = 4; // coarse lattice spacing
@@ -48,6 +50,9 @@ private:
 
 	// Region mask: caves fade in as the mask rises from REGION_T to REGION_T + REGION_FADE.
 	static constexpr double REGION_T = -0.15, REGION_FADE = 0.3;
+	// Above this region strength, drop the cover so tunnels break the surface into mouths. Without
+	// this the whole tube network stays sealed under the cover and never connects up to the surface.
+	static constexpr double REGION_OPEN = 0.7;
 
 	// Solid blocks of cover needed before carving. Thin tubes stay well under the surface so they
 	// never scar the grass; only big caverns and ravines are allowed to break through into mouths.
@@ -56,6 +61,15 @@ private:
 	// onto the cliff faces. Big caverns always reach the surface into wide natural mouths.
 	static constexpr int SPAGHETTI_LAND_COVER = 4, MOUNTAIN_SPAGHETTI_COVER = 0, CHEESE_LAND_COVER = 0;
 	static constexpr int FLOOR_Y = 5;                  // keep a solid floor at the bottom
+
+	// Lava lakes. The world is tiled into warped cells, each pooling lava at its own flat level
+	// between LAVA_MIN/MAX, so a connected pool only ever sits at one height. Where two cells of
+	// different height meet, a thin band of rock (LAKE_WALL) stays solid below the higher level, so
+	// their pools can't merge into one sloped body or leave an open void at the lava's edge.
+	static constexpr int LAKE_CELL = 96;               // size of one flat lava region
+	static constexpr int LAKE_WALL = 4;                // half-width of the rock band between regions
+	static constexpr int LAKE_WARP = 28;               // wiggle the region edges off a straight grid
+	static constexpr int LAKE_FILL = 128;              // out of 255, how many regions pool lava at all
 
 	// How "mountainous" a column is, by surface height: drives cliff openings and guarantees caves
 	// even where the region mask is low, so mountains are never left hollow-free.
@@ -73,6 +87,12 @@ private:
 	OctavePerlin m_region{ 2, 0.5, 1. / 300. };
 	OctavePerlin m_ravinePath{ 2, 0.5, 1. / 96. };
 	OctavePerlin m_ravineMask{ 2, 0.5, 1. / 400. };
+	// Warps the lake cell grid so region edges curve instead of running along straight lines.
+	OctavePerlin m_lakeWarp{ 2, 0.5, 1. / 220. };
 
 	bool ravineCarved(const Column& col, int y) const;
+	// Sets the column's lava level, and a wall level where it borders a region of different height.
+	void lakeAt(ivec2 xz, Column& col) const;
+	// Deterministic 0..255 hash of a cell plus a salt, for per-region levels without storing state.
+	static int hash(int x, int z, int salt);
 };

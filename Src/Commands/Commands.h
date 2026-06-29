@@ -29,14 +29,13 @@ enum class Command {
 class Commands {
 public:
 	Commands();
-	Command findKey(sf::Keyboard::Key key) const;
-	Command findMouseButton(sf::Mouse::Button button) const;
-	void onPressedEvent(sf::Keyboard::Key key);
-	void onPressedEvent(sf::Mouse::Button button);
-	void onPressedEvent(Command command);
+	void onKeyPressed(sf::Keyboard::Key key);
 	bool isActive(Command command) const;
-	bool use(Command command);
+
+private:
+	void pollHeld();
+	void activate(Command command);
+	static Command findKey(sf::Keyboard::Key key);
 
 	std::set<Command> m_commands;
 };
-

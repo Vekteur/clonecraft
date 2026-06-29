@@ -48,6 +48,9 @@ public:
 private:
 	static const vec3 INITIAL_POSITION;
 	static const float DEFAULT_TARGET_DISTANCE, CREATIVE_TARGET_DISTANCE;
+	static const sf::Time REPEAT_DELAY;
+
+	bool tryRepeat(sf::Time& accumulator, sf::Time dt, bool active);
 
 	Game* game;
 	GameMode m_gameMode = GameMode::SURVIVAL;
