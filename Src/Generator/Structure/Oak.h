@@ -2,8 +2,8 @@
 
 #include "Structure.h"
 
-class Tree : public Structure {
+class Oak : public Structure {
 public:
-	Tree();
+	Oak();
 	virtual bool isValidPos(ivec3 centerPos, BiomeID biomeID) const override;
 };

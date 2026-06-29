@@ -12,7 +12,7 @@ Block Swamp::getBlock(ivec3 pos, int depth) const {
 }
 
 std::vector<StructureInfo> Swamp::getStructures() const {
-	return { { StructureID::TREE, 0.1f } };
+	return { { StructureID::OAK, 0.1f }, { StructureID::WILLOW, 0.06f } };
 }
 
 double Swamp::biomeValue(double temperature, double altitude) const {

@@ -213,13 +213,13 @@ void ChunkMap::applyEdits(const std::vector<BlockEdit>& edits) {
 			sectionsToUpdate.insert(section + Dir3D::to_ivec3(dir));
 	}
 
-	timeSinceStart();
-	std::cout << "Remeshing " << sectionsToUpdate.size() << " sections" << std::endl;
-
 	// Light can change well past the edited block (removing a torch darkens its whole radius), so add
 	// every section the relight changed.
 	for (const ivec3& section : lightDirtySections)
 		sectionsToUpdate.insert(section);
+
+	timeSinceStart();
+	std::cout << "Remeshing " << sectionsToUpdate.size() << " sections" << std::endl;
 	remeshSections({ sectionsToUpdate.begin(), sectionsToUpdate.end() });
 	
 	timeSinceStart();

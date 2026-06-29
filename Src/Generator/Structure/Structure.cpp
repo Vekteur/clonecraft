@@ -9,8 +9,8 @@ ivec2 Structure::getSupportPos(ivec2 globalPos) const {
 	return getCenterPos(globalPos);
 }
 
-Block Structure::getBlock(ivec3 pos) const {
-	return m_blocks.at(pos);
+DynamicArray3D<Block> Structure::build(uint32_t) const {
+	return m_blocks;
 }
 
 ivec3 Structure::size() const {

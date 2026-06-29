@@ -13,7 +13,12 @@ Block Forest::getBlock(ivec3 pos, int depth) const {
 }
 
 std::vector<StructureInfo> Forest::getStructures() const {
-	return { { StructureID::TREE, 0.3f } };
+	return {
+		{ StructureID::OAK, 0.3f },
+		{ StructureID::BIG_OAK, 0.06f },
+		{ StructureID::MAPLE, 0.05f },
+		{ StructureID::CHERRY, 0.03f }
+	};
 }
 
 double Forest::biomeValue(double temperature, double altitude) const {

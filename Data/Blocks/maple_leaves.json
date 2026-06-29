@@ -1,0 +1,9 @@
+{
+	"opaque" : false,
+	"obstacle" : true,
+	"emission" : 8,
+	"category" : "semi-transparent",
+	"textures" : {
+		"all" : "maple_leaves"
+	}
+}

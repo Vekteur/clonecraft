@@ -12,7 +12,11 @@
 #include "Islands.h"
 #include "Swamp.h"
 
-#include "Generator/Structure/Tree.h"
+#include "Generator/Structure/Oak.h"
+#include "Generator/Structure/BigOak.h"
+#include "Generator/Structure/Willow.h"
+#include "Generator/Structure/Maple.h"
+#include "Generator/Structure/Cherry.h"
 #include "Generator/Structure/Fir.h"
 #include "Generator/Structure/Palm.h"
 #include "Generator/Structure/DeadTree.h"
@@ -30,7 +34,11 @@ BiomeMap::BiomeMap() {
 	addBiome(std::make_unique<Islands>(), BiomeID::ISLANDS, "Islands");
 	addBiome(std::make_unique<Swamp>(), BiomeID::SWAMP, "Swamp");
 
-	addStructure(std::make_unique<Tree>(), StructureID::TREE);
+	addStructure(std::make_unique<Oak>(), StructureID::OAK);
+	addStructure(std::make_unique<BigOak>(), StructureID::BIG_OAK);
+	addStructure(std::make_unique<Willow>(), StructureID::WILLOW);
+	addStructure(std::make_unique<Maple>(), StructureID::MAPLE);
+	addStructure(std::make_unique<Cherry>(), StructureID::CHERRY);
 	addStructure(std::make_unique<Fir>(), StructureID::FIR);
 	addStructure(std::make_unique<Palm>(), StructureID::PALM);
 	addStructure(std::make_unique<DeadTree>(), StructureID::DEAD_TREE);

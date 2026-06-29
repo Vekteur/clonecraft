@@ -20,7 +20,7 @@ Block Mountains::getBlock(ivec3 pos, int depth) const {
 }
 
 std::vector<StructureInfo> Mountains::getStructures() const {
-	return { { StructureID::TREE, 0.05f } };
+	return { { StructureID::OAK, 0.05f } };
 }
 
 double Mountains::biomeValue(double temperature, double altitude) const {

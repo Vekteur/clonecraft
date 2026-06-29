@@ -1,7 +1,11 @@
 #pragma once
 
 enum class StructureID {
-	TREE = 0,
+	OAK = 0,
+	BIG_OAK,
+	WILLOW,
+	MAPLE,
+	CHERRY,
 	FIR,
 	PALM,
 	DEAD_TREE,

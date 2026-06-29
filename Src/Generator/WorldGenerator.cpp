@@ -8,6 +8,19 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+
+namespace {
+	// Stable per-structure seed from its world position, so a structure spanning several chunks is
+	// built identically by each of them (FNV-1a hash).
+	uint32_t structureSeed(ivec3 pos) {
+		uint32_t h = 2166136261u;
+		for (int v : { pos.x, pos.y, pos.z }) {
+			h = (h ^ static_cast<uint32_t>(v)) * 16777619u;
+		}
+		return h;
+	}
+}
 
 void WorldGenerator::loadChunk(Chunk& chunk) const {
 	loadHeights(chunk);
@@ -46,6 +59,7 @@ void WorldGenerator::loadBlocks(Chunk& chunk) const {
 
 	// Sample the 3D noise on a coarse lattice, then trilinearly interpolate it per block below.
 	const int LXZ = DENSITY_LATTICE_XZ, LY = DENSITY_LATTICE_Y;
+	const ivec3 L{ LXZ, LY, LXZ };
 	int nx = Const::SECTION_SIDE / LXZ + 1, nz = Const::SECTION_SIDE / LXZ + 1, ny = topY / LY + 2;
 	DynamicArray3D<double> grid({ nx, ny, nz });
 	auto at = [&](int i, int j, int k) -> double& { return grid.at({ i, j, k }); };
@@ -58,9 +72,9 @@ void WorldGenerator::loadBlocks(Chunk& chunk) const {
 
 	CaveCarver::Grid caveGrid = m_caveCarver.sample(origin, topY);
 
-	auto sampleNoise = [&](int bx, int by, int bz) {
-		ivec3 cell{ bx / LXZ, by / LY, bz / LXZ };
-		dvec3 frac{ (bx % LXZ) / double(LXZ), (by % LY) / double(LY), (bz % LXZ) / double(LXZ) };
+	auto sampleNoise = [&](ivec3 pos) {
+		ivec3 cell = pos / L;
+		dvec3 frac = dvec3(pos % L) / dvec3(L);
 		return math::trilerp(grid, cell, frac);
 	};
 
@@ -76,21 +90,19 @@ void WorldGenerator::loadBlocks(Chunk& chunk) const {
 			// term lets it fold back over itself into cliffs and overhangs.
 			int depth = 0; // solid blocks already placed above this one in the column
 			for (int y = topY; y >= 0; --y) {
-				double density = (height - y) + sampleNoise(x, y, z) * rugged;
 				ivec3 local{ x, y, z };
+				double density = (height - y) + sampleNoise(local) * rugged;
 				if (density > 0.) {
-					if (m_caveCarver.isCarved(caveGrid, caveCol, local, origin + local, depth)) {
-						// Carved blocks stay air but still count as depth, so caves keep stone walls.
-						// The deepest carved cells pool lava instead, so caves bottom out in lava lakes.
-						if (y < Const::LAVA_LEVEL)
+					// Carved blocks stay air (but still count as depth, so caves keep stone walls);
+					// below a region's lava level they pool flat lava, and the rest is solid terrain.
+					if (m_caveCarver.isCarved(caveGrid, caveCol, local, depth)) {
+						if (y < caveCol.lavaLevel)
 							chunk.setBlock(local, { BlockID::LAVA });
-					}
-					else {
+					} else {
 						chunk.setBlock(local, biome.getBlock(origin + local, depth));
 					}
 					++depth;
-				}
-				else {
+				} else {
 					depth = 0;
 					if (y < Const::SEA_LEVEL) {
 						BlockID fluid = BlockID::WATER;
@@ -146,12 +158,12 @@ void WorldGenerator::loadStructure(Chunk& chunk, const Structure& structure, flo
 std::optional<ivec2> WorldGenerator::findLocalPos(const Structure& structure, ivec2 zonePos, float freq) const {
 	ivec3 size = structure.size();
 	ivec2 zoneSize = { size.x, size.z };
-	ivec2 bounds = float(1.f / sqrt(freq)) * vec2(zoneSize);
+	ivec2 bounds = vec2(zoneSize) / float(sqrt(freq));
 
 	int posX = PerlinNoise::perm[PerlinNoise::perm[posMod(zonePos.x, 256)] + posMod(zonePos.y, 256)];
 	int posY = PerlinNoise::perm[PerlinNoise::perm[posMod(zonePos.y, 256)] + posMod(zonePos.x, 256)];
-	ivec2 pos = ivec2{ posX, posY } % bounds;
-
+	ivec2 pos{ posX, posY }; // pos is in [0, 255]
+	pos %= bounds; // pos is in [0, bounds) and is in [0, zoneSize) with probability freq
 	if (pos.x < zoneSize.x && pos.y < zoneSize.y)
 		return pos;
 	return std::nullopt;
@@ -160,6 +172,7 @@ std::optional<ivec2> WorldGenerator::findLocalPos(const Structure& structure, iv
 void WorldGenerator::drawStructure(Chunk& chunk, const Structure& structure, ivec3 globalPos) const {
 	ivec3 size = structure.size();
 	ivec2 size2D = Converter::to2D(size);
+	DynamicArray3D<Block> blocks = structure.build(structureSeed(globalPos));
 	ivec3 globalChunkPos = Converter::chunkToGlobal(chunk.getPosition());
 	ivec2 globalPos2D = Converter::to2D(globalPos), globalChunkPos2D = Converter::to2D(globalChunkPos);
 	ivec2 minPos = max(globalChunkPos2D, globalPos2D);
@@ -169,7 +182,7 @@ void WorldGenerator::drawStructure(Chunk& chunk, const Structure& structure, ive
 			for (int y = globalPos.y; y < globalPos.y + size.y; ++y) {
 				ivec3 pos{ x, y, z };
 				ivec3 localPos = pos - globalPos;
-				Block block = structure.getBlock(localPos);
+				Block block = blocks.at(localPos);
 				if (block.id != +BlockID::AIR) {
 					ivec3 innerChunkPos = pos - globalChunkPos;
 					chunk.setBlock(innerChunkPos, block);

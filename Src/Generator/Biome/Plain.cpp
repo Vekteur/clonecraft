@@ -13,7 +13,8 @@ Block Plain::getBlock(ivec3 pos, int depth) const {
 }
 
 std::vector<StructureInfo> Plain::getStructures() const {
-	return { { StructureID::TREE, 0.001f } };
+	return { { StructureID::OAK, 0.001f }, { StructureID::BIG_OAK, 0.004f },
+			{ StructureID::CHERRY, 0.006f } };
 }
 
 double Plain::biomeValue(double temperature, double altitude) const {

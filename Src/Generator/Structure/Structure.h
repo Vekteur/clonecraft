@@ -6,6 +6,7 @@
 
 #include "Maths/GlmCommon.h"
 
+#include <cstdint>
 #include <optional>
 
 class Structure {
@@ -14,7 +15,12 @@ public:
 	virtual ~Structure() = default;
 	virtual bool isValidPos(ivec3 centerPos, BiomeID biomeID) const = 0;
 	virtual ivec2 getSupportPos(ivec2 globalPos) const;
-	Block getBlock(ivec3 pos) const;
+
+	// Block layout for one placement, fitting inside size(). The seed (derived from the
+	// structure's world position) lets procedural structures vary their shape so each instance
+	// looks distinct. The default returns the fixed template baked at construction.
+	virtual DynamicArray3D<Block> build(uint32_t seed) const;
+
 	ivec3 size() const;
 	ivec2 getCenterPos(ivec2 globalPos = ivec2{ 0, 0 }) const;
 
