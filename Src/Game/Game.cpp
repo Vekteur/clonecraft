@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #include "Game/BulkEdit.h"
+#include "Generator/WorldGenerator.h"
 #include "Maths/Converter.h"
 #include "Util/DebugGL.h"
 #include "Util/Logger.h"
@@ -37,6 +38,7 @@ void Game::runOrchestratorLoop() {
 	while (!m_stopGeneratingThread) {
 		m_chunkMap.refreshSelection(m_player.getCamera().getFrustum());
 		m_chunkMap.unloadFarChunks();
+		g_worldGenerator.unloadFarStructures(m_chunkMap.getCenter(), ChunkMap::VIEW_DISTANCE);
 		std::this_thread::sleep_for(std::chrono::milliseconds(8));
 	}
 }

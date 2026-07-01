@@ -38,8 +38,13 @@ public:
 	// within the chunk (for lattice lookup), 'depth' is the solid blocks above it in the column.
 	bool isCarved(const Grid& grid, const Column& col, ivec3 local, int depth) const;
 
+	// Same decision as isCarved, but samples the 3D fields straight at the point instead of
+	// interpolating a pre-sampled grid. For one-off lookups (finding a structure's support height)
+	// where building a whole grid would be wasteful. 'pos' is the global block position.
+	bool isCarvedPointwise(const Column& col, ivec3 pos, int depth) const;
+
 private:
-	static constexpr int LXZ = 4, LY = 4; // coarse lattice spacing
+	static constexpr ivec3 L{4, 4, 4}; // coarse lattice spacing
 
 	// Vertical squash of each 3D field: above 1 biases tunnels/rooms horizontal.
 	static constexpr double SPAGHETTI_V = 1.4, CHEESE_V = 1.0;
@@ -91,8 +96,16 @@ private:
 	OctavePerlin m_lakeWarp{ 2, 0.5, 1. / 220. };
 
 	bool ravineCarved(const Column& col, int y) const;
+
+	template<typename SampleSpaghetti, typename SampleCheese>
+	bool carved(const Column& col, int y, int depth, SampleSpaghetti sampleSpaghetti, SampleCheese sampleCheese) const;
+	// Trilinearly interpolates a field over the world lattice the grid is sampled on, matching isCarved
+	// exactly but without a pre-built grid. noiseAt(nx, ny, nz) gives the field at a lattice node.
+	template<typename Noise>
+	double latticeSample(ivec3 pos, Noise noiseAt) const;
+
 	// Sets the column's lava level, and a wall level where it borders a region of different height.
 	void lakeAt(ivec2 xz, Column& col) const;
 	// Deterministic 0..255 hash of a cell plus a salt, for per-region levels without storing state.
-	static int hash(int x, int z, int salt);
+	static int hash(ivec2 cell, int salt);
 };

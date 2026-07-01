@@ -14,10 +14,10 @@ Block Forest::getBlock(ivec3 pos, int depth) const {
 
 std::vector<StructureInfo> Forest::getStructures() const {
 	return {
-		{ StructureID::OAK, 0.3f },
-		{ StructureID::BIG_OAK, 0.06f },
-		{ StructureID::MAPLE, 0.05f },
-		{ StructureID::CHERRY, 0.03f }
+		{ StructureID::OAK, 0.4f },
+		{ StructureID::BIG_OAK, 0.2f },
+		{ StructureID::MAPLE, 0.2f },
+		{ StructureID::CHERRY, 0.2f }
 	};
 }
 

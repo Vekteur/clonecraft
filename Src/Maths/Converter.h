@@ -32,12 +32,44 @@ inline int floorDiv(float base, float divider) {
 	return static_cast<int>(std::floor(base / divider));
 }
 
+inline ivec2 floorDiv(ivec2 base, ivec2 divider) {
+	return { floorDiv(base.x, divider.x), floorDiv(base.y, divider.y) };
+}
+
+inline ivec2 floorDiv(vec2 base, vec2 divider) {
+	return { floorDiv(base.x, divider.x), floorDiv(base.y, divider.y) };
+}
+
+inline ivec3 floorDiv(ivec3 base, ivec3 divider) {
+	return { floorDiv(base.x, divider.x), floorDiv(base.y, divider.y), floorDiv(base.z, divider.z) };
+}
+
+inline ivec3 floorDiv(vec3 base, vec3 divider) {
+	return { floorDiv(base.x, divider.x), floorDiv(base.y, divider.y), floorDiv(base.z, divider.z) };
+}
+
 inline int posMod(int base, int modulo) {
 	return ((base % modulo) + modulo) % modulo;
 }
 
 inline float posMod(float base, float modulo) {
 	return std::fmod(std::fmod(base, modulo) + modulo, modulo);
+}
+
+inline ivec2 posMod(ivec2 base, ivec2 modulo) {
+	return { posMod(base.x, modulo.x), posMod(base.y, modulo.y) };
+}
+
+inline vec2 posMod(vec2 base, vec2 modulo) {
+	return { posMod(base.x, modulo.x), posMod(base.y, modulo.y) };
+}
+
+inline ivec3 posMod(ivec3 base, ivec3 modulo) {
+	return { posMod(base.x, modulo.x), posMod(base.y, modulo.y), posMod(base.z, modulo.z) };
+}
+
+inline vec3 posMod(vec3 base, vec3 modulo) {
+	return { posMod(base.x, modulo.x), posMod(base.y, modulo.y), posMod(base.z, modulo.z) };
 }
 
 template<typename T>
